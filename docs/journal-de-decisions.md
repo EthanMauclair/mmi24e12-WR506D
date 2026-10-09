@@ -73,7 +73,7 @@ Les justifications détaillées sont dans [ANNEXE-justifications.md](ANNEXE-just
 ## D-008 : Fichiers lock générés au premier lancement
 
 - **Date :** 2026-10-09
-- **Statut :** Action en attente
+- **Statut :** Réalisée le 2026-10-09 (branche `feature/lock-dependencies`)
 - **Contexte :** l'environnement qui a initialisé le dépôt n'avait pas accès à Packagist ni à npm.
 - **Décision :** générer `composer.lock`, `symfony.lock` et `package-lock.json` au premier `docker compose up`, puis les commiter dans `feature/lock-dependencies`.
 - **Vérification à faire au passage :** relire les fichiers éventuellement ajoutés par Symfony Flex (`git status` dans `backend/`) avant de les commiter.
@@ -84,3 +84,12 @@ Les justifications détaillées sont dans [ANNEXE-justifications.md](ANNEXE-just
 - **Statut :** Acceptée
 - **Décision :** collection et environnement exportés dans `postman/`, mis à jour dans la même MR que le code.
 - **Raison :** historique lié au code ; exécutable en CI avec Newman.
+
+## D-010 : Fichiers ajoutés par Symfony Flex au premier lancement
+
+- **Date :** 2026-10-09
+- **Statut :** Acceptée
+- **Constat :** au premier `composer install`, Flex a appliqué 14 recettes et ajouté `backend/.editorconfig`, `backend/config/reference.php` et un bloc `symfony/routing` dans `backend/.env`.
+- **Décision :** conserver les trois. `.editorconfig` uniformise l'indentation et les fins de ligne dans les éditeurs ; `reference.php` est généré par Symfony 7.4 pour l'autocomplétion de la configuration dans l'IDE.
+- **Correction :** `DEFAULT_URI` était déclarée deux fois dans `backend/.env` (une fois par l'initialisation, une fois par Flex avec `http://localhost`, port faux). Une seule déclaration est gardée, dans le bloc de Flex, avec `http://localhost:8080`.
+- **Leçon :** un squelette écrit à la main diverge de ce que produisent les outils officiels ; toujours relire `git status` après le premier lancement.
