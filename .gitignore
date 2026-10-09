@@ -1,0 +1,16 @@
+# Variables d'environnement locales de Docker Compose (identifiants de base de données) : jamais versionnées.
+# Le slash initial limite la règle à la racine : backend/.env et frontend/.env sont des valeurs par défaut versionnées.
+/.env
+/.env.local
+
+# Dépendances et fichiers générés (chaque sous-projet a aussi son propre .gitignore)
+vendor/
+node_modules/
+
+# Systèmes et éditeurs
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
