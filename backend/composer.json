@@ -32,6 +32,9 @@
         "symfony/validator": "7.4.*",
         "symfony/yaml": "7.4.*"
     },
+    "require-dev": {
+        "symfony/maker-bundle": "^1.62"
+    },
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
