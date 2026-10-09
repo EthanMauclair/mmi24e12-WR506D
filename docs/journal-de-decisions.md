@@ -4,8 +4,6 @@ Une entrée par décision. On ne réécrit pas une entrée : si une décision ch
 
 **Statuts :** `Proposée` · `Acceptée` · `À revoir` · `Remplacée par D-xxx`
 
-Les justifications détaillées sont dans [ANNEXE-justifications.md](ANNEXE-justifications.md).
-
 ---
 
 ## D-001 : Initialiser l'infrastructure avant le pitch 1

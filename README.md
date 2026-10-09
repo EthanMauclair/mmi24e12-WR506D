@@ -10,7 +10,7 @@ Application web de gestion de garde-robe, pensée d'abord pour le téléphone.
 | Environnement | Docker Compose (Nginx, PHP-FPM, MariaDB, Node 24) |
 | Tests manuels d'API | Postman (collection versionnée dans `postman/`) |
 
-Les raisons de chacun de ces choix sont détaillées dans [docs/ANNEXE-justifications.md](docs/ANNEXE-justifications.md). Les décisions prises au fil du projet sont tenues dans [docs/journal-de-decisions.md](docs/journal-de-decisions.md).
+Les décisions prises au fil du projet sont tenues dans [docs/journal-de-decisions.md](docs/journal-de-decisions.md).
 
 ---
 
@@ -93,7 +93,7 @@ Quand l'API évolue, la collection est mise à jour **dans la même merge reques
 ├── frontend/       Application Vue 3 (Vite, TypeScript, Vue Router, Pinia)
 ├── docker/         Images et configuration (PHP-FPM, Nginx)
 ├── postman/        Collection et environnement Postman
-├── docs/           Annexe des justifications, journal de décisions
+├── docs/           Journal de décisions
 ├── compose.yaml    Stack de développement
 └── .env.example    Modèle des variables locales
 ```
