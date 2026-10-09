@@ -1,0 +1,12 @@
+# Normalise les fins de ligne en LF dans le dépôt, quel que soit le système.
+# Indispensable sous Windows : un script shell ou bin/console en CRLF
+# ne s'exécute plus dans les conteneurs Linux.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
