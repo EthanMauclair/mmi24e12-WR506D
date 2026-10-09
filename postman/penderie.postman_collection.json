@@ -1,0 +1,122 @@
+{
+  "info": {
+    "name": "Penderie API",
+    "description": "Collection Postman de l'API Penderie (Symfony 7.4 + API Platform).\n\nSélectionner l'environnement « Penderie - local » avant d'exécuter les requêtes. Chaque requête contient des tests automatiques (onglet Scripts > Post-response) : la collection entière peut être lancée avec le Collection Runner ou Newman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Santé de l'API",
+      "item": [
+        {
+          "name": "Point d'entrée de l'API (JSON-LD)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Réponse au format JSON-LD', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/ld+json');",
+                  "});",
+                  "",
+                  "pm.test('Le point d\\'entrée décrit l\\'API', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body['@id']).to.eql('/api');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/ld+json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api",
+              "host": ["{{baseUrl}}"],
+              "path": ["api"]
+            },
+            "description": "Vérifie que la stack Docker (Nginx + PHP-FPM + Symfony) répond."
+          },
+          "response": []
+        },
+        {
+          "name": "Contrat OpenAPI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Document OpenAPI 3', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.openapi).to.match(/^3\\./);",
+                  "    pm.expect(body.info.title).to.eql('Penderie API');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/vnd.openapi+json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs.jsonopenapi",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs.jsonopenapi"]
+            },
+            "description": "Récupère le contrat OpenAPI généré. Il peut être réimporté dans Postman (Import > lien) pour régénérer la collection quand l'API évolue."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "CORS",
+      "item": [
+        {
+          "name": "Pré-requête depuis le front Vue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Origine du front autorisée', function () {",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.eql(pm.environment.get('frontUrl'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "{{frontUrl}}" },
+              { "key": "Access-Control-Request-Method", "value": "GET" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api",
+              "host": ["{{baseUrl}}"],
+              "path": ["api"]
+            },
+            "description": "Simule la requête preflight envoyée par le navigateur quand l'application Vue (port 5173) appelle l'API (port 8080)."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
