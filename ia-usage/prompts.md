@@ -40,3 +40,18 @@ Chaque utilisation d'un assistant IA est consignée ici : date, outil, prompt, e
 - Projet Vue 3 (Vite, Vue Router, Pinia, ESLint, Prettier) dans `frontend/`
 - Environnement Docker : MariaDB 13.0, PHP 8.4-FPM, Nginx, Node 24
 - Collection Postman, modèle de PR, README d'installation
+
+---
+
+## 2026-10-20 — Rédaction des pull requests
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/project-setup`
+
+**Prompt :**
+
+> Pour la PR, dnne moi le titre conventionnel à mettre ainsi que la description, et ça pour chaque PR qu'on va faire pendant le projet.
+
+**Résultat retenu :**
+
+- Titre et description de la PR `feature/project-setup` → `develop`, rédigés selon le modèle `.github/pull_request_template.md`
