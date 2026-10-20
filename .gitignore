@@ -1,0 +1,15 @@
+# Variables d'environnement locales (contiennent des secrets)
+.env
+.env.local
+.env.*.local
+
+# Dépendances
+node_modules/
+vendor/
+
+# IDE / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
