@@ -85,3 +85,23 @@ Chaque utilisation d'un assistant IA est consignée ici : date, outil, prompt, e
 **Résultat retenu :**
 
 - Les commits non poussés de `feature/project-setup` sont repris sur une nouvelle branche `feature/ia-usage-log`, créée depuis `develop`, puis fusionnés par une nouvelle PR
+
+---
+
+## 2026-10-20 — Modèle de données
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/modele-donnees`
+
+**Prompt :**
+
+> Je viens d'ajouter un dossier annexe dans le projet. Il n'est pas à poussé sur github, il est simplement ici pour accompagner au développement de l'application. Prends connaissance du fichier contexte-projet.md et ensuite crée le modèle de données
+
+Le prompt s'appuie sur deux documents de cadrage locaux (non versionnés) : le contexte du projet et la spécification du modèle de données.
+
+**Résultat retenu :**
+
+- 11 énumérations PHP et 22 entités Doctrine avec leurs repositories
+- Validations Symfony (règles des mineurs, articles personnels, tenues, abonnements, prêts, annonces, conversations)
+- Migration MariaDB avec les contraintes CHECK
+- Fixtures des catégories (arborescence à 3 niveaux) et des couleurs
