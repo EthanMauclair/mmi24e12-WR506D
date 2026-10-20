@@ -70,3 +70,18 @@ Chaque utilisation d'un assistant IA est consignée ici : date, outil, prompt, e
 **Résultat retenu :**
 
 - Réglage de la protection de `develop` et `main` pour un projet en solo : PR obligatoire, mais 0 approbation requise (on ne peut pas approuver sa propre PR)
+
+---
+
+## 2026-10-20 — Récupération des commits non poussés
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ia-usage-log`
+
+**Prompt :**
+
+> J'ai fusionné sans puh :/
+
+**Résultat retenu :**
+
+- Les commits non poussés de `feature/project-setup` sont repris sur une nouvelle branche `feature/ia-usage-log`, créée depuis `develop`, puis fusionnés par une nouvelle PR
