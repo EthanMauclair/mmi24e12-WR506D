@@ -39,6 +39,14 @@ Le premier démarrage prend quelques minutes : les dépendances PHP (`composer i
 
 Si l'API répond `{"status":"ok"}`, tout fonctionne. Les ports se changent dans `.env` s'ils sont déjà pris.
 
+Chargez ensuite les référentiels (catégories et couleurs) :
+
+```bash
+docker compose exec php bin/console doctrine:fixtures:load -n
+```
+
+Attention : cette commande vide la base avant de la remplir.
+
 Suivre la progression du premier démarrage :
 
 ```bash
