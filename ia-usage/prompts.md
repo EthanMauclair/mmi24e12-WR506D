@@ -40,3 +40,48 @@ Chaque utilisation d'un assistant IA est consignée ici : date, outil, prompt, e
 - Projet Vue 3 (Vite, Vue Router, Pinia, ESLint, Prettier) dans `frontend/`
 - Environnement Docker : MariaDB 13.0, PHP 8.4-FPM, Nginx, Node 24
 - Collection Postman, modèle de PR, README d'installation
+
+---
+
+## 2026-10-20 — Rédaction des pull requests
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/project-setup`
+
+**Prompt :**
+
+> Pour la PR, dnne moi le titre conventionnel à mettre ainsi que la description, et ça pour chaque PR qu'on va faire pendant le projet.
+
+**Résultat retenu :**
+
+- Titre et description de la PR `feature/project-setup` → `develop`, rédigés selon le modèle `.github/pull_request_template.md`
+
+---
+
+## 2026-10-20 — Fusion bloquée par la protection de branche
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/project-setup`
+
+**Prompt :**
+
+> Je ne peux pas Merge pull request dû au fait des règles de protection sur les branches
+
+**Résultat retenu :**
+
+- Réglage de la protection de `develop` et `main` pour un projet en solo : PR obligatoire, mais 0 approbation requise (on ne peut pas approuver sa propre PR)
+
+---
+
+## 2026-10-20 — Récupération des commits non poussés
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ia-usage-log`
+
+**Prompt :**
+
+> J'ai fusionné sans puh :/
+
+**Résultat retenu :**
+
+- Les commits non poussés de `feature/project-setup` sont repris sur une nouvelle branche `feature/ia-usage-log`, créée depuis `develop`, puis fusionnés par une nouvelle PR
