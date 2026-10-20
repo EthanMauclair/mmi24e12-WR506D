@@ -55,3 +55,18 @@ Chaque utilisation d'un assistant IA est consignée ici : date, outil, prompt, e
 **Résultat retenu :**
 
 - Titre et description de la PR `feature/project-setup` → `develop`, rédigés selon le modèle `.github/pull_request_template.md`
+
+---
+
+## 2026-10-20 — Fusion bloquée par la protection de branche
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/project-setup`
+
+**Prompt :**
+
+> Je ne peux pas Merge pull request dû au fait des règles de protection sur les branches
+
+**Résultat retenu :**
+
+- Réglage de la protection de `develop` et `main` pour un projet en solo : PR obligatoire, mais 0 approbation requise (on ne peut pas approuver sa propre PR)
