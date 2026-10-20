@@ -25,7 +25,8 @@ final class UnSeulPretEnCoursValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, Pret::class);
         }
 
-        if (!$value->estEnCours() || null === $value->getArticle()) {
+        // Un article pas encore enregistré n'a forcément aucun prêt
+        if (!$value->estEnCours() || null === $value->getArticle()?->getId()) {
             return;
         }
 

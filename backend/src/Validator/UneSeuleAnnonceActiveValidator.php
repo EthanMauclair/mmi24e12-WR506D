@@ -25,7 +25,8 @@ final class UneSeuleAnnonceActiveValidator extends ConstraintValidator
             throw new UnexpectedValueException($value, Annonce::class);
         }
 
-        if (!$value->estActive() || null === $value->getArticle()) {
+        // Un article pas encore enregistré n'a forcément aucune annonce
+        if (!$value->estActive() || null === $value->getArticle()?->getId()) {
             return;
         }
 
