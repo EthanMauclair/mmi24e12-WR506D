@@ -6,6 +6,8 @@ use App\Entity\Categorie;
 use App\Entity\Couleur;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpClient\Retry\GenericRetryStrategy;
+use Symfony\Component\HttpClient\RetryableHttpClient;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -34,12 +36,23 @@ final class ReconnaissanceVetement
         {"categorieId": 12, "couleur": "Bordeaux", "marque": "COS", "titre": "Pull col roulé", "confiance": 0.8}
         TXT;
 
+    private readonly HttpClientInterface $client;
+
     public function __construct(
-        private readonly HttpClientInterface $client,
+        HttpClientInterface $client,
         private readonly LoggerInterface $logger,
         #[Autowire(env: 'OPENROUTER_API_KEY')] private readonly string $cleApi,
         #[Autowire(env: 'OPENROUTER_MODELE')] private readonly string $modele,
     ) {
+        // Les modèles gratuits sont souvent surchargés (429, 502, 503, 504) : un nouvel essai après 2 s.
+        // Ces codes sont listés explicitement, car Symfony ne réessaie pas un POST par défaut ;
+        // ici, renvoyer la même analyse est sans risque.
+        $this->client = new RetryableHttpClient(
+            $client,
+            new GenericRetryStrategy([429, 500, 502, 503, 504], delayMs: 2000),
+            maxRetries: 1,
+            logger: $logger,
+        );
     }
 
     public function estDisponible(): bool
