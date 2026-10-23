@@ -36,10 +36,18 @@ const router = useRouter()
 const ajout = useAjoutArticleStore()
 const referentiels = useReferentielsStore()
 
-const origine = route.query.origine === 'vetement' ? 'vetement' : 'manuel'
+// Le même formulaire sert à l'ajout (après un scan ou en saisie manuelle) et à la modification d'un article
+const idArticle = route.name === 'article-modifier' ? route.params.id : null
+const origine = idArticle ? 'modification' : route.query.origine === 'vetement' ? 'vetement' : 'manuel'
 const scan = origine === 'vetement' ? ajout.vetement : null
 const codeInconnu = origine === 'manuel' ? ajout.codeInconnu : null
 const suggestions = scan?.suggestions ?? {}
+
+// Article modifié : sa photo, ses droits et les valeurs absentes du formulaire (ISBN, description…)
+const articleModifie = ref(null)
+const titreEcran = { vetement: "Vérifiez l'article", manuel: 'Nouvel article', modification: "Modifier l'article" }[origine]
+const retour = idArticle ? { name: 'article', params: { id: idArticle } } : { name: 'scan' }
+const peutChangerConfidentialite = computed(() => !idArticle || articleModifie.value?.peutChangerConfidentialite)
 
 const logementId = ref(null)
 const stockages = ref([])
@@ -101,27 +109,56 @@ function nombre(valeur) {
   return valeur === '' || valeur === null ? null : Number(valeur)
 }
 
+/**
+ * Pré-remplit le formulaire avec l'article à modifier.
+ */
+function preremplir(article) {
+  const formulaire = article.formulaire
+  const detail = formulaire.vetement ?? formulaire.livre ?? formulaire.vinyle ?? {}
+  for (const cle of Object.keys(valeurs)) {
+    if (cle in detail) {
+      valeurs[cle] = detail[cle] ?? (typeof valeurs[cle] === 'string' ? '' : null)
+    }
+  }
+  valeurs.titre = formulaire.titre
+  valeurs.categorieId = formulaire.categorieId
+  stockageId.value = formulaire.stockageId
+  etiquettesChoisies.value = [...formulaire.etiquetteIds]
+  estPersonnel.value = article.estPersonnel
+}
+
 async function enregistrer() {
   erreur.value = ''
   erreurs.value = {}
   envoiEnCours.value = true
 
   const detail = DETAIL_PAR_FAMILLE[famille.value]
+  // En modification, on repart des valeurs enregistrées pour ne pas effacer ce que le formulaire n'affiche pas
+  const origineFormulaire = articleModifie.value?.formulaire ?? {}
   const corps = {
-    logementId: logementId.value,
     stockageId: stockageId.value,
     categorieId: valeurs.categorieId,
     titre: valeurs.titre,
-    modeAjout: scan ? 'SCAN_IMAGE' : codeInconnu ? 'SCAN_CODE_BARRE' : 'MANUEL',
-    estPersonnel: estPersonnel.value,
     etiquetteIds: etiquettesChoisies.value,
-    photo: scan?.photo ?? null,
+    description: origineFormulaire.description ?? null,
+    etat: origineFormulaire.etat ?? null,
+  }
+  if (peutChangerConfidentialite.value) {
+    corps.estPersonnel = estPersonnel.value
+  }
+  if (!idArticle) {
+    Object.assign(corps, {
+      logementId: logementId.value,
+      modeAjout: scan ? 'SCAN_IMAGE' : codeInconnu ? 'SCAN_CODE_BARRE' : 'MANUEL',
+      photo: scan?.photo ?? null,
+    })
   }
   if (detail === 'vetement') {
     corps.vetement = { marque: valeurs.marque, couleurId: valeurs.couleurId, taille: valeurs.taille, matiere: valeurs.matiere }
   } else if (detail === 'livre') {
     corps.livre = {
-      isbn: codeInconnu,
+      ...origineFormulaire.livre,
+      isbn: codeInconnu ?? origineFormulaire.livre?.isbn ?? null,
       auteur: valeurs.auteur,
       editeur: valeurs.editeur,
       nbPages: nombre(valeurs.nbPages),
@@ -129,7 +166,8 @@ async function enregistrer() {
     }
   } else if (detail === 'vinyle') {
     corps.vinyle = {
-      ean: codeInconnu,
+      ...origineFormulaire.vinyle,
+      ean: codeInconnu ?? origineFormulaire.vinyle?.ean ?? null,
       artiste: valeurs.artiste,
       label: valeurs.label,
       anneeSortie: nombre(valeurs.anneeSortie),
@@ -138,7 +176,9 @@ async function enregistrer() {
   }
 
   try {
-    const article = await api('/articles', { methode: 'POST', corps })
+    const article = idArticle
+      ? await api(`/articles/${idArticle}`, { methode: 'PUT', corps })
+      : await api('/articles', { methode: 'POST', corps })
     ajout.reinitialiser()
     router.replace({ name: 'article', params: { id: article.id } })
   } catch (e) {
@@ -156,7 +196,15 @@ onMounted(async () => {
     return
   }
   try {
-    logementId.value = await idLogementActif()
+    if (idArticle) {
+      articleModifie.value = await api(`/articles/${idArticle}`)
+      if (!articleModifie.value.peutModifier) {
+        router.replace(retour)
+        return
+      }
+      preremplir(articleModifie.value)
+    }
+    logementId.value = idArticle ? articleModifie.value.logementId : await idLogementActif()
     if (logementId.value === null) {
       router.replace({ name: 'dressing' })
       return
@@ -182,15 +230,20 @@ onMounted(async () => {
 <template>
   <div class="ecran">
     <header class="entete">
-      <RouterLink :to="{ name: 'scan' }" class="bouton-icone" :aria-label="scan ? 'Reprendre la photo' : 'Retour au scan'">
+      <RouterLink :to="retour" class="bouton-icone" :aria-label="idArticle ? 'Retour à la fiche' : scan ? 'Reprendre la photo' : 'Retour au scan'">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
       </RouterLink>
-      <h1 class="entete__titre">{{ scan ? "Vérifiez l'article" : 'Nouvel article' }}</h1>
+      <h1 class="entete__titre">{{ titreEcran }}</h1>
     </header>
 
     <p v-if="chargement" class="etat">Chargement…</p>
 
     <form v-else id="formulaire-article" class="contenu" novalidate @submit.prevent="enregistrer">
+      <div v-if="articleModifie?.photos.length" class="resume">
+        <img :src="articleModifie.photos[0]" alt="Photo de l'article" class="resume__photo" />
+        <span class="resume__aide">Modifiez les informations puis enregistrez. La photo reste la même.</span>
+      </div>
+
       <div v-if="scan" class="resume">
         <img :src="scan.apercu ?? scan.photo" alt="Photo du scan" class="resume__photo" />
         <div class="resume__textes">
@@ -277,7 +330,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <label class="personnel">
+      <label v-if="peutChangerConfidentialite" class="personnel">
         <input v-model="estPersonnel" type="checkbox" class="personnel__case" />
         Article personnel — visible uniquement par moi
       </label>
@@ -286,7 +339,7 @@ onMounted(async () => {
     <div class="pied">
       <button type="submit" form="formulaire-article" class="bouton-principal bouton-principal--icone" :disabled="envoiEnCours || chargement">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-        {{ envoiEnCours ? 'Enregistrement…' : 'Enregistrer dans le dressing' }}
+        {{ envoiEnCours ? 'Enregistrement…' : idArticle ? 'Enregistrer les modifications' : 'Enregistrer dans le dressing' }}
       </button>
     </div>
   </div>
