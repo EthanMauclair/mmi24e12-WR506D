@@ -225,3 +225,36 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 - Front : client API, store de session, routes protégées, écrans reliés à l'API avec gestion des erreurs
 - `vendor/` et `var/` du backend dans des volumes Docker (requêtes environ 5 fois plus rapides sous Windows)
 - Projet renommé « penderie » (README, Postman, `.env.example`), collection Postman complétée et vérifiée avec Newman
+
+---
+
+## 2026-10-23 — Ajout d'article par scan
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ajout-article-scan`
+
+**Prompts :**
+
+> C'est propre, on reviendra plus tard pour modifier le front. Continuons sur la fonctionnalité du scan.
+
+Choix du service de reconnaissance des vêtements (question posée par l'assistant) :
+
+> On va utiliser OpenRouteur avec les modèle Gemma free google/gemma-4-31b-it:free
+
+Consignes ajoutées en cours de route :
+
+> L'image doit être réduite
+> L'image doit être convertie en JPG
+> L'image doit être transformée en B64
+> Le prompt envoyé au modèle doit être précis et reformulé
+
+Le prompt s'appuie sur des maquettes HTML locales (non versionnées) : caméra, vérification du vêtement, vinyle trouvé.
+
+**Résultat retenu :**
+
+- Photo réduite à 1024 px et convertie en JPEG dans le navigateur puis à nouveau côté serveur (GD), encodée en base64 pour le modèle
+- Reconnaissance des vêtements via OpenRouter (`google/gemma-4-31b-it:free`) : prompt système (rôle, règles, format JSON exact) et demande reformulée avec les catégories et couleurs autorisées ; chaque valeur renvoyée est vérifiée en base ; 30 analyses par heure et par utilisateur ; repli sur la saisie manuelle sans clé ou en cas d'échec
+- Codes-barres lus dans le navigateur (ZXing en WebAssembly, servi par l'application) ; fiches cherchées dans Open Library, Google Books et MusicBrainz (réessai en cas de limite, correspondance exacte du code exigée)
+- Création d'article avec son détail (vêtement, livre, vinyle), sa photo ou sa couverture, son emplacement et ses étiquettes
+- Écrans caméra, vérification du vêtement, livre ou vinyle trouvé, saisie manuelle
+- Correctif : `backend/.env` (valeurs par défaut, sans secret) n'avait jamais été versionné
