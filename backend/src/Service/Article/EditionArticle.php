@@ -24,9 +24,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Crée un article et son détail (vêtement, livre ou vinyle) à partir des données du formulaire d'ajout.
+ * Crée ou modifie un article et son détail (vêtement, livre ou vinyle) à partir des données du formulaire.
  */
-final class CreationArticle
+final class EditionArticle
 {
     /** Sites dont on accepte les couvertures proposées par la recherche de code-barres */
     private const HOTES_COUVERTURES = ['covers.openlibrary.org', 'books.google.com', 'books.googleusercontent.com', 'coverartarchive.org'];

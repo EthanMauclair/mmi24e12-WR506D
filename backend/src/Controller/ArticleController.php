@@ -9,7 +9,7 @@ use App\Repository\LogementRepository;
 use App\Security\Voter\ArticleVoter;
 use App\Security\Voter\LogementVoter;
 use App\Service\Article\ArticleInvalideException;
-use App\Service\Article\CreationArticle;
+use App\Service\Article\EditionArticle;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -35,7 +35,7 @@ final class ArticleController extends ApiController
         Request $request,
         #[CurrentUser] Utilisateur $utilisateur,
         LogementRepository $logements,
-        CreationArticle $creation,
+        EditionArticle $edition,
     ): JsonResponse {
         $donnees = $this->lireJson($request);
         $logement = $logements->find((int) ($donnees['logementId'] ?? 0));
@@ -45,7 +45,7 @@ final class ArticleController extends ApiController
         $this->denyAccessUnlessGranted(LogementVoter::VOIR, $logement);
 
         try {
-            $article = $creation->creer($logement, $utilisateur, $donnees);
+            $article = $edition->creer($logement, $utilisateur, $donnees);
         } catch (ArticleInvalideException $e) {
             return $this->reponseInvalide($e->messages);
         }
