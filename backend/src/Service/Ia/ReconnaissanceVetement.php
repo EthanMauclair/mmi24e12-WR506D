@@ -43,6 +43,7 @@ final class ReconnaissanceVetement
         private readonly LoggerInterface $logger,
         #[Autowire(env: 'OPENROUTER_API_KEY')] private readonly string $cleApi,
         #[Autowire(env: 'OPENROUTER_MODELE')] private readonly string $modele,
+        #[Autowire(env: 'OPENROUTER_MODELE_SECOURS')] private readonly string $modeleSecours,
     ) {
         // Les modèles gratuits sont souvent surchargés (429, 502, 503, 504) : un nouvel essai après 2 s.
         // Ces codes sont listés explicitement, car Symfony ne réessaie pas un POST par défaut ;
@@ -80,7 +81,8 @@ final class ReconnaissanceVetement
                 'headers' => ['X-Title' => 'Penderie'],
                 'timeout' => 45,
                 'json' => [
-                    'model' => $this->modele,
+                    // OpenRouter passe au modèle suivant si le premier est saturé, en panne ou refuse de répondre
+                    'models' => array_values(array_unique(array_filter(array_map('trim', [$this->modele, $this->modeleSecours])))),
                     'temperature' => 0.1,
                     'max_tokens' => 400,
                     'response_format' => ['type' => 'json_object'],

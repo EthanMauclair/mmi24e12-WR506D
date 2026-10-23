@@ -25,6 +25,7 @@ services:
       DATABASE_URL: mysql://${MARIADB_USER}:${MARIADB_PASSWORD}@database:3306/${MARIADB_DATABASE}?serverVersion=${MARIADB_SERVER_VERSION:-13.0.2-MariaDB}&charset=utf8mb4
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODELE: ${OPENROUTER_MODELE:-google/gemma-4-31b-it:free}
+      OPENROUTER_MODELE_SECOURS: ${OPENROUTER_MODELE_SECOURS-google/gemma-4-26b-a4b-it:free}
     volumes:
       - ./backend:/var/www/backend
       # Dépendances, cache, logs et sessions hors du dossier partagé avec l'hôte :
