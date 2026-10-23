@@ -48,6 +48,19 @@ class Categorie
         $this->enfants = new ArrayCollection();
     }
 
+    /**
+     * Chemin complet depuis la racine, ex. « Femmes › Pulls et sweats › Pulls ».
+     */
+    public function getChemin(): string
+    {
+        $noms = [];
+        for ($categorie = $this; null !== $categorie; $categorie = $categorie->getParent()) {
+            array_unshift($noms, $categorie->getNom());
+        }
+
+        return implode(' › ', $noms);
+    }
+
     public function getId(): ?int
     {
         return $this->id;
