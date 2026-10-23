@@ -1,108 +1,161 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { api } from '@/services/api'
+import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 
-// Données d'exemple reprises de la maquette, en attendant l'API
-const article = {
-  nom: 'Pull col roulé',
-  infos: 'COS · Laine mérinos · Taille M',
-  statut: 'Disponible',
-  fond: 'var(--couleur-vignette-bordeaux)',
-  datePhoto: '14 oct.',
-  nbPhotos: 3,
-  emplacement: 'Chambre › Armoire › Étagère 2',
-  idPiece: 1,
-  categorie: 'Pull',
-  couleur: { nom: 'Bordeaux', valeur: 'var(--couleur-vignette-bordeaux)' },
-  etiquettes: ['Travail', 'Hiver', 'Week-end'],
+const FORMAT_DATE_SCAN = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+
+const route = useRoute()
+
+const article = ref(null)
+const chargement = ref(true)
+const erreur = ref('')
+const erreurConfidentialite = ref('')
+const indexPhoto = ref(0)
+
+const retour = computed(() =>
+  article.value?.emplacement ? `/pieces/${article.value.emplacement.piece.id}` : '/dressing',
+)
+const chemin = computed(() => {
+  const emplacement = article.value.emplacement
+  return emplacement ? `${emplacement.piece.nom} › ${emplacement.stockage.nom}` : 'À ranger'
+})
+
+async function charger(id) {
+  chargement.value = true
+  erreur.value = ''
+  try {
+    article.value = await api(`/articles/${id}`)
+    indexPhoto.value = 0
+  } catch (e) {
+    erreur.value = e.message
+  } finally {
+    chargement.value = false
+  }
 }
 
-const indexPhoto = ref(0)
-const estPersonnel = ref(false)
+// L'interrupteur change d'abord à l'écran, puis revient en arrière si l'API refuse
+async function changerConfidentialite(estPersonnel) {
+  erreurConfidentialite.value = ''
+  article.value.estPersonnel = estPersonnel
+  try {
+    article.value = await api(`/articles/${article.value.id}`, { methode: 'PATCH', corps: { estPersonnel } })
+  } catch (e) {
+    article.value.estPersonnel = !estPersonnel
+    erreurConfidentialite.value = e.violations.estPersonnel ?? e.message
+  }
+}
+
+watch(() => route.params.id, charger, { immediate: true })
 </script>
 
 <template>
   <div class="ecran">
-    <div class="photo" :style="{ background: article.fond }">
-      <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-      <RouterLink :to="`/pieces/${article.idPiece}`" class="photo__bouton photo__bouton--gauche" aria-label="Retour">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-      </RouterLink>
-      <button type="button" class="photo__bouton photo__bouton--droite" aria-label="Modifier l'article">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-      </button>
-      <span class="photo__source">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-        Photo du scan · {{ article.datePhoto }}
-      </span>
-      <span class="photo__indicateurs">
-        <span v-for="index in article.nbPhotos" :key="index" class="indicateur" :class="{ 'indicateur--actif': index - 1 === indexPhoto }"></span>
-      </span>
+    <p v-if="chargement && !article" class="etat">Chargement de l'article…</p>
+    <div v-else-if="erreur" class="contenu-erreur">
+      <p class="message-erreur" role="alert">{{ erreur }}</p>
+      <RouterLink to="/dressing">Retour au dressing</RouterLink>
     </div>
 
-    <main class="contenu">
-      <div class="titre">
-        <div class="titre__textes">
-          <h1 class="titre__nom">{{ article.nom }}</h1>
-          <span class="titre__infos">{{ article.infos }}</span>
-        </div>
-        <span class="statut">{{ article.statut }}</span>
+    <template v-else-if="article">
+      <div
+        class="photo"
+        :class="{ 'photo--claire': estCouleurClaire(article.couleur?.codeHex) }"
+        :style="{ background: fondVignette(article.couleur?.codeHex) }"
+      >
+        <img v-if="article.photos.length" :src="article.photos[indexPhoto]" alt="" class="photo__image" />
+        <svg v-else width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
+        <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche" aria-label="Retour">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </RouterLink>
+        <button v-if="article.peutModifier" type="button" class="photo__bouton photo__bouton--droite" aria-label="Modifier l'article">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+        </button>
+        <span v-if="article.dateScan" class="photo__source">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+          Photo du scan · {{ FORMAT_DATE_SCAN.format(new Date(article.dateScan)) }}
+        </span>
+        <span v-if="article.photos.length > 1" class="photo__indicateurs">
+          <button
+            v-for="(photo, index) in article.photos"
+            :key="photo"
+            type="button"
+            class="indicateur"
+            :class="{ 'indicateur--actif': index === indexPhoto }"
+            :aria-label="`Photo ${index + 1}`"
+            @click="indexPhoto = index"
+          ></button>
+        </span>
       </div>
 
-      <div class="emplacement">
-        <span class="emplacement__icone">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-        </span>
-        <span class="emplacement__textes">
-          <span class="emplacement__libelle">Rangé dans</span>
-          <span class="emplacement__chemin">{{ article.emplacement }}</span>
-        </span>
+      <main class="contenu">
+        <div class="titre">
+          <div class="titre__textes">
+            <h1 class="titre__nom">{{ article.titre }}</h1>
+            <span class="titre__infos">{{ article.infos }}</span>
+          </div>
+          <span class="statut" :class="{ 'statut--indisponible': article.statut !== 'DISPONIBLE' }">{{ article.libelleStatut }}</span>
+        </div>
+
+        <div class="emplacement">
+          <span class="emplacement__icone">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+          </span>
+          <span class="emplacement__textes">
+            <span class="emplacement__libelle">Rangé dans</span>
+            <span class="emplacement__chemin">{{ chemin }}</span>
+          </span>
+        </div>
+
+        <dl class="caracteristiques">
+          <div class="caracteristique">
+            <dt class="caracteristique__libelle">Catégorie</dt>
+            <dd class="caracteristique__valeur">{{ article.categorie }}</dd>
+          </div>
+          <div v-if="article.couleur" class="caracteristique">
+            <dt class="caracteristique__libelle">Couleur</dt>
+            <dd class="caracteristique__valeur caracteristique__valeur--couleur">
+              <span class="pastille-couleur" :style="{ background: article.couleur.codeHex }"></span>{{ article.couleur.nom }}
+            </dd>
+          </div>
+        </dl>
+
+        <div class="etiquettes">
+          <span class="etiquettes__titre">Étiquettes</span>
+          <div class="etiquettes__liste">
+            <span v-for="etiquette in article.etiquettes" :key="etiquette.id" class="etiquette">{{ etiquette.nom }}</span>
+            <span v-if="!article.etiquettes.length && !article.peutModifier" class="etiquettes__vide">Aucune étiquette</span>
+            <button v-if="article.peutModifier" type="button" class="etiquette-ajout">+ Ajouter</button>
+          </div>
+        </div>
+
+        <label v-if="article.peutChangerConfidentialite" class="personnel">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="personnel__icone"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+          <span class="personnel__textes">
+            <span class="personnel__titre">Article personnel</span>
+            <span class="personnel__aide">Visible uniquement par vous</span>
+          </span>
+          <input :checked="article.estPersonnel" type="checkbox" class="visuellement-cache" @change="changerConfidentialite($event.target.checked)" />
+          <span class="interrupteur" :class="{ 'interrupteur--actif': article.estPersonnel }" aria-hidden="true">
+            <span class="interrupteur__curseur"></span>
+          </span>
+        </label>
+        <p v-if="erreurConfidentialite" class="message-erreur" role="alert">{{ erreurConfidentialite }}</p>
+      </main>
+
+      <div class="actions">
+        <a href="#" class="action action--secondaire">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
+          Prêter
+        </a>
+        <!-- Un article personnel ne peut pas être mis en vente -->
+        <a v-if="!article.estPersonnel" href="#" class="action action--principale">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
+          Mettre en vente
+        </a>
       </div>
-
-      <dl class="caracteristiques">
-        <div class="caracteristique">
-          <dt class="caracteristique__libelle">Catégorie</dt>
-          <dd class="caracteristique__valeur">{{ article.categorie }}</dd>
-        </div>
-        <div class="caracteristique">
-          <dt class="caracteristique__libelle">Couleur</dt>
-          <dd class="caracteristique__valeur caracteristique__valeur--couleur">
-            <span class="pastille-couleur" :style="{ background: article.couleur.valeur }"></span>{{ article.couleur.nom }}
-          </dd>
-        </div>
-      </dl>
-
-      <div class="etiquettes">
-        <span class="etiquettes__titre">Étiquettes</span>
-        <div class="etiquettes__liste">
-          <span v-for="etiquette in article.etiquettes" :key="etiquette" class="etiquette">{{ etiquette }}</span>
-          <button type="button" class="etiquette-ajout">+ Ajouter</button>
-        </div>
-      </div>
-
-      <label class="personnel">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="personnel__icone"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-        <span class="personnel__textes">
-          <span class="personnel__titre">Article personnel</span>
-          <span class="personnel__aide">Visible uniquement par vous</span>
-        </span>
-        <input v-model="estPersonnel" type="checkbox" class="visuellement-cache" />
-        <span class="interrupteur" :class="{ 'interrupteur--actif': estPersonnel }" aria-hidden="true">
-          <span class="interrupteur__curseur"></span>
-        </span>
-      </label>
-    </main>
-
-    <div class="actions">
-      <a href="#" class="action action--secondaire">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
-        Prêter
-      </a>
-      <a href="#" class="action action--principale">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-        Mettre en vente
-      </a>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -438,5 +491,40 @@ const estPersonnel = ref(false)
 .action--principale:hover {
   color: var(--couleur-sur-primaire);
   background: var(--couleur-primaire-fonce);
+}
+
+.photo--claire {
+  color: var(--couleur-photo-icone-sombre);
+}
+
+.photo__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.indicateur {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.statut--indisponible {
+  background: var(--couleur-primaire-pale);
+  color: var(--couleur-primaire);
+}
+
+.etiquettes__vide {
+  font-size: 13px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.contenu-erreur {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px;
 }
 </style>
