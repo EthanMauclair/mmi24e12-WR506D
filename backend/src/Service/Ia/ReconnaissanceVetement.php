@@ -6,8 +6,6 @@ use App\Entity\Categorie;
 use App\Entity\Couleur;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\HttpClient\Retry\GenericRetryStrategy;
-use Symfony\Component\HttpClient\RetryableHttpClient;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -36,23 +34,22 @@ final class ReconnaissanceVetement
         {"categorieId": 12, "couleur": "Bordeaux", "marque": "COS", "titre": "Pull col roulé", "confiance": 0.8}
         TXT;
 
-    private readonly HttpClientInterface $client;
+    /**
+     * Temps total accordé à l'analyse, en secondes : il doit rester sous les 90 s d'attente
+     * de Nginx (docker/nginx/default.conf). Le modèle raisonne souvent 20 à 40 s avant de répondre.
+     */
+    private const BUDGET_SECONDES = 80;
+
+    /** En dessous de ce temps restant, un nouvel essai n'aurait pas le temps d'aboutir */
+    private const MINIMUM_POUR_REESSAYER = 20;
 
     public function __construct(
-        HttpClientInterface $client,
+        private readonly HttpClientInterface $client,
         private readonly LoggerInterface $logger,
         #[Autowire(env: 'OPENROUTER_API_KEY')] private readonly string $cleApi,
         #[Autowire(env: 'OPENROUTER_MODELE')] private readonly string $modele,
+        #[Autowire(env: 'OPENROUTER_MODELE_SECOURS')] private readonly string $modeleSecours,
     ) {
-        // Les modèles gratuits sont souvent surchargés (429, 502, 503, 504) : un nouvel essai après 2 s.
-        // Ces codes sont listés explicitement, car Symfony ne réessaie pas un POST par défaut ;
-        // ici, renvoyer la même analyse est sans risque.
-        $this->client = new RetryableHttpClient(
-            $client,
-            new GenericRetryStrategy([429, 500, 502, 503, 504], delayMs: 2000),
-            maxRetries: 1,
-            logger: $logger,
-        );
     }
 
     public function estDisponible(): bool
@@ -74,15 +71,48 @@ final class ReconnaissanceVetement
             return null;
         }
 
+        // Les modèles gratuits échouent parfois vite (surcharge, erreur interne) : on réessaie alors,
+        // tant qu'il reste assez de temps dans le budget. Un essai trop long n'est pas répété.
+        $debut = microtime(true);
+        for ($essai = 1; $essai <= 2; ++$essai) {
+            $restant = self::BUDGET_SECONDES - (microtime(true) - $debut);
+            if ($essai > 1 && $restant < self::MINIMUM_POUR_REESSAYER) {
+                break;
+            }
+
+            $texte = $this->interroger($imageBase64, $categories, $couleurs, $restant);
+            if (null !== $texte) {
+                return $this->interpreter($texte, $categories, $couleurs);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Un appel à OpenRouter.
+     *
+     * @param list<Categorie> $categories
+     * @param list<Couleur>   $couleurs
+     *
+     * @return string|null texte de la réponse, ou null si le modèle n'a pas répondu
+     */
+    private function interroger(string $imageBase64, array $categories, array $couleurs, float $dureeMax): ?string
+    {
         try {
             $reponse = $this->client->request('POST', self::URL, [
                 'auth_bearer' => $this->cleApi,
                 'headers' => ['X-Title' => 'Penderie'],
-                'timeout' => 45,
+                'max_duration' => $dureeMax,
                 'json' => [
-                    'model' => $this->modele,
+                    // OpenRouter passe au modèle suivant si le premier est saturé, en panne ou refuse de répondre
+                    'models' => array_values(array_unique(array_filter(array_map('trim', [$this->modele, $this->modeleSecours])))),
                     'temperature' => 0.1,
-                    'max_tokens' => 400,
+                    // Gemma 4 raisonne avant de répondre (jusqu'à ~1 500 jetons, impossible à désactiver chez
+                    // le fournisseur gratuit) : une limite trop basse est consommée avant d'écrire le JSON
+                    'max_tokens' => 4000,
+                    // Le raisonnement n'est pas renvoyé : seule la fiche JSON nous intéresse
+                    'reasoning' => ['exclude' => true],
                     'response_format' => ['type' => 'json_object'],
                     'messages' => [
                         ['role' => 'system', 'content' => self::INSTRUCTIONS_SYSTEME],
@@ -102,12 +132,17 @@ final class ReconnaissanceVetement
 
         $texte = $donnees['choices'][0]['message']['content'] ?? null;
         if (!\is_string($texte)) {
-            $this->logger->warning('Réponse inattendue du modèle de reconnaissance.', ['reponse' => $donnees]);
+            // finish_reason « length » : la limite de jetons a été atteinte avant la réponse
+            $this->logger->warning('Le modèle {modele} n\'a pas renvoyé de fiche (fin : {fin}, erreur : {erreur}).', [
+                'modele' => $donnees['model'] ?? '?',
+                'fin' => $donnees['choices'][0]['finish_reason'] ?? '?',
+                'erreur' => $donnees['error']['message'] ?? 'aucune',
+            ]);
 
             return null;
         }
 
-        return $this->interpreter($texte, $categories, $couleurs);
+        return $texte;
     }
 
     /**

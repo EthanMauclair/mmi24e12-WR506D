@@ -115,7 +115,7 @@ async function rechercherCode(code) {
 }
 
 async function analyserVetement(image) {
-  traitement.value = 'Analyse de la photo…'
+  traitement.value = 'Analyse en cours, environ une minute…'
   erreur.value = ''
   ajout.reinitialiser()
   try {

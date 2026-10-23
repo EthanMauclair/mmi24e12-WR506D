@@ -271,3 +271,20 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées) : caméra, 
 - Procédure pas à pas : création de la clé OpenRouter, ajout dans le `.env` racine (jamais dans `backend/.env`), recréation du conteneur PHP, vérification sans afficher la clé
 - Test réel : une veste en jean reconnue (« Vestes en jean », Bleu, « Veste en jean », aucune marque inventée) ; les échecs du fournisseur gratuit (429, 500, 504) retombent proprement sur la saisie manuelle
 - Correctifs trouvés pendant ce test : réessai de l'analyse après une surcharge, et droits d'écriture de PHP-FPM sur `var/` (la limite de 30 analyses par heure n'était jamais enregistrée)
+
+---
+
+## 2026-10-23 — Modèle d'IA de secours
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ia-modele-secours`
+
+**Prompt :**
+
+> ajoute google/gemma-4-26b-a4b-it:free. Ensuite dit moi si le front pour le scan est fait et est-ce que la fonctionnalitée du scan est terminé ou on doit encore faire des choses
+
+**Résultat retenu :**
+
+- `google/gemma-4-26b-a4b-it:free` ajouté comme modèle de secours (paramètre `models` d'OpenRouter, variable `OPENROUTER_MODELE_SECOURS`)
+- Cause des échecs trouvée en testant avec de vraies photos : le modèle raisonne avant de répondre (jusqu'à ~1 500 jetons, impossible à désactiver chez le fournisseur gratuit) et épuisait la limite de 400 jetons ; limite portée à 4 000, et budget global de 80 s (sous les 90 s de Nginx) avec un nouvel essai seulement s'il reste au moins 20 s
+- Bilan de la fonctionnalité de scan et liste de ce qui reste à faire
