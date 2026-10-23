@@ -1,35 +1,96 @@
-@import './base.css';
+@import './variables.css';
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+body {
+  margin: 0;
+  background: var(--couleur-fond);
+  color: var(--couleur-texte);
+  font-family: var(--police);
 }
 
-a,
-.green {
+a {
+  color: var(--couleur-primaire);
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+a:hover {
+  color: var(--couleur-primaire-fonce);
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+/* Écran mobile : 390 px de large au maximum, centré sur les grands écrans */
+.ecran {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--couleur-fond);
+  color: var(--couleur-texte);
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+/* Champs de formulaire */
+.champ {
+  display: flex;
+  flex-direction: column;
+}
+
+.champ__libelle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-libelle);
+}
+
+.saisie {
+  box-sizing: border-box;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  font: inherit;
+  font-size: 15px;
+  color: var(--couleur-texte);
+  outline: none;
+}
+
+/* Saisie composée (préfixe ou bouton) : la bordure est portée par le conteneur */
+.saisie--groupe {
+  display: flex;
+  align-items: center;
+}
+
+.saisie--groupe input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--couleur-texte);
+}
+
+.saisie:focus-visible,
+.saisie--groupe:focus-within {
+  border-color: var(--couleur-primaire);
+}
+
+/* Boutons */
+.bouton-principal {
+  height: 54px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bouton-principal:hover {
+  background: var(--couleur-primaire-fonce);
 }

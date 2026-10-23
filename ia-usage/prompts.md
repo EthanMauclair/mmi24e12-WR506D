@@ -105,3 +105,22 @@ Le prompt s'appuie sur deux documents de cadrage locaux (non versionnés) : le c
 - Validations Symfony (règles des mineurs, articles personnels, tenues, abonnements, prêts, annonces, conversations)
 - Migration MariaDB avec les contraintes CHECK
 - Fixtures des catégories (arborescence à 3 niveaux) et des couleurs
+
+---
+
+## 2026-10-23 — Écrans de connexion et d'inscription
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ecrans-authentification`
+
+**Prompt :**
+
+> Reproduis en Vue.js l'écran docs/maquettes/Inscription.dc.html docs/maquettes/Connexion.dc.html. Reprends exactement les couleurs, tailles, espacements et textes. Les balises sc-for, sc-if et {{ }} viennent de l'outil de maquette : traduis-les en v-for, v-if et données réactives. Mets les couleurs dans des variables CSS communes.
+
+Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
+
+**Résultat retenu :**
+
+- Couleurs et police dans des variables CSS communes (`frontend/src/assets/variables.css`), styles de formulaire partagés dans `main.css`
+- Vues `ConnexionView` et `InscriptionView`, routes `/connexion` et `/inscription`
+- Affichage du mot de passe et choix de la visibilité du profil en données réactives (`ref`, `computed`, `v-for`)
