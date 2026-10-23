@@ -25,6 +25,10 @@ services:
       DATABASE_URL: mysql://${MARIADB_USER}:${MARIADB_PASSWORD}@database:3306/${MARIADB_DATABASE}?serverVersion=${MARIADB_SERVER_VERSION:-13.0.2-MariaDB}&charset=utf8mb4
     volumes:
       - ./backend:/var/www/backend
+      # Dépendances, cache, logs et sessions hors du dossier partagé avec l'hôte :
+      # beaucoup plus rapide sous Windows et macOS
+      - backend_vendor:/var/www/backend/vendor
+      - backend_var:/var/www/backend/var
     depends_on:
       database:
         condition: service_healthy
@@ -54,5 +58,7 @@ services:
       - nginx
 
 volumes:
+  backend_vendor:
+  backend_var:
   database_data:
   frontend_node_modules:
