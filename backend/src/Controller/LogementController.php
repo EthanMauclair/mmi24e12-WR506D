@@ -70,9 +70,9 @@ final class LogementController extends ApiController
         $pieces = array_map(static fn (Piece $piece) => [
             'id' => $piece->getId(),
             'nom' => $piece->getNom(),
-            'stockages' => array_map(static fn ($stockage) => $stockage->getNom(), $piece->getStockages()->toArray()),
+            'stockages' => array_map(static fn ($stockage) => $stockage->getNom(), $piece->getStockages()->getValues()),
             'nbArticles' => $nombresParPiece[$piece->getId()] ?? 0,
-        ], $logement->getPieces()->toArray());
+        ], $logement->getPieces()->getValues());
 
         return $this->json([
             ...$this->presentateur->logementResume($logement, $utilisateur),
@@ -120,7 +120,7 @@ final class LogementController extends ApiController
             'stockages' => $stockages,
             'etiquettes' => array_map(
                 static fn ($etiquette) => ['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()],
-                $logement->getEtiquettes()->toArray(),
+                $logement->getEtiquettes()->getValues(),
             ),
         ]);
     }

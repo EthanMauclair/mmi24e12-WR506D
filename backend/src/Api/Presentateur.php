@@ -89,7 +89,7 @@ final class Presentateur
         $vetement = $details[DetailVetement::class][$article->getId()] ?? null;
         $couleur = $vetement?->getCouleurPrincipale();
         $stockage = $article->getStockage();
-        $photos = $article->getPhotos()->toArray();
+        $photos = $article->getPhotos()->getValues();
         $photoScan = array_values(array_filter($photos, static fn ($photo) => $photo->isEstImageScan()))[0] ?? null;
 
         return [
@@ -110,7 +110,7 @@ final class Presentateur
             'logementId' => $article->getLogement()->getId(),
             'etiquettes' => array_map(
                 static fn ($etiquette) => ['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()],
-                $article->getEtiquettes()->toArray(),
+                $article->getEtiquettes()->getValues(),
             ),
             'estPersonnel' => $article->isEstPersonnel(),
             'peutModifier' => $peutModifier,
