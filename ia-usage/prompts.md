@@ -258,3 +258,16 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées) : caméra, 
 - Création d'article avec son détail (vêtement, livre, vinyle), sa photo ou sa couverture, son emplacement et ses étiquettes
 - Écrans caméra, vérification du vêtement, livre ou vinyle trouvé, saisie manuelle
 - Correctif : `backend/.env` (valeurs par défaut, sans secret) n'avait jamais été versionné
+
+**Prompts de suivi :**
+
+> Expliuqe moi en détail comment faire, je ne comprends pas Ajoute ta clé dans .env (OPENROUTER_API_KEY=sk-or-...), puis lance docker compose up -d --build php. Le --build est nécessaire cette fois-ci, à cause de la nouvelle extension GD.
+> Dis-moi quand c'est fait, sans coller la clé ici : je lancerai un vrai test de reconnaissance.
+
+> c'est fait, il mereste le push à faire
+
+**Résultat retenu :**
+
+- Procédure pas à pas : création de la clé OpenRouter, ajout dans le `.env` racine (jamais dans `backend/.env`), recréation du conteneur PHP, vérification sans afficher la clé
+- Test réel : une veste en jean reconnue (« Vestes en jean », Bleu, « Veste en jean », aucune marque inventée) ; les échecs du fournisseur gratuit (429, 500, 504) retombent proprement sur la saisie manuelle
+- Correctifs trouvés pendant ce test : réessai de l'analyse après une surcharge, et droits d'écriture de PHP-FPM sur `var/` (la limite de 30 analyses par heure n'était jamais enregistrée)
