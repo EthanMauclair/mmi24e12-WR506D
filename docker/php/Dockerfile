@@ -4,6 +4,7 @@ COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /u
 RUN install-php-extensions pdo_mysql intl opcache zip
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY php.ini /usr/local/etc/php/conf.d/zz-penderie.ini
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
