@@ -24,11 +24,18 @@ export function definirSurNonConnecte(rappel) {
   surNonConnecte = rappel
 }
 
-export async function api(chemin, { methode = 'GET', corps } = {}) {
+/**
+ * @param {object} options
+ * @param {object} [options.corps] envoyé en JSON
+ * @param {FormData} [options.formulaire] envoyé en multipart (fichiers), le navigateur fixe le Content-Type
+ */
+export async function api(chemin, { methode = 'GET', corps, formulaire } = {}) {
   const options = { method: methode, credentials: 'same-origin', headers: { Accept: 'application/json' } }
   if (corps !== undefined) {
     options.headers['Content-Type'] = 'application/json'
     options.body = JSON.stringify(corps)
+  } else if (formulaire !== undefined) {
+    options.body = formulaire
   }
 
   let reponse
