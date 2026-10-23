@@ -148,3 +148,13 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 - Textes d'aide « Nom d'utilisateur » et « E-mail », préfixe @ retiré
 - Champ date natif (`type="date"`) : calendrier, format JJ/MM/AAAA conservé, date future impossible
 - Pastille « 100 % gratuit » retirée
+
+**Prompt de suivi :**
+
+> Je viens de regarder les modifs. C'est pas mal, supprime la flèche retour en haut à gauche, il y a déjà  'Déjà inscrit ? Se connecter' en bas de la page, ajoute également un bandeau bordeaux pour habiller la page qui englobe Créer un compte et Indexez votre dressing et partagez vos tenues. je n'est pas fait :git push -u origin feature/ajustements-inscription. Je peux le faire une fois les modifs faites ou je dois en faire un nouveau ?
+
+**Résultat retenu :**
+
+- Flèche de retour retirée (le lien « Se connecter » en bas de page suffit)
+- Bandeau bordeaux autour du titre et du sous-titre, dans le style de l'écran de connexion
+- Les nouveaux commits restent sur la même branche, pas encore poussée : un seul push suffit
