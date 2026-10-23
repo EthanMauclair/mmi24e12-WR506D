@@ -27,7 +27,9 @@ const flashActif = ref(false)
 const traitement = ref('')
 const erreur = ref('')
 const confirmation = ref(ajout.confirmation)
+// Nouvelle session de scan : on oublie le résultat précédent (code inconnu, photo…)
 ajout.confirmation = ''
+ajout.reinitialiser()
 
 let flux = null
 let minuterieLecture = null
