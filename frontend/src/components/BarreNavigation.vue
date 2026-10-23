@@ -5,7 +5,7 @@ defineProps({
   actif: { type: String, default: 'dressing' },
 })
 
-// Les écrans Tenues, Scan, Marché et Profil n'existent pas encore : pas de route, lien provisoire '#'
+// Les écrans Tenues, Marché et Profil n'existent pas encore : pas de route, lien provisoire '#'
 const onglets = [
   {
     id: 'dressing',
@@ -37,9 +37,9 @@ const onglets = [
 <template>
   <nav class="barre" aria-label="Navigation principale">
     <template v-for="onglet in onglets" :key="onglet.id">
-      <a v-if="onglet.central" href="#" class="scan" aria-label="Scanner un article">
+      <RouterLink v-if="onglet.central" to="/scan" class="scan" aria-label="Scanner un article">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10" /></svg>
-      </a>
+      </RouterLink>
       <component
         :is="onglet.route ? RouterLink : 'a'"
         v-else

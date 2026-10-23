@@ -24,6 +24,7 @@ Ouvrez `.env` et remplacez les valeurs `change_me` :
 
 - `MARIADB_PASSWORD` et `MARIADB_ROOT_PASSWORD` : mots de passe de votre choix
 - `APP_SECRET` : une chaîne aléatoire, par exemple générée avec `openssl rand -hex 32`
+- `OPENROUTER_API_KEY` (facultatif) : clé gratuite à créer sur [openrouter.ai/keys](https://openrouter.ai/keys), pour la reconnaissance des vêtements par IA. Sans clé, le scan garde la photo et les champs se remplissent à la main.
 
 ## Lancement
 
@@ -87,8 +88,15 @@ Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
   - parcourir les articles d'un stockage, ouvrir la fiche d'un article ;
   - rechercher « Où est rangé… ? » par titre, catégorie, marque ou couleur ;
   - rendre un article personnel (visible uniquement par la personne qui l'a ajouté).
+- **Ajout d'article par scan** (bouton central de la barre de navigation) :
+  - **vêtement** : la photo est réduite (1024 px), convertie en JPEG puis envoyée en base64 à un modèle de vision d'OpenRouter (`google/gemma-4-31b-it:free` par défaut, modifiable avec `OPENROUTER_MODELE`), qui propose la catégorie, la couleur, la marque si elle est lisible et un titre. 30 analyses par heure et par utilisateur ;
+  - **livre ou vinyle** : le code-barres est lu dans le navigateur, puis la fiche est cherchée dans Open Library (et Google Books en secours) pour les livres, MusicBrainz pour les disques ;
+  - **saisie manuelle**, aussi proposée quand un code-barres n'est dans aucune base ;
+  - tous les champs restent modifiables avant l'enregistrement ; la photo du scan est conservée.
 
-Les autres écrans (tenues, scan, marché, profil, prêts) arrivent dans les prochaines versions.
+La caméra du navigateur n'est accessible que sur une page sécurisée : `http://localhost` fonctionne, mais depuis un téléphone sur le réseau local il faut une adresse en HTTPS. À défaut, le bouton « Importer depuis la galerie » permet de choisir ou de prendre une photo.
+
+Les autres écrans (tenues, marché, profil, prêts) arrivent dans les prochaines versions.
 
 ## API
 
@@ -105,6 +113,11 @@ Les autres écrans (tenues, scan, marché, profil, prêts) arrivent dans les pro
 | POST    | `/api/logements/{id}/pieces`            | Ajoute une pièce                               |
 | GET     | `/api/pieces/{id}`                      | Détail : stockages et articles                 |
 | POST    | `/api/pieces/{id}/stockages`            | Ajoute un stockage                             |
+| GET     | `/api/logements/{id}/rangement`         | Emplacements et étiquettes pour l'ajout        |
+| GET     | `/api/referentiels`                     | Catégories, couleurs, formats et états         |
+| POST    | `/api/scans/vetement`                   | Envoie la photo d'un vêtement (`photo`, multipart) et renvoie les suggestions de l'IA |
+| GET     | `/api/scans/code-barres/{code}`         | Fiche d'un livre (ISBN) ou d'un vinyle (EAN)   |
+| POST    | `/api/articles`                         | Ajoute un article avec son détail et sa photo  |
 | GET     | `/api/articles/{id}`                    | Fiche d'un article                             |
 | PATCH   | `/api/articles/{id}`                    | Rend un article personnel ou non               |
 
@@ -122,6 +135,14 @@ docker compose exec frontend npm run lint
 ```
 
 Les dépendances PHP (`vendor/`) et le cache Symfony (`var/`) vivent dans des volumes Docker, pour de meilleures performances sous Windows et macOS : utilisez toujours Composer via `docker compose exec php`.
+
+Les photos des scans sont enregistrées dans `backend/public/uploads/` (non versionné).
+
+Après une modification de `.env` (par exemple l'ajout de la clé OpenRouter), recréez le conteneur PHP pour qu'il la prenne en compte :
+
+```bash
+docker compose up -d php
+```
 
 ## Postman
 

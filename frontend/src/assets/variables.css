@@ -27,6 +27,24 @@
 
   --couleur-interrupteur-inactif: #dccfd3;
 
+  /* Champ pré-rempli par l'IA */
+  --couleur-bordure-ia: #d9b3bf;
+
+  /* Écran caméra */
+  --couleur-scan-fond: #150b0e;
+  --couleur-scan-cadre: #2a1a1f;
+  --couleur-scan-voile: rgba(255, 255, 255, 0.12);
+  --couleur-scan-onglets: rgba(255, 255, 255, 0.1);
+  --couleur-scan-texte: rgba(255, 255, 255, 0.78);
+  --couleur-scan-code: rgba(255, 255, 255, 0.75);
+  --couleur-scan-laser: #e0466e;
+
+  /* Pochette et disque de l'écran « Vinyle trouvé » */
+  --couleur-pochette: #3c4a5a;
+  --couleur-disque: #1e1416;
+  --couleur-disque-centre-bord: #2d2023;
+  --ombre-pochette: 0 6px 16px rgba(30, 20, 22, 0.18);
+
   /* Fonds pastel des pièces */
   --couleur-pastel-rose: #f5e7eb;
   --couleur-pastel-sable: #f1ece6;

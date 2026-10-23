@@ -4,8 +4,8 @@ import { RouterLink, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
+import { logementMemorise, memoriserLogementActif } from '@/utils/logementActif'
 
-const CLE_LOGEMENT_ACTIF = 'penderie.logementActif'
 const FONDS_PIECES = ['rose', 'sable', 'ardoise', 'lavande'].map((teinte) => `var(--couleur-pastel-${teinte})`)
 const LIBELLES_ROLES = { PROPRIETAIRE: 'Propriétaire', COPROPRIETAIRE: 'Co-propriétaire', MINEUR: 'Membre' }
 
@@ -43,25 +43,9 @@ function pluriel(nombre, mot) {
   return nombre > 1 ? `${mot}s` : mot
 }
 
-function memoriserLogement(id) {
-  try {
-    localStorage.setItem(CLE_LOGEMENT_ACTIF, String(id))
-  } catch {
-    // Stockage indisponible (navigation privée) : le premier logement sera affiché
-  }
-}
-
-function logementMemorise() {
-  try {
-    return Number(localStorage.getItem(CLE_LOGEMENT_ACTIF))
-  } catch {
-    return null
-  }
-}
-
 async function chargerLogement(id) {
   logement.value = await api(`/logements/${id}`)
-  memoriserLogement(id)
+  memoriserLogementActif(id)
 }
 
 async function charger() {

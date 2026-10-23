@@ -31,9 +31,24 @@ const router = createRouter({
       component: () => import('../views/PieceView.vue'),
     },
     {
+      path: '/articles/nouveau',
+      name: 'article-nouveau',
+      component: () => import('../views/AjoutArticleView.vue'),
+    },
+    {
       path: '/articles/:id',
       name: 'article',
       component: () => import('../views/ArticleView.vue'),
+    },
+    {
+      path: '/scan',
+      name: 'scan',
+      component: () => import('../views/ScanView.vue'),
+    },
+    {
+      path: '/scan/code-barres',
+      name: 'scan-code-barres',
+      component: () => import('../views/ScanCodeBarresView.vue'),
     },
   ],
 })

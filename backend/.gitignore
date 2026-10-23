@@ -10,3 +10,6 @@
 ###< symfony/framework-bundle ###
 
 /.env.dev
+
+# Photos envoyées par les utilisateurs
+/public/uploads/
