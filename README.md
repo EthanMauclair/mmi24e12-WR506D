@@ -1,6 +1,8 @@
-# Pendu — mmi24e12-WR506D
+# Penderie — mmi24e12-WR506D
 
-Application web du jeu du pendu : API **Symfony 7.4 LTS**, interface **Vue.js 3**, base **MariaDB 13**, le tout lancé avec **Docker**.
+Application web pour indexer les articles d'un logement (vêtements, vinyles, livres, comics…) et retrouver où chacun est rangé : Logement › Pièce › Stockage › Article.
+
+API **Symfony 7.4 LTS**, interface **Vue.js 3**, base **MariaDB 13**, le tout lancé avec **Docker**.
 
 ## Prérequis
 
@@ -39,7 +41,7 @@ Le premier démarrage prend quelques minutes : les dépendances PHP (`composer i
 
 Si l'API répond `{"status":"ok"}`, tout fonctionne. Les ports se changent dans `.env` s'ils sont déjà pris.
 
-Chargez ensuite les référentiels (catégories et couleurs) :
+Chargez ensuite les référentiels (catégories, couleurs) et les données de démonstration :
 
 ```bash
 docker compose exec php bin/console doctrine:fixtures:load -n
@@ -57,8 +59,56 @@ Arrêter le projet :
 
 ```bash
 docker compose down          # conserve la base de données
-docker compose down -v       # supprime aussi les données
+docker compose down -v       # supprime aussi les données et les dépendances installées
 ```
+
+## Comptes de démonstration
+
+Après le chargement des fixtures, tous les comptes ont le mot de passe `penderie2026` :
+
+| E-mail             | Rôle dans « Appartement Lyon »                         |
+|--------------------|--------------------------------------------------------|
+| `lea@exemple.fr`   | Propriétaire : gère les pièces et les stockages        |
+| `tom@exemple.fr`   | Co-propriétaire                                        |
+| `ines@exemple.fr`  | Co-propriétaire                                        |
+| `jules@exemple.fr` | Membre mineur, rattaché à Léa                          |
+| `sam@exemple.fr`   | Aucun logement : peut créer le sien                    |
+
+Léa possède un article personnel (« Montre de ma grand-mère ») que les autres membres ne voient pas.
+
+Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
+
+## Fonctionnalités disponibles
+
+- **Authentification** : inscription (un mineur indique l'e-mail du compte majeur qui le rattache), connexion, déconnexion. La session est un cookie géré par Symfony ; 5 tentatives de connexion échouées bloquent temporairement le compte.
+- **Inventaire** :
+  - créer un logement, choisir le logement affiché, voir ses chiffres clés ;
+  - ajouter des pièces et des stockages (propriétaire du logement uniquement) ;
+  - parcourir les articles d'un stockage, ouvrir la fiche d'un article ;
+  - rechercher « Où est rangé… ? » par titre, catégorie, marque ou couleur ;
+  - rendre un article personnel (visible uniquement par la personne qui l'a ajouté).
+
+Les autres écrans (tenues, scan, marché, profil, prêts) arrivent dans les prochaines versions.
+
+## API
+
+| Méthode | Route                                   | Description                                    |
+|---------|-----------------------------------------|------------------------------------------------|
+| POST    | `/api/inscription`                      | Crée un compte et ouvre la session             |
+| POST    | `/api/connexion`                        | Ouvre la session (`email`, `motDePasse`)       |
+| POST    | `/api/deconnexion`                      | Ferme la session                               |
+| GET     | `/api/moi`                              | Utilisateur connecté                           |
+| GET     | `/api/logements`                        | Logements dont on est propriétaire ou membre   |
+| POST    | `/api/logements`                        | Crée un logement                               |
+| GET     | `/api/logements/{id}`                   | Détail : chiffres clés et pièces               |
+| GET     | `/api/logements/{id}/recherche?q=…`     | Recherche d'articles avec leur emplacement     |
+| POST    | `/api/logements/{id}/pieces`            | Ajoute une pièce                               |
+| GET     | `/api/pieces/{id}`                      | Détail : stockages et articles                 |
+| POST    | `/api/pieces/{id}/stockages`            | Ajoute un stockage                             |
+| GET     | `/api/articles/{id}`                    | Fiche d'un article                             |
+| PATCH   | `/api/articles/{id}`                    | Rend un article personnel ou non               |
+
+Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).
 
 ## Commandes utiles
 
@@ -71,9 +121,11 @@ docker compose exec frontend npm install <paquet>
 docker compose exec frontend npm run lint
 ```
 
+Les dépendances PHP (`vendor/`) et le cache Symfony (`var/`) vivent dans des volumes Docker, pour de meilleures performances sous Windows et macOS : utilisez toujours Composer via `docker compose exec php`.
+
 ## Postman
 
-Importez `postman/hangman.postman_collection.json` dans Postman. La variable `baseUrl` vaut `http://localhost:8080` par défaut.
+Importez `postman/penderie.postman_collection.json` dans Postman. Lancez d'abord « Authentification › Connexion » : Postman garde le cookie de session pour les requêtes suivantes, et les requêtes d'inventaire remplissent elles-mêmes les identifiants (logement, pièce, article) à réutiliser.
 
 ## Structure
 
@@ -86,7 +138,7 @@ ia-usage/     Suivi des prompts IA utilisés
 compose.yaml  Orchestration des services
 ```
 
-En développement, le serveur Vite relaie les appels `/api/*` vers Symfony : le frontend peut donc appeler `fetch('/api/...')` directement.
+En développement, le serveur Vite relaie les appels `/api/*` vers Symfony : le front et l'API partagent la même origine, ce qui permet l'authentification par cookie de session.
 
 ## Workflow Git
 
@@ -102,8 +154,8 @@ Aucun commit direct sur `main` ni sur `develop` : tout passe par une **Pull Requ
 Les messages de commit suivent les [Conventional Commits](https://www.conventionalcommits.org/fr/) au présent de l'impératif, un commit par intention :
 
 ```
-feat: ajoute le choix aléatoire d'un mot
-fix: corrige le décompte des erreurs
+feat: ajoute la recherche d'un article
+fix: corrige le décompte des articles prêtés
 docs: complète la procédure d'installation
 ```
 
