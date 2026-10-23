@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PieceRepository::class)]
 #[ORM\UniqueConstraint(name: 'uniq_piece_logement_nom', columns: ['logement_id', 'nom'])]
-#[UniqueEntity(fields: ['logement', 'nom'], message: 'Une pièce porte déjà ce nom dans ce logement.')]
+#[UniqueEntity(fields: ['logement', 'nom'], errorPath: 'nom', message: 'Une pièce porte déjà ce nom dans ce logement.')]
 class Piece
 {
     #[ORM\Id]
@@ -33,6 +33,7 @@ class Piece
      * @var Collection<int, Stockage>
      */
     #[ORM\OneToMany(targetEntity: Stockage::class, mappedBy: 'piece', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $stockages;
 
     public function __construct()

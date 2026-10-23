@@ -41,6 +41,7 @@ class Logement
      * @var Collection<int, Piece>
      */
     #[ORM\OneToMany(targetEntity: Piece::class, mappedBy: 'logement', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $pieces;
 
     /**

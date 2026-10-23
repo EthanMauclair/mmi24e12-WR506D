@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: EtiquetteRepository::class)]
 #[ORM\UniqueConstraint(name: 'uniq_etiquette_logement_nom', columns: ['logement_id', 'nom'])]
-#[UniqueEntity(fields: ['logement', 'nom'], message: 'Cette étiquette existe déjà dans ce logement.')]
+#[UniqueEntity(fields: ['logement', 'nom'], errorPath: 'nom', message: 'Cette étiquette existe déjà dans ce logement.')]
 class Etiquette
 {
     #[ORM\Id]
