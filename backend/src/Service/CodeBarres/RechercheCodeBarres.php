@@ -4,6 +4,7 @@ namespace App\Service\CodeBarres;
 
 use App\Enum\FormatVinyle;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\RetryableHttpClient;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -16,10 +17,15 @@ final class RechercheCodeBarres
     // MusicBrainz exige un User-Agent identifiant l'application
     private const USER_AGENT = 'Penderie/1.0 (https://github.com/EthanMauclair/mmi24e12-WR506D)';
 
-    public function __construct(
-        private readonly HttpClientInterface $client,
-        private readonly LoggerInterface $logger,
-    ) {
+    private readonly HttpClientInterface $client;
+
+    /** Vrai si une base n'a pas répondu pendant la dernière recherche */
+    private bool $baseInjoignable = false;
+
+    public function __construct(HttpClientInterface $client, private readonly LoggerInterface $logger)
+    {
+        // MusicBrainz limite à une requête par seconde (503 au-delà) : on réessaie après un court délai
+        $this->client = new RetryableHttpClient($client, maxRetries: 2, logger: $logger);
     }
 
     /**
@@ -37,16 +43,31 @@ final class RechercheCodeBarres
 
     /**
      * @return array<string, mixed>|null fiche trouvée, ou null si le code est inconnu
+     *
+     * @throws BaseInjoignableException si aucune base n'a pu répondre : on ne peut pas conclure que le code est inconnu
      */
     public function rechercher(string $code): ?array
     {
         $code = self::normaliser($code);
+        $this->baseInjoignable = false;
 
         if (self::estIsbn($code)) {
-            return $this->livreOpenLibrary($code) ?? $this->livreGoogleBooks($code);
+            $fiche = $this->livreOpenLibrary($code);
+            // Google Books n'est qu'un secours : son quota sans clé est souvent épuisé
+            if (null === $fiche) {
+                $erreurOpenLibrary = $this->baseInjoignable;
+                $fiche = $this->livreGoogleBooks($code);
+                $this->baseInjoignable = $erreurOpenLibrary;
+            }
+        } else {
+            $fiche = 1 === preg_match('/^\d{8,14}$/', $code) ? $this->disqueMusicBrainz($code) : null;
         }
 
-        return 1 === preg_match('/^\d{8,14}$/', $code) ? $this->disqueMusicBrainz($code) : null;
+        if (null === $fiche && $this->baseInjoignable) {
+            throw new BaseInjoignableException();
+        }
+
+        return $fiche;
     }
 
     /**
@@ -181,6 +202,7 @@ final class RechercheCodeBarres
             ])->toArray();
         } catch (ExceptionInterface $e) {
             $this->logger->warning('Recherche de code-barres impossible sur {url} : {erreur}', ['url' => $url, 'erreur' => $e->getMessage()]);
+            $this->baseInjoignable = true;
 
             return [];
         }

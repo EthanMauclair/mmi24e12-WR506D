@@ -6,6 +6,7 @@ use App\Entity\Utilisateur;
 use App\Enum\FamilleCategorie;
 use App\Repository\CategorieRepository;
 use App\Repository\CouleurRepository;
+use App\Service\CodeBarres\BaseInjoignableException;
 use App\Service\CodeBarres\RechercheCodeBarres;
 use App\Service\Ia\ReconnaissanceVetement;
 use App\Service\Photo\PhotoInvalideException;
@@ -87,7 +88,11 @@ final class ScanController extends ApiController
     #[Route('/code-barres/{code}', name: 'api_scan_code_barres', requirements: ['code' => '[0-9Xx -]{8,20}'], methods: ['GET'])]
     public function codeBarres(string $code, RechercheCodeBarres $recherche, CategorieRepository $categories): JsonResponse
     {
-        $fiche = $recherche->rechercher($code);
+        try {
+            $fiche = $recherche->rechercher($code);
+        } catch (BaseInjoignableException $e) {
+            return $this->json(['message' => $e->getMessage()], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
         if (null === $fiche) {
             return $this->json(
                 ['message' => 'Aucun livre ni vinyle trouvé pour ce code-barres. Vous pouvez saisir l\'article vous-même.', 'code' => RechercheCodeBarres::normaliser($code)],
