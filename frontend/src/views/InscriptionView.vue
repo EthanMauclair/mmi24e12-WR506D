@@ -10,7 +10,9 @@ const optionsVisibilite = [
 const pseudo = ref('')
 const email = ref('')
 const motDePasse = ref('')
+// Format AAAA-MM-JJ du champ date ; le navigateur l'affiche en JJ/MM/AAAA avec un calendrier
 const dateNaissance = ref('')
+const aujourdhui = new Date().toISOString().slice(0, 10)
 const visibilite = ref('public')
 const conditionsAcceptees = ref(false)
 </script>
@@ -47,7 +49,7 @@ const conditionsAcceptees = ref(false)
         </label>
         <label class="champ">
           <span class="champ__libelle">Date de naissance</span>
-          <input v-model="dateNaissance" class="saisie saisie--compacte" type="text" inputmode="numeric" placeholder="JJ / MM / AAAA" />
+          <input v-model="dateNaissance" class="saisie saisie--compacte" type="date" :max="aujourdhui" autocomplete="bday" />
         </label>
       </div>
 
@@ -160,6 +162,10 @@ const conditionsAcceptees = ref(false)
   min-width: 0;
   padding: 0 14px;
   font-size: 14px;
+}
+
+.saisie[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
 }
 
 .deux-colonnes {
