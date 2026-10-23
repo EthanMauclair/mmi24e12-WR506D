@@ -19,12 +19,12 @@ const conditionsAcceptees = ref(false)
 
 <template>
   <div class="ecran">
-    <form id="formulaire-inscription" class="formulaire" @submit.prevent>
-      <div class="intro">
-        <h1 class="intro__titre">Créer un compte</h1>
-        <span class="intro__texte">Indexez votre dressing et partagez vos tenues.</span>
-      </div>
+    <div class="bandeau">
+      <h1 class="bandeau__titre">Créer un compte</h1>
+      <span class="bandeau__texte">Indexez votre dressing et partagez vos tenues.</span>
+    </div>
 
+    <form id="formulaire-inscription" class="formulaire" @submit.prevent>
       <label class="champ">
         <span class="champ__libelle">Nom d'utilisateur</span>
         <input v-model="pseudo" class="saisie" type="text" autocomplete="username" placeholder="Nom d'utilisateur" />
@@ -86,31 +86,40 @@ const conditionsAcceptees = ref(false)
 </template>
 
 <style scoped>
+/* Même habillage que le bandeau de l'écran de connexion */
+.bandeau {
+  flex-shrink: 0;
+  padding: 32px 24px 48px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bandeau__titre {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.bandeau__texte {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 .formulaire {
   flex: 1;
-  padding: 16px 24px 0;
+  margin-top: -24px;
+  padding: 24px 24px 0;
+  border-radius: 26px 26px 0 0;
+  background: var(--couleur-fond);
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-
-.intro__titre {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.intro__texte {
-  font-size: 14px;
-  color: var(--couleur-texte-secondaire);
 }
 
 .champ {
