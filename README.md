@@ -89,7 +89,7 @@ Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
   - rechercher « Où est rangé… ? » par titre, catégorie, marque ou couleur ;
   - rendre un article personnel (visible uniquement par la personne qui l'a ajouté).
 - **Ajout d'article par scan** (bouton central de la barre de navigation) :
-  - **vêtement** : la photo est réduite (1024 px), convertie en JPEG puis envoyée en base64 à un modèle de vision d'OpenRouter (`google/gemma-4-31b-it:free` par défaut, modifiable avec `OPENROUTER_MODELE`), qui propose la catégorie, la couleur, la marque si elle est lisible et un titre. 30 analyses par heure et par utilisateur ;
+  - **vêtement** : la photo est réduite (1024 px), convertie en JPEG puis envoyée en base64 à un modèle de vision d'OpenRouter (`google/gemma-4-31b-it:free` par défaut, modifiable avec `OPENROUTER_MODELE`), qui propose la catégorie, la couleur, la marque si elle est lisible et un titre. Si ce modèle est saturé, OpenRouter bascule sur `google/gemma-4-26b-a4b-it:free` (`OPENROUTER_MODELE_SECOURS`, vide pour désactiver). Ces modèles gratuits raisonnent avant de répondre : une analyse prend de quelques secondes à une minute (80 s au maximum). 30 analyses par heure et par utilisateur ;
   - **livre ou vinyle** : le code-barres est lu dans le navigateur, puis la fiche est cherchée dans Open Library (et Google Books en secours) pour les livres, MusicBrainz pour les disques ;
   - **saisie manuelle**, aussi proposée quand un code-barres n'est dans aucune base ;
   - tous les champs restent modifiables avant l'enregistrement ; la photo du scan est conservée.
