@@ -1,6 +1,10 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
+
+const session = useSessionStore()
+const router = useRouter()
 
 const optionsVisibilite = [
   { id: 'public', label: 'Public', desc: 'Tout le monde voit vos tenues' },
@@ -15,6 +19,44 @@ const dateNaissance = ref('')
 const aujourdhui = new Date().toISOString().slice(0, 10)
 const visibilite = ref('public')
 const conditionsAcceptees = ref(false)
+const emailTuteur = ref('')
+
+const envoiEnCours = ref(false)
+const erreur = ref('')
+const erreurs = ref({})
+
+// Un mineur indique l'e-mail du compte majeur auquel il est rattaché
+const estMineur = computed(() => {
+  if (!dateNaissance.value) {
+    return false
+  }
+  const majorite = new Date(dateNaissance.value)
+  majorite.setFullYear(majorite.getFullYear() + 18)
+  return majorite > new Date()
+})
+
+async function creerCompte() {
+  erreur.value = ''
+  erreurs.value = {}
+  envoiEnCours.value = true
+  try {
+    await session.inscription({
+      pseudo: pseudo.value,
+      email: email.value,
+      motDePasse: motDePasse.value,
+      dateNaissance: dateNaissance.value,
+      estPrive: visibilite.value === 'prive',
+      conditionsAcceptees: conditionsAcceptees.value,
+      emailTuteur: estMineur.value ? emailTuteur.value : null,
+    })
+    router.push({ name: 'dressing' })
+  } catch (e) {
+    erreurs.value = e.violations
+    erreur.value = Object.keys(e.violations).length ? '' : e.message
+  } finally {
+    envoiEnCours.value = false
+  }
+}
 </script>
 
 <template>
@@ -24,25 +66,31 @@ const conditionsAcceptees = ref(false)
       <span class="bandeau__texte">Indexez votre dressing et partagez vos tenues.</span>
     </div>
 
-    <form id="formulaire-inscription" class="formulaire" @submit.prevent>
+    <form id="formulaire-inscription" class="formulaire" novalidate @submit.prevent="creerCompte">
+      <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+
       <label class="champ">
         <span class="champ__libelle">Nom d'utilisateur</span>
-        <input v-model="pseudo" class="saisie" type="text" autocomplete="username" placeholder="Nom d'utilisateur" />
+        <input v-model="pseudo" class="saisie" :class="{ 'saisie--invalide': erreurs.pseudo }" type="text" autocomplete="username" placeholder="Nom d'utilisateur" />
+        <span v-if="erreurs.pseudo" class="champ__erreur">{{ erreurs.pseudo }}</span>
       </label>
 
       <label class="champ">
         <span class="champ__libelle">E-mail</span>
-        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="E-mail" />
+        <input v-model="email" class="saisie" :class="{ 'saisie--invalide': erreurs.email }" type="email" autocomplete="email" placeholder="E-mail" />
+        <span v-if="erreurs.email" class="champ__erreur">{{ erreurs.email }}</span>
       </label>
 
       <div class="deux-colonnes">
         <label class="champ">
           <span class="champ__libelle">Mot de passe</span>
-          <input v-model="motDePasse" class="saisie saisie--compacte" type="password" autocomplete="new-password" placeholder="8 caractères min." />
+          <input v-model="motDePasse" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.motDePasse }" type="password" autocomplete="new-password" placeholder="8 caractères min." />
+          <span v-if="erreurs.motDePasse" class="champ__erreur">{{ erreurs.motDePasse }}</span>
         </label>
         <label class="champ">
           <span class="champ__libelle">Date de naissance</span>
-          <input v-model="dateNaissance" class="saisie saisie--compacte" type="date" :max="aujourdhui" autocomplete="bday" />
+          <input v-model="dateNaissance" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.dateNaissance }" type="date" :max="aujourdhui" autocomplete="bday" />
+          <span v-if="erreurs.dateNaissance" class="champ__erreur">{{ erreurs.dateNaissance }}</span>
         </label>
       </div>
 
@@ -50,6 +98,12 @@ const conditionsAcceptees = ref(false)
         <svg class="info__icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
         Moins de 18 ans ? Votre compte sera rattaché à un compte majeur, qui vous ajoutera à son logement.
       </p>
+
+      <label v-if="estMineur" class="champ">
+        <span class="champ__libelle">E-mail du compte majeur</span>
+        <input v-model="emailTuteur" class="saisie" :class="{ 'saisie--invalide': erreurs.emailTuteur }" type="email" placeholder="E-mail du parent ou tuteur" />
+        <span v-if="erreurs.emailTuteur" class="champ__erreur">{{ erreurs.emailTuteur }}</span>
+      </label>
 
       <fieldset class="visibilite">
         <legend class="visibilite__legende">Visibilité du profil</legend>
@@ -73,10 +127,13 @@ const conditionsAcceptees = ref(false)
         <input v-model="conditionsAcceptees" type="checkbox" class="conditions__case" />
         <span>J'accepte les <a href="#" class="conditions__lien">conditions d'utilisation</a> et la <a href="#" class="conditions__lien">politique de confidentialité</a>.</span>
       </label>
+      <span v-if="erreurs.conditionsAcceptees" class="champ__erreur">{{ erreurs.conditionsAcceptees }}</span>
     </form>
 
     <div class="pied">
-      <button type="submit" form="formulaire-inscription" class="bouton-principal">Créer mon compte</button>
+      <button type="submit" form="formulaire-inscription" class="bouton-principal" :disabled="envoiEnCours">
+        {{ envoiEnCours ? 'Création du compte…' : 'Créer mon compte' }}
+      </button>
       <p class="pied__texte">
         Déjà inscrit ?
         <RouterLink to="/connexion" class="pied__lien">Se connecter</RouterLink>

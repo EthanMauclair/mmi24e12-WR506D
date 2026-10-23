@@ -1,10 +1,31 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
+
+const session = useSessionStore()
+const route = useRoute()
+const router = useRouter()
 
 const email = ref('')
 const motDePasse = ref('')
 const afficherMotDePasse = ref(false)
+const envoiEnCours = ref(false)
+const erreur = ref('')
+
+async function seConnecter() {
+  erreur.value = ''
+  envoiEnCours.value = true
+  try {
+    await session.connexion(email.value.trim(), motDePasse.value)
+    const redirection = route.query.redirection
+    router.push(typeof redirection === 'string' && redirection.startsWith('/') ? redirection : { name: 'dressing' })
+  } catch (e) {
+    erreur.value = e.message
+  } finally {
+    envoiEnCours.value = false
+  }
+}
 
 const typeMotDePasse = computed(() => (afficherMotDePasse.value ? 'text' : 'password'))
 const libelleBascule = computed(() =>
@@ -24,18 +45,20 @@ const libelleBascule = computed(() =>
       </div>
     </div>
 
-    <form class="formulaire" @submit.prevent>
+    <form class="formulaire" @submit.prevent="seConnecter">
       <h1 class="formulaire__titre">Connexion</h1>
+
+      <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <label class="champ">
         <span class="champ__libelle">E-mail</span>
-        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="vous@exemple.fr" />
+        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="vous@exemple.fr" required />
       </label>
 
       <label class="champ">
         <span class="champ__libelle">Mot de passe</span>
         <span class="saisie saisie--groupe saisie--mot-de-passe">
-          <input v-model="motDePasse" :type="typeMotDePasse" autocomplete="current-password" placeholder="••••••••" />
+          <input v-model="motDePasse" :type="typeMotDePasse" autocomplete="current-password" placeholder="••••••••" required />
           <button type="button" class="bascule" :aria-label="libelleBascule" @click="afficherMotDePasse = !afficherMotDePasse">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
           </button>
@@ -44,7 +67,9 @@ const libelleBascule = computed(() =>
 
       <a href="#" class="oubli">Mot de passe oublié ?</a>
 
-      <button type="submit" class="bouton-principal">Se connecter</button>
+      <button type="submit" class="bouton-principal" :disabled="envoiEnCours">
+        {{ envoiEnCours ? 'Connexion…' : 'Se connecter' }}
+      </button>
 
       <div class="separateur">
         <span class="separateur__trait"></span>
