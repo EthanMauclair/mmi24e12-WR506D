@@ -124,3 +124,27 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 - Couleurs et police dans des variables CSS communes (`frontend/src/assets/variables.css`), styles de formulaire partagés dans `main.css`
 - Vues `ConnexionView` et `InscriptionView`, routes `/connexion` et `/inscription`
 - Affichage du mot de passe et choix de la visibilité du profil en données réactives (`ref`, `computed`, `v-for`)
+
+---
+
+## 2026-10-23 — Ajustements de l'écran d'inscription
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ajustements-inscription`
+
+**Prompts :**
+
+> lance le serveur pour voir le rendu
+
+> On va ajuster quelques éléments. Pour la page inscription :
+> -dans le champs de 'nom d'utilisateur', enlèves le @ lea.chine et mets Nom d'utilisateur à la place.
+> -dans le champs  'E-mail', enlèves vous@exemple.fr et mets E-mail à la place.
+> -pour la date de naissance, ajoute un calendrier pour seléctionner une date facilement. Et garde la structure conventionnelle. Je m'explique, quand j'ai rentré une date, ça a supprimer les / et ça a juste mis les chiffres en suivant.
+> -retire aussi le 100% gatuit en haut de l'écran
+
+**Résultat retenu :**
+
+- Serveur Vite lancé en local pour vérifier le rendu
+- Textes d'aide « Nom d'utilisateur » et « E-mail », préfixe @ retiré
+- Champ date natif (`type="date"`) : calendrier, format JJ/MM/AAAA conservé, date future impossible
+- Pastille « 100 % gratuit » retirée
