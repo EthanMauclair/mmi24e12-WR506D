@@ -288,3 +288,28 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées) : caméra, 
 - `google/gemma-4-26b-a4b-it:free` ajouté comme modèle de secours (paramètre `models` d'OpenRouter, variable `OPENROUTER_MODELE_SECOURS`)
 - Cause des échecs trouvée en testant avec de vraies photos : le modèle raisonne avant de répondre (jusqu'à ~1 500 jetons, impossible à désactiver chez le fournisseur gratuit) et épuisait la limite de 400 jetons ; limite portée à 4 000, et budget global de 80 s (sous les 90 s de Nginx) avec un nouvel essai seulement s'il reste au moins 20 s
 - Bilan de la fonctionnalité de scan et liste de ce qui reste à faire
+
+---
+
+## 2026-10-23 — Modification d'un article et caméra du scan en plein écran
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branches** : `feature/scan-plein-ecran` et `feature/modification-article`
+
+**Prompt :**
+
+> Modifie la fonctionnalité 'Modifier un article déjà enregistré' pour que le crayon de modification fonctionne. Pour cette page http://localhost:5173/scan mets un full screen en gardant le meme overlay, modifie juste la couleur du rond centrale plein en blanc
+
+Le prompt est consigné une seule fois ici, pour éviter un conflit entre les deux branches.
+
+**Résultat retenu (`feature/modification-article`) :**
+
+- Le crayon de la fiche article ouvre le formulaire d'ajout en mode modification (`/articles/:id/modifier`), pré-rempli avec les valeurs de l'article
+- Route `PUT /api/articles/{id}` : titre, catégorie (le détail change si la famille change), emplacement, étiquettes, détail ; réservée à celui qui a ajouté l'article ou au propriétaire du logement ; seul l'auteur peut changer « Article personnel »
+- Correctif trouvé en testant : après le retrait d'une étiquette, la liste était renvoyée en objet JSON au lieu d'un tableau
+
+**Résultat retenu (`feature/scan-plein-ecran`) :**
+
+- Image de la caméra en plein écran, sous l'habillage inchangé (en-tête, cadre, consigne, onglets, boutons) ; le cadre devient transparent quand la caméra est active
+- Ombre légère sous les textes pour rester lisibles sur n'importe quelle image
+- Rond central du déclencheur en blanc plein
