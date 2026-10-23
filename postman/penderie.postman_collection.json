@@ -1,0 +1,303 @@
+{
+  "info": {
+    "name": "Penderie API",
+    "description": "Collection Postman de l'API de la penderie.\n\nL'authentification se fait par cookie de session : lancez d'abord « Connexion », Postman renvoie ensuite le cookie automatiquement.\n\nLes requêtes d'inventaire utilisent les variables logementId, pieceId et articleId, remplies par les tests des requêtes précédentes. Avec les données de démonstration (doctrine:fixtures:load), le compte lea@exemple.fr / penderie2026 est propriétaire du logement « Appartement Lyon ».",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "email", "value": "lea@exemple.fr" },
+    { "key": "motDePasse", "value": "penderie2026" },
+    { "key": "logementId", "value": "" },
+    { "key": "pieceId", "value": "" },
+    { "key": "articleId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('API ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentification",
+      "item": [
+        {
+          "name": "Inscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"nouveau.membre\",\n  \"email\": \"nouveau@exemple.fr\",\n  \"motDePasse\": \"motdepasse\",\n  \"dateNaissance\": \"1999-03-01\",\n  \"estPrive\": false,\n  \"conditionsAcceptees\": true,\n  \"emailTuteur\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/inscription", "host": ["{{baseUrl}}"], "path": ["api", "inscription"] },
+            "description": "Crée le compte et connecte l'utilisateur. Un mineur doit indiquer emailTuteur (e-mail d'un compte majeur existant). Erreurs de validation : 422 avec un objet violations { champ: message }."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Compte créé (201) ou déjà existant (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Connexion",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"motDePasse\": \"{{motDePasse}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/connexion", "host": ["{{baseUrl}}"], "path": ["api", "connexion"] },
+            "description": "Ouvre une session (cookie PHPSESSID). 401 si les identifiants sont incorrects, 429 après 5 échecs."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Utilisateur renvoyé', () => pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get('email')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Utilisateur connecté",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/moi", "host": ["{{baseUrl}}"], "path": ["api", "moi"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventaire",
+      "item": [
+        {
+          "name": "Mes logements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/logements", "host": ["{{baseUrl}}"], "path": ["api", "logements"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const logements = pm.response.json();",
+                  "if (logements.length) { pm.collectionVariables.set('logementId', logements[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer un logement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Maison de vacances\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/logements", "host": ["{{baseUrl}}"], "path": ["api", "logements"] },
+            "description": "Refusé (422) pour un membre mineur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));"] }
+            }
+          ]
+        },
+        {
+          "name": "Détail d'un logement",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/logements/{{logementId}}", "host": ["{{baseUrl}}"], "path": ["api", "logements", "{{logementId}}"] },
+            "description": "Pièces, nombre d'articles, de pièces et d'articles prêtés. 403 si l'on n'est pas membre du logement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const logement = pm.response.json();",
+                  "if (logement.pieces.length) { pm.collectionVariables.set('pieceId', logement.pieces[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechercher un article",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/logements/{{logementId}}/recherche?q=levi",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "logements", "{{logementId}}", "recherche"],
+              "query": [{ "key": "q", "value": "levi" }]
+            },
+            "description": "Recherche par titre, catégorie, marque ou couleur (2 caractères minimum). Chaque résultat indique son emplacement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Ajouter une pièce",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Cave\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/logements/{{logementId}}/pieces", "host": ["{{baseUrl}}"], "path": ["api", "logements", "{{logementId}}", "pieces"] },
+            "description": "Réservé au propriétaire du logement (403 sinon). 422 si le nom est vide ou déjà utilisé."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Créée (201) ou déjà existante (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));"] }
+            }
+          ]
+        },
+        {
+          "name": "Détail d'une pièce",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pieces/{{pieceId}}", "host": ["{{baseUrl}}"], "path": ["api", "pieces", "{{pieceId}}"] },
+            "description": "Stockages de la pièce et articles visibles (sans les articles personnels des autres membres)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const piece = pm.response.json();",
+                  "if (piece.articles.length) { pm.collectionVariables.set('articleId', piece.articles[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ajouter un stockage",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Panier\",\n  \"type\": \"BOITE\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/pieces/{{pieceId}}/stockages", "host": ["{{baseUrl}}"], "path": ["api", "pieces", "{{pieceId}}", "stockages"] },
+            "description": "Types : ARMOIRE, PENDERIE, COMMODE, ETAGERE, PLACARD, BIBLIOTHEQUE, BOITE, AUTRE. Réservé au propriétaire du logement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Créé (201) ou déjà existant (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));"] }
+            }
+          ]
+        },
+        {
+          "name": "Détail d'un article",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "articles", "{{articleId}}"] },
+            "description": "403 pour un article personnel d'un autre membre."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        },
+        {
+          "name": "Rendre un article personnel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"estPersonnel\": false\n}" },
+            "url": { "raw": "{{baseUrl}}/api/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "articles", "{{articleId}}"] },
+            "description": "Seule la personne qui a ajouté l'article peut le rendre personnel (403 sinon)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Déconnexion",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/deconnexion", "host": ["{{baseUrl}}"], "path": ["api", "deconnexion"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": { "type": "text/javascript", "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"] }
+        }
+      ]
+    }
+  ]
+}

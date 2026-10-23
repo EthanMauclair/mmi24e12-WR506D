@@ -189,3 +189,39 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 - Vues `DressingView` (`/dressing`), `PieceView` (`/pieces/:id`) et `ArticleView` (`/articles/:id`), avec des données d'exemple en attendant l'API
 - `sc-for` → `v-for` (pièces, articles, onglets, étiquettes, indicateurs de photo), `sc-if` → `v-if` (badge « Prêté »), onglet de stockage et interrupteur « Article personnel » en données réactives
 - Deux défauts des maquettes corrigés : onglets qui passaient sur deux lignes, éléments de la photo masqués par le contenu
+
+---
+
+## 2026-10-23 — Ordre de développement front / back
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : aucune (question)
+
+**Prompt :**
+
+> Selon toi, est-il mieux de faire toutes les pages en front et après relier le back ou bien mixer les 2 en même temps ?
+
+**Résultat retenu :**
+
+- Avancer fonctionnalité par fonctionnalité (API, puis écran qui l'utilise), en commençant par l'authentification puis l'inventaire
+
+---
+
+## 2026-10-23 — Authentification et inventaire de bout en bout
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/authentification-inventaire`
+
+**Prompt :**
+
+> Termine la partie Authentification et Inventaire. Relie le back avec le front pour que ces 2 partie soit finit
+
+**Résultat retenu :**
+
+- API d'authentification par session Symfony (`json_login`) : inscription avec rattachement des mineurs, connexion limitée à 5 tentatives, déconnexion, utilisateur connecté
+- Droits d'accès par voters : membres du logement, gestion réservée au propriétaire, articles personnels visibles par leur seul auteur
+- API d'inventaire : logements, pièces, stockages, articles, recherche « Où est rangé… ? »
+- Données de démonstration reprenant les maquettes, et rechargement des fixtures corrigé (catégories auto-référencées)
+- Front : client API, store de session, routes protégées, écrans reliés à l'API avec gestion des erreurs
+- `vendor/` et `var/` du backend dans des volumes Docker (requêtes environ 5 fois plus rapides sous Windows)
+- Projet renommé « penderie » (README, Postman, `.env.example`), collection Postman complétée et vérifiée avec Newman

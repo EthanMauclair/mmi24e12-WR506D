@@ -1,89 +1,171 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
+import { api } from '@/services/api'
+import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 
-// Données d'exemple reprises de la maquette, en attendant l'API
-const piece = { nom: 'Chambre', logement: 'Appartement Lyon' }
-
-const stockages = [
-  { id: 'armoire', nom: 'Armoire', nbArticles: 64, detail: '3 étagères · 1 penderie' },
-  { id: 'commode', nom: 'Commode', nbArticles: 39 },
-  { id: 'sous-le-lit', nom: 'Sous le lit' },
+// Mêmes valeurs que l'énumération TypeStockage du backend
+const TYPES_STOCKAGE = [
+  { valeur: 'ARMOIRE', libelle: 'Armoire' },
+  { valeur: 'PENDERIE', libelle: 'Penderie' },
+  { valeur: 'COMMODE', libelle: 'Commode' },
+  { valeur: 'ETAGERE', libelle: 'Étagère' },
+  { valeur: 'PLACARD', libelle: 'Placard' },
+  { valeur: 'BIBLIOTHEQUE', libelle: 'Bibliothèque' },
+  { valeur: 'BOITE', libelle: 'Boîte' },
+  { valeur: 'AUTRE', libelle: 'Autre' },
 ]
 
-const articles = [
-  { id: 1, stockage: 'armoire', nom: 'Pull col roulé', infos: 'COS · Bordeaux · M', emplacement: 'Étagère 2', fond: 'var(--couleur-vignette-bordeaux)', prete: false },
-  { id: 2, stockage: 'armoire', nom: 'Veste en jean', infos: "Levi's · Bleu · S", emplacement: 'Penderie', fond: 'var(--couleur-vignette-denim)', prete: true },
-  { id: 3, stockage: 'armoire', nom: 'Chemise rayée', infos: 'Uniqlo · Blanc · M', emplacement: 'Penderie', fond: 'var(--couleur-vignette-grege)', prete: false },
-  { id: 4, stockage: 'armoire', nom: 'Sweat zippé', infos: 'Carhartt · Vert · L', emplacement: 'Étagère 1', fond: 'var(--couleur-vignette-kaki)', prete: false },
-]
+const route = useRoute()
 
-const idStockageActif = ref(stockages[0].id)
-const stockageActif = computed(() => stockages.find((s) => s.id === idStockageActif.value))
-const articlesAffiches = computed(() => articles.filter((a) => a.stockage === idStockageActif.value))
+const piece = ref(null)
+const chargement = ref(true)
+const erreur = ref('')
+const idStockageActif = ref(null)
 
-function libelleOnglet(stockage) {
-  return stockage.nbArticles === undefined ? stockage.nom : `${stockage.nom} · ${stockage.nbArticles}`
+const ajoutStockage = ref(false)
+const nomStockage = ref('')
+const typeStockage = ref('ARMOIRE')
+const erreursStockage = ref({})
+
+const stockageActif = computed(() => piece.value?.stockages.find((s) => s.id === idStockageActif.value))
+const articlesAffiches = computed(() => piece.value?.articles.filter((a) => a.stockageId === idStockageActif.value) ?? [])
+
+function detailStockage(stockage) {
+  const nb = stockage.nbArticles
+  return `${stockage.libelleType} · ${nb} article${nb > 1 ? 's' : ''}`
 }
+
+async function charger(id) {
+  chargement.value = true
+  erreur.value = ''
+  try {
+    piece.value = await api(`/pieces/${id}`)
+    if (!piece.value.stockages.some((s) => s.id === idStockageActif.value)) {
+      idStockageActif.value = piece.value.stockages[0]?.id ?? null
+    }
+  } catch (e) {
+    erreur.value = e.message
+  } finally {
+    chargement.value = false
+  }
+}
+
+async function creerStockage() {
+  erreursStockage.value = {}
+  try {
+    const stockage = await api(`/pieces/${piece.value.id}/stockages`, {
+      methode: 'POST',
+      corps: { nom: nomStockage.value, type: typeStockage.value },
+    })
+    piece.value.stockages.push(stockage)
+    idStockageActif.value = stockage.id
+    nomStockage.value = ''
+    ajoutStockage.value = false
+  } catch (e) {
+    erreursStockage.value = Object.keys(e.violations).length ? e.violations : { general: e.message }
+  }
+}
+
+watch(() => route.params.id, charger, { immediate: true })
 </script>
 
 <template>
   <div class="ecran">
     <main class="contenu">
-      <header class="entete">
-        <RouterLink to="/dressing" class="bouton-icone" aria-label="Retour au dressing">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-        </RouterLink>
-        <div class="entete__titres">
-          <nav class="fil-ariane" aria-label="Fil d'Ariane">{{ piece.logement }} › {{ piece.nom }}</nav>
-          <h1 class="entete__titre">{{ piece.nom }}</h1>
-        </div>
-        <button type="button" class="bouton-icone" aria-label="Plus d'options">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
-        </button>
-      </header>
+      <p v-if="chargement && !piece" class="etat">Chargement de la pièce…</p>
+      <p v-else-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
-      <div class="onglets" role="tablist" aria-label="Stockages de la pièce">
-        <button
-          v-for="stockage in stockages"
-          :key="stockage.id"
-          type="button"
-          role="tab"
-          class="onglet"
-          :class="{ 'onglet--actif': stockage.id === idStockageActif, 'onglet--sans-nombre': stockage.nbArticles === undefined }"
-          :aria-selected="stockage.id === idStockageActif"
-          @click="idStockageActif = stockage.id"
-        >
-          {{ libelleOnglet(stockage) }}
-        </button>
-      </div>
+      <template v-else-if="piece">
+        <header class="entete">
+          <RouterLink to="/dressing" class="bouton-icone" aria-label="Retour au dressing">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </RouterLink>
+          <div class="entete__titres">
+            <nav class="fil-ariane" aria-label="Fil d'Ariane">{{ piece.logement.nom }} › {{ piece.nom }}</nav>
+            <h1 class="entete__titre">{{ piece.nom }}</h1>
+          </div>
+          <button
+            v-if="piece.peutGerer"
+            type="button"
+            class="bouton-icone"
+            aria-label="Ajouter un stockage"
+            :aria-expanded="ajoutStockage"
+            @click="ajoutStockage = !ajoutStockage"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+          </button>
+        </header>
 
-      <div class="stockage">
-        <div class="stockage__textes">
-          <span class="stockage__nom">{{ stockageActif.nom }}</span>
-          <span v-if="stockageActif.detail" class="stockage__detail">{{ stockageActif.detail }}</span>
-        </div>
-        <button type="button" class="filtrer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
-          Filtrer
-        </button>
-      </div>
+        <form v-if="ajoutStockage" class="ajout" @submit.prevent="creerStockage">
+          <span class="ajout__titre">Nouveau stockage</span>
+          <p v-if="erreursStockage.general" class="message-erreur" role="alert">{{ erreursStockage.general }}</p>
+          <div class="ajout__ligne">
+            <input v-model="nomStockage" class="saisie ajout__nom" :class="{ 'saisie--invalide': erreursStockage.nom }" type="text" placeholder="Nom (ex. Armoire)" aria-label="Nom du stockage" required />
+            <select v-model="typeStockage" class="saisie ajout__type" aria-label="Type de stockage">
+              <option v-for="type in TYPES_STOCKAGE" :key="type.valeur" :value="type.valeur">{{ type.libelle }}</option>
+            </select>
+          </div>
+          <span v-if="erreursStockage.nom" class="champ__erreur">{{ erreursStockage.nom }}</span>
+          <div class="ajout__actions">
+            <button type="button" class="ajout__annuler" @click="ajoutStockage = false">Annuler</button>
+            <button type="submit" class="ajout__valider">Ajouter</button>
+          </div>
+        </form>
 
-      <div v-if="articlesAffiches.length" class="articles">
-        <RouterLink v-for="article in articlesAffiches" :key="article.id" :to="`/articles/${article.id}`" class="article">
-          <span class="article__vignette" :style="{ background: article.fond }">
-            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-            <span class="article__emplacement">{{ article.emplacement }}</span>
-            <span v-if="article.prete" class="article__prete">Prêté</span>
-          </span>
-          <span class="article__textes">
-            <span class="article__nom">{{ article.nom }}</span>
-            <span class="article__infos">{{ article.infos }}</span>
-          </span>
-        </RouterLink>
-      </div>
-      <p v-else class="vide">Aucun article dans ce stockage pour le moment.</p>
+        <p v-if="piece.stockages.length === 0" class="etat">
+          Aucun stockage dans cette pièce.<template v-if="piece.peutGerer"> Ajoutez-en un avec le bouton ⋯ en haut à droite.</template>
+        </p>
+
+        <template v-else>
+          <div class="onglets" role="tablist" aria-label="Stockages de la pièce">
+            <button
+              v-for="stockage in piece.stockages"
+              :key="stockage.id"
+              type="button"
+              role="tab"
+              class="onglet"
+              :class="{ 'onglet--actif': stockage.id === idStockageActif }"
+              :aria-selected="stockage.id === idStockageActif"
+              @click="idStockageActif = stockage.id"
+            >
+              {{ stockage.nom }} · {{ stockage.nbArticles }}
+            </button>
+          </div>
+
+          <div class="stockage">
+            <div class="stockage__textes">
+              <span class="stockage__nom">{{ stockageActif.nom }}</span>
+              <span class="stockage__detail">{{ detailStockage(stockageActif) }}</span>
+            </div>
+            <button type="button" class="filtrer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
+              Filtrer
+            </button>
+          </div>
+
+          <div v-if="articlesAffiches.length" class="articles">
+            <RouterLink v-for="article in articlesAffiches" :key="article.id" :to="`/articles/${article.id}`" class="article">
+              <span
+                class="article__vignette"
+                :class="{ 'article__vignette--claire': estCouleurClaire(article.couleur) }"
+                :style="{ background: fondVignette(article.couleur) }"
+              >
+                <img v-if="article.photo" :src="article.photo" alt="" class="article__photo" />
+                <svg v-else width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
+                <span class="article__emplacement">{{ article.categorie }}</span>
+                <span v-if="article.statut === 'PRETE'" class="article__prete">Prêté</span>
+              </span>
+              <span class="article__textes">
+                <span class="article__nom">{{ article.titre }}</span>
+                <span class="article__infos">{{ article.infos }}</span>
+              </span>
+            </RouterLink>
+          </div>
+          <p v-else class="vide">Aucun article dans ce stockage pour le moment.</p>
+        </template>
+      </template>
     </main>
 
     <BarreNavigation actif="dressing" />
@@ -149,9 +231,6 @@ function libelleOnglet(stockage) {
   cursor: pointer;
 }
 
-.onglet--sans-nombre {
-  padding: 0 14px;
-}
 
 .onglet--actif {
   border: 0;
@@ -272,5 +351,85 @@ function libelleOnglet(stockage) {
   margin: 0;
   font-size: 14px;
   color: var(--couleur-texte-secondaire);
+}
+
+.article__vignette {
+  overflow: hidden;
+}
+
+.article__vignette--claire {
+  border: 1px solid var(--couleur-bordure);
+  box-sizing: border-box;
+  color: var(--couleur-photo-icone-sombre);
+}
+
+.article__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ajout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+}
+
+.ajout__titre {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ajout__ligne {
+  display: flex;
+  gap: 8px;
+}
+
+.ajout__nom {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+}
+
+.ajout__type {
+  width: 130px;
+  height: 46px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.ajout__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ajout__annuler,
+.ajout__valider {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ajout__annuler {
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+}
+
+.ajout__valider {
+  border: 0;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
 }
 </style>

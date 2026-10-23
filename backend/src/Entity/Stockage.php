@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: StockageRepository::class)]
 #[ORM\UniqueConstraint(name: 'uniq_stockage_piece_nom', columns: ['piece_id', 'nom'])]
-#[UniqueEntity(fields: ['piece', 'nom'], message: 'Un stockage porte déjà ce nom dans cette pièce.')]
+#[UniqueEntity(fields: ['piece', 'nom'], errorPath: 'nom', message: 'Un stockage porte déjà ce nom dans cette pièce.')]
 class Stockage
 {
     #[ORM\Id]

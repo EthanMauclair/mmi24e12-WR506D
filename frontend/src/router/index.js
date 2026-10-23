@@ -1,21 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: { name: 'connexion' },
+      redirect: { name: 'dressing' },
     },
     {
       path: '/connexion',
       name: 'connexion',
       component: () => import('../views/ConnexionView.vue'),
+      meta: { public: true },
     },
     {
       path: '/inscription',
       name: 'inscription',
       component: () => import('../views/InscriptionView.vue'),
+      meta: { public: true },
     },
     {
       path: '/dressing',
@@ -33,6 +36,23 @@ const router = createRouter({
       component: () => import('../views/ArticleView.vue'),
     },
   ],
+})
+
+// Les écrans publics (connexion, inscription) renvoient vers le dressing si l'on est déjà connecté ;
+// les autres demandent d'être connecté.
+router.beforeEach(async (cible) => {
+  const session = useSessionStore()
+  await session.verifier()
+
+  if (cible.meta.public) {
+    return session.utilisateur ? { name: 'dressing' } : true
+  }
+
+  if (!session.utilisateur) {
+    return { name: 'connexion', query: { redirection: cible.fullPath } }
+  }
+
+  return true
 })
 
 export default router
