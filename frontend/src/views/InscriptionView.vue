@@ -10,37 +10,29 @@ const optionsVisibilite = [
 const pseudo = ref('')
 const email = ref('')
 const motDePasse = ref('')
+// Format AAAA-MM-JJ du champ date ; le navigateur l'affiche en JJ/MM/AAAA avec un calendrier
 const dateNaissance = ref('')
+const aujourdhui = new Date().toISOString().slice(0, 10)
 const visibilite = ref('public')
 const conditionsAcceptees = ref(false)
 </script>
 
 <template>
   <div class="ecran">
-    <header class="entete">
-      <RouterLink to="/connexion" class="retour" aria-label="Retour à la connexion">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-      </RouterLink>
-      <span class="pastille">100 % gratuit</span>
-    </header>
+    <div class="bandeau">
+      <h1 class="bandeau__titre">Créer un compte</h1>
+      <span class="bandeau__texte">Indexez votre dressing et partagez vos tenues.</span>
+    </div>
 
     <form id="formulaire-inscription" class="formulaire" @submit.prevent>
-      <div class="intro">
-        <h1 class="intro__titre">Créer un compte</h1>
-        <span class="intro__texte">Indexez votre dressing et partagez vos tenues.</span>
-      </div>
-
       <label class="champ">
         <span class="champ__libelle">Nom d'utilisateur</span>
-        <span class="saisie saisie--groupe saisie--pseudo">
-          <span class="arobase">@</span>
-          <input v-model="pseudo" type="text" autocomplete="username" placeholder="lea.chine" />
-        </span>
+        <input v-model="pseudo" class="saisie" type="text" autocomplete="username" placeholder="Nom d'utilisateur" />
       </label>
 
       <label class="champ">
         <span class="champ__libelle">E-mail</span>
-        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="vous@exemple.fr" />
+        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="E-mail" />
       </label>
 
       <div class="deux-colonnes">
@@ -50,7 +42,7 @@ const conditionsAcceptees = ref(false)
         </label>
         <label class="champ">
           <span class="champ__libelle">Date de naissance</span>
-          <input v-model="dateNaissance" class="saisie saisie--compacte" type="text" inputmode="numeric" placeholder="JJ / MM / AAAA" />
+          <input v-model="dateNaissance" class="saisie saisie--compacte" type="date" :max="aujourdhui" autocomplete="bday" />
         </label>
       </div>
 
@@ -94,61 +86,40 @@ const conditionsAcceptees = ref(false)
 </template>
 
 <style scoped>
-.entete {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px 0;
-}
-
-.retour {
-  width: 44px;
-  height: 44px;
+/* Même habillage que le bandeau de l'écran de connexion */
+.bandeau {
   flex-shrink: 0;
-  box-sizing: border-box;
-  border-radius: 14px;
-  border: 1px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
+  padding: 32px 24px 48px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.pastille {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire);
-  font-size: 12px;
+.bandeau__titre {
+  margin: 0;
+  font-size: 28px;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.bandeau__texte {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.85;
 }
 
 .formulaire {
   flex: 1;
-  padding: 16px 24px 0;
+  margin-top: -24px;
+  padding: 24px 24px 0;
+  border-radius: 26px 26px 0 0;
+  background: var(--couleur-fond);
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-
-.intro__titre {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.intro__texte {
-  font-size: 14px;
-  color: var(--couleur-texte-secondaire);
 }
 
 .champ {
@@ -159,20 +130,14 @@ const conditionsAcceptees = ref(false)
   height: 50px;
 }
 
-.saisie--pseudo {
-  gap: 4px;
-}
-
 .saisie--compacte {
   min-width: 0;
   padding: 0 14px;
   font-size: 14px;
 }
 
-.arobase {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
+.saisie[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
 }
 
 .deux-colonnes {

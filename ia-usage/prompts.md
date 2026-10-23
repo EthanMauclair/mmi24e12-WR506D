@@ -124,3 +124,47 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 - Couleurs et police dans des variables CSS communes (`frontend/src/assets/variables.css`), styles de formulaire partagés dans `main.css`
 - Vues `ConnexionView` et `InscriptionView`, routes `/connexion` et `/inscription`
 - Affichage du mot de passe et choix de la visibilité du profil en données réactives (`ref`, `computed`, `v-for`)
+
+---
+
+## 2026-10-23 — Ajustements de l'écran d'inscription
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ajustements-inscription`
+
+**Prompts :**
+
+> lance le serveur pour voir le rendu
+
+> On va ajuster quelques éléments. Pour la page inscription :
+> -dans le champs de 'nom d'utilisateur', enlèves le @ lea.chine et mets Nom d'utilisateur à la place.
+> -dans le champs  'E-mail', enlèves vous@exemple.fr et mets E-mail à la place.
+> -pour la date de naissance, ajoute un calendrier pour seléctionner une date facilement. Et garde la structure conventionnelle. Je m'explique, quand j'ai rentré une date, ça a supprimer les / et ça a juste mis les chiffres en suivant.
+> -retire aussi le 100% gatuit en haut de l'écran
+
+**Résultat retenu :**
+
+- Serveur Vite lancé en local pour vérifier le rendu
+- Textes d'aide « Nom d'utilisateur » et « E-mail », préfixe @ retiré
+- Champ date natif (`type="date"`) : calendrier, format JJ/MM/AAAA conservé, date future impossible
+- Pastille « 100 % gratuit » retirée
+
+**Prompt de suivi :**
+
+> Je viens de regarder les modifs. C'est pas mal, supprime la flèche retour en haut à gauche, il y a déjà  'Déjà inscrit ? Se connecter' en bas de la page, ajoute également un bandeau bordeaux pour habiller la page qui englobe Créer un compte et Indexez votre dressing et partagez vos tenues. je n'est pas fait :git push -u origin feature/ajustements-inscription. Je peux le faire une fois les modifs faites ou je dois en faire un nouveau ?
+
+**Résultat retenu :**
+
+- Flèche de retour retirée (le lien « Se connecter » en bas de page suffit)
+- Bandeau bordeaux autour du titre et du sous-titre, dans le style de l'écran de connexion
+- Les nouveaux commits restent sur la même branche, pas encore poussée : un seul push suffit
+
+**Prompts de suivi (abandonnés) :**
+
+> C'est mieux, avant que je pousse, fait une dernière modif, réduit l'espace entre 'J'accepte les conditions d'utilisation et la politique de confidentialité.' et le bouton créer son compte. Il y a u ntrop grand espace blanc.
+
+> Je n'ai toujours pas poussé, je n'aime pas cette nouvelle version. remet le bouton comme avant mais réduit la taille du formulaire ci possible
+
+**Résultat retenu :**
+
+- Aucun : le rapprochement du bouton ne convenait pas. Retour à la version avec le bandeau bordeaux, bouton de création de compte en bas de l'écran
