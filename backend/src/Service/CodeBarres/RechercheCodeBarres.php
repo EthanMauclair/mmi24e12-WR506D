@@ -151,10 +151,20 @@ final class RechercheCodeBarres
         $donnees = $this->obtenir('https://musicbrainz.org/ws/2/release/', [
             'query' => 'barcode:'.$ean,
             'fmt' => 'json',
-            'limit' => 1,
+            'limit' => 5,
         ]);
-        $disque = $donnees['releases'][0] ?? null;
-        if (!\is_array($disque) || empty($disque['title'])) {
+
+        // La recherche plein texte renvoie toujours des résultats approchants :
+        // on ne garde qu'une édition dont le code-barres est exactement celui scanné
+        // (sans les zéros de tête : un UPC à 12 chiffres vaut un EAN à 13 chiffres commençant par 0)
+        $disque = null;
+        foreach ($donnees['releases'] ?? [] as $edition) {
+            if (ltrim((string) ($edition['barcode'] ?? ''), '0') === ltrim($ean, '0')) {
+                $disque = $edition;
+                break;
+            }
+        }
+        if (null === $disque || empty($disque['title'])) {
             return null;
         }
 
