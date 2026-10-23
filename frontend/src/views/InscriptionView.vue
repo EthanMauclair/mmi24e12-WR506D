@@ -19,12 +19,6 @@ const conditionsAcceptees = ref(false)
 
 <template>
   <div class="ecran">
-    <header class="entete">
-      <RouterLink to="/connexion" class="retour" aria-label="Retour à la connexion">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-      </RouterLink>
-    </header>
-
     <form id="formulaire-inscription" class="formulaire" @submit.prevent>
       <div class="intro">
         <h1 class="intro__titre">Créer un compte</h1>
@@ -92,27 +86,6 @@ const conditionsAcceptees = ref(false)
 </template>
 
 <style scoped>
-.entete {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px 0;
-}
-
-.retour {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  border-radius: 14px;
-  border: 1px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .formulaire {
   flex: 1;
   padding: 16px 24px 0;
