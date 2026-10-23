@@ -17,6 +17,21 @@ const router = createRouter({
       name: 'inscription',
       component: () => import('../views/InscriptionView.vue'),
     },
+    {
+      path: '/dressing',
+      name: 'dressing',
+      component: () => import('../views/DressingView.vue'),
+    },
+    {
+      path: '/pieces/:id',
+      name: 'piece',
+      component: () => import('../views/PieceView.vue'),
+    },
+    {
+      path: '/articles/:id',
+      name: 'article',
+      component: () => import('../views/ArticleView.vue'),
+    },
   ],
 })
 

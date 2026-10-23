@@ -29,6 +29,31 @@ a:hover {
   color: var(--couleur-texte);
 }
 
+/* Bouton carré à icône (retour, notifications, options) */
+.bouton-icone {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: 14px;
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Texte lu par les lecteurs d'écran uniquement */
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
 /* Champs de formulaire */
 .champ {
   display: flex;

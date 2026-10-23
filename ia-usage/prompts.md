@@ -168,3 +168,24 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 **Résultat retenu :**
 
 - Aucun : le rapprochement du bouton ne convenait pas. Retour à la version avec le bandeau bordeaux, bouton de création de compte en bas de l'écran
+
+---
+
+## 2026-10-23 — Écrans du dressing, d'une pièce et d'un article
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/ecrans-inventaire`
+
+**Prompt :**
+
+> Reproduis en Vue.js l'écran docs/maquettes/Main.dc.html. docs/maquettes/Stockage.dc.html et docs/maquettes/Article.dc.html. Reprends exactement les couleurs, tailles, espacements et textes. Les balises sc-for, sc-if et {{ }} viennent de l'outil de maquette : traduis-les en v-for, v-if et données réactives. Mets les couleurs dans des variables CSS communes.
+
+Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
+
+**Résultat retenu :**
+
+- Nouvelles couleurs ajoutées aux variables CSS communes (pastels des pièces, vignettes, éléments sur photo, succès, interrupteur)
+- Composant `BarreNavigation` partagé
+- Vues `DressingView` (`/dressing`), `PieceView` (`/pieces/:id`) et `ArticleView` (`/articles/:id`), avec des données d'exemple en attendant l'API
+- `sc-for` → `v-for` (pièces, articles, onglets, étiquettes, indicateurs de photo), `sc-if` → `v-if` (badge « Prêté »), onglet de stockage et interrupteur « Article personnel » en données réactives
+- Deux défauts des maquettes corrigés : onglets qui passaient sur deux lignes, éléments de la photo masqués par le contenu

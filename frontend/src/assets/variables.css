@@ -8,13 +8,44 @@
   --couleur-fond: #fbf8f7;
   --couleur-surface: #ffffff;
   --couleur-bordure: #eadfe2;
+  --couleur-bordure-pointillee: #c9b5bb;
+  --couleur-separateur: #f1e9eb;
 
   --couleur-texte: #1e1416;
   --couleur-texte-secondaire: #6b5a5e;
   --couleur-libelle: #4a3a3e;
+  --couleur-chevron: #9a8a8e;
 
   --couleur-sur-primaire: #ffffff;
   --couleur-sur-primaire-voile: rgba(255, 255, 255, 0.14);
+
+  --couleur-succes: #1f5a35;
+  --couleur-succes-fond: #e6f1ea;
+
+  --couleur-interrupteur-inactif: #dccfd3;
+
+  /* Fonds pastel des pièces */
+  --couleur-pastel-rose: #f5e7eb;
+  --couleur-pastel-sable: #f1ece6;
+  --couleur-pastel-ardoise: #eaeef0;
+  --couleur-pastel-lavande: #eeeaf2;
+
+  /* Fonds des vignettes d'articles en attendant les photos */
+  --couleur-vignette-bordeaux: #7d2a3f;
+  --couleur-vignette-denim: #4f6a86;
+  --couleur-vignette-grege: #b9b2aa;
+  --couleur-vignette-kaki: #5b6b4e;
+
+  /* Éléments posés sur une photo */
+  --couleur-photo-icone: rgba(255, 255, 255, 0.7);
+  --couleur-photo-icone-grande: rgba(255, 255, 255, 0.55);
+  --couleur-photo-etiquette: rgba(255, 255, 255, 0.92);
+  --couleur-photo-bouton: rgba(255, 255, 255, 0.94);
+  --couleur-photo-voile: rgba(30, 20, 22, 0.55);
+  --couleur-photo-indicateur: rgba(255, 255, 255, 0.5);
+
+  --ombre-bouton-scan: 0 8px 20px rgba(110, 26, 51, 0.32);
+  --ombre-curseur: 0 1px 3px rgba(0, 0, 0, 0.2);
 
   --police: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
