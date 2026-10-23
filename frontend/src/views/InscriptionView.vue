@@ -23,7 +23,6 @@ const conditionsAcceptees = ref(false)
       <RouterLink to="/connexion" class="retour" aria-label="Retour à la connexion">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
       </RouterLink>
-      <span class="pastille">100 % gratuit</span>
     </header>
 
     <form id="formulaire-inscription" class="formulaire" @submit.prevent>
@@ -112,15 +111,6 @@ const conditionsAcceptees = ref(false)
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.pastille {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire);
-  font-size: 12px;
-  font-weight: 800;
 }
 
 .formulaire {
