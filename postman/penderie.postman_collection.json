@@ -785,6 +785,50 @@
               }
             }
           ]
+        },
+        {
+          "name": "Modifier un article",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Article modifié depuis Postman\",\n  \"categorieId\": {{categorieId}},\n  \"stockageId\": null,\n  \"etiquetteIds\": [],\n  \"vetement\": {\"marque\": \"COS\", \"couleurId\": null, \"taille\": \"L\", \"matiere\": \"Laine\"}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "Remplace les informations de l'article (titre, catégorie, emplacement, étiquettes, détail). Réservé à celui qui l'a ajouté ou au propriétaire du logement. Le bloc « formulaire » de GET /api/articles/{id} donne les valeurs actuelles. Modifie l'article créé par la requête précédente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Titre modifié', () => pm.expect(pm.response.json().titre).to.eql('Article modifié depuis Postman'));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
