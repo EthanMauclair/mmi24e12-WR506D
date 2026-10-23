@@ -126,12 +126,17 @@ function libelleOnglet(stockage) {
   letter-spacing: -0.02em;
 }
 
+/* Les onglets défilent horizontalement plutôt que de passer sur deux lignes */
 .onglets {
   display: flex;
   gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .onglet {
+  flex-shrink: 0;
+  white-space: nowrap;
   height: 40px;
   padding: 0 16px;
   border-radius: 999px;
