@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\RoleLogement;
 use App\Repository\LogementRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -54,6 +55,24 @@ class Logement
         $this->membres = new ArrayCollection();
         $this->pieces = new ArrayCollection();
         $this->etiquettes = new ArrayCollection();
+    }
+
+    /**
+     * Rôle de l'utilisateur dans ce logement : 'PROPRIETAIRE', un RoleLogement, ou null s'il n'en fait pas partie.
+     */
+    public function roleDe(Utilisateur $utilisateur): RoleLogement|string|null
+    {
+        if ($this->proprietaire === $utilisateur) {
+            return 'PROPRIETAIRE';
+        }
+
+        foreach ($this->membres as $membre) {
+            if ($membre->getUtilisateur() === $utilisateur) {
+                return $membre->getRole();
+            }
+        }
+
+        return null;
     }
 
     #[Assert\Callback]
