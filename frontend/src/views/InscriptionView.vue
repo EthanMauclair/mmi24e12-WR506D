@@ -32,15 +32,12 @@ const conditionsAcceptees = ref(false)
 
       <label class="champ">
         <span class="champ__libelle">Nom d'utilisateur</span>
-        <span class="saisie saisie--groupe saisie--pseudo">
-          <span class="arobase">@</span>
-          <input v-model="pseudo" type="text" autocomplete="username" placeholder="lea.chine" />
-        </span>
+        <input v-model="pseudo" class="saisie" type="text" autocomplete="username" placeholder="Nom d'utilisateur" />
       </label>
 
       <label class="champ">
         <span class="champ__libelle">E-mail</span>
-        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="vous@exemple.fr" />
+        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="E-mail" />
       </label>
 
       <div class="deux-colonnes">
@@ -159,20 +156,10 @@ const conditionsAcceptees = ref(false)
   height: 50px;
 }
 
-.saisie--pseudo {
-  gap: 4px;
-}
-
 .saisie--compacte {
   min-width: 0;
   padding: 0 14px;
   font-size: 14px;
-}
-
-.arobase {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
 }
 
 .deux-colonnes {
