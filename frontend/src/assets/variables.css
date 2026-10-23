@@ -1,0 +1,20 @@
+/* Couleurs et typographie communes, reprises des maquettes (docs/maquettes) */
+:root {
+  --couleur-primaire: #6e1a33;
+  --couleur-primaire-fonce: #4a0f21;
+  --couleur-primaire-pale: #f5e7eb;
+  --couleur-info-fond: #f1e8ea;
+
+  --couleur-fond: #fbf8f7;
+  --couleur-surface: #ffffff;
+  --couleur-bordure: #eadfe2;
+
+  --couleur-texte: #1e1416;
+  --couleur-texte-secondaire: #6b5a5e;
+  --couleur-libelle: #4a3a3e;
+
+  --couleur-sur-primaire: #ffffff;
+  --couleur-sur-primaire-voile: rgba(255, 255, 255, 0.14);
+
+  --police: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
