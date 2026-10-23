@@ -102,6 +102,29 @@ final class LogementController extends ApiController
         return $this->json(['id' => $piece->getId(), 'nom' => $piece->getNom()], Response::HTTP_CREATED);
     }
 
+    /**
+     * Emplacements (« Pièce › Stockage ») et étiquettes proposés à l'ajout d'un article.
+     */
+    #[Route('/{id}/rangement', name: 'api_logement_rangement', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[IsGranted(LogementVoter::VOIR, 'logement')]
+    public function rangement(#[MapEntity(id: 'id')] Logement $logement): JsonResponse
+    {
+        $stockages = [];
+        foreach ($logement->getPieces() as $piece) {
+            foreach ($piece->getStockages() as $stockage) {
+                $stockages[] = ['id' => $stockage->getId(), 'chemin' => $piece->getNom().' › '.$stockage->getNom()];
+            }
+        }
+
+        return $this->json([
+            'stockages' => $stockages,
+            'etiquettes' => array_map(
+                static fn ($etiquette) => ['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()],
+                $logement->getEtiquettes()->toArray(),
+            ),
+        ]);
+    }
+
     #[Route('/{id}/recherche', name: 'api_logement_recherche', requirements: ['id' => '\d+'], methods: ['GET'])]
     #[IsGranted(LogementVoter::VOIR, 'logement')]
     public function recherche(
