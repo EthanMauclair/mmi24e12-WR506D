@@ -119,3 +119,40 @@ a:hover {
 .bouton-principal:hover {
   background: var(--couleur-primaire-fonce);
 }
+
+.bouton-principal:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Messages d'erreur renvoyés par l'API */
+.message-erreur {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--couleur-erreur-fond);
+  color: var(--couleur-erreur);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.champ__erreur {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--couleur-erreur);
+}
+
+.saisie--invalide,
+.saisie--invalide:focus-visible {
+  border-color: var(--couleur-erreur);
+}
+
+/* Messages d'attente ou d'absence de données */
+.etat {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--couleur-texte-secondaire);
+}

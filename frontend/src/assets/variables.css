@@ -22,6 +22,9 @@
   --couleur-succes: #1f5a35;
   --couleur-succes-fond: #e6f1ea;
 
+  --couleur-erreur: #b42318;
+  --couleur-erreur-fond: #fdecea;
+
   --couleur-interrupteur-inactif: #dccfd3;
 
   /* Fonds pastel des pièces */
@@ -39,6 +42,7 @@
   /* Éléments posés sur une photo */
   --couleur-photo-icone: rgba(255, 255, 255, 0.7);
   --couleur-photo-icone-grande: rgba(255, 255, 255, 0.55);
+  --couleur-photo-icone-sombre: rgba(30, 20, 22, 0.3);
   --couleur-photo-etiquette: rgba(255, 255, 255, 0.92);
   --couleur-photo-bouton: rgba(255, 255, 255, 0.94);
   --couleur-photo-voile: rgba(30, 20, 22, 0.55);
@@ -46,6 +50,7 @@
 
   --ombre-bouton-scan: 0 8px 20px rgba(110, 26, 51, 0.32);
   --ombre-curseur: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --ombre-menu: 0 12px 32px rgba(30, 20, 22, 0.16);
 
   --police: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
