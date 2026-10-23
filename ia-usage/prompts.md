@@ -158,3 +158,13 @@ Le prompt s'appuie sur des maquettes HTML locales (non versionnées).
 - Flèche de retour retirée (le lien « Se connecter » en bas de page suffit)
 - Bandeau bordeaux autour du titre et du sous-titre, dans le style de l'écran de connexion
 - Les nouveaux commits restent sur la même branche, pas encore poussée : un seul push suffit
+
+**Prompts de suivi (abandonnés) :**
+
+> C'est mieux, avant que je pousse, fait une dernière modif, réduit l'espace entre 'J'accepte les conditions d'utilisation et la politique de confidentialité.' et le bouton créer son compte. Il y a u ntrop grand espace blanc.
+
+> Je n'ai toujours pas poussé, je n'aime pas cette nouvelle version. remet le bouton comme avant mais réduit la taille du formulaire ci possible
+
+**Résultat retenu :**
+
+- Aucun : le rapprochement du bouton ne convenait pas. Retour à la version avec le bandeau bordeaux, bouton de création de compte en bas de l'écran
