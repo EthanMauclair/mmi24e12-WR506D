@@ -2,6 +2,8 @@
 .env
 .env.local
 .env.*.local
+# Valeurs par défaut de Symfony, sans secret : nécessaire au démarrage du backend
+!backend/.env
 
 # Dépendances
 node_modules/
