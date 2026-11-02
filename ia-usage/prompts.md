@@ -371,3 +371,15 @@ Le prompt est consigné une seule fois ici, pour éviter un conflit entre les de
 
 - Les champs Marque et Couleur existaient déjà, mais n'apparaissaient qu'une fois la catégorie choisie : après la photo d'un vêtement, ils s'affichent dès l'ouverture de la fiche et l'IA les remplit
 - Étiquettes retirées du formulaire ; en modification, celles déjà posées sur l'article sont conservées
+
+**Prompt de suivi :**
+
+> Jsp. Pour  le scan, j'ai toujours un problème. Ce projet est un projet universitaire, donc nous sommes plusieurs dizaines d'étudiant à faire la même chose, c'est pour cela que je te dit de passer par openrouteur, redimenssionner, etc. Pourquoi mon scan ne fonctionne t'il pas en autoomie alors que tout les autres étudiant on leurs champs qui se remplissent en 5s environ. Est ce que il y a une soluton pour reprendre le code des autres ou je ne sais quoi pour comparer, si je t'envoie un dépot github jsp.
+
+**Résultat retenu :**
+
+- Diagnostic d'après les journaux : la clé fonctionne (quota gratuit non atteint), mais les modèles Gemma gratuits, partagés par tous, répondent tantôt en 2 s, tantôt par une erreur 504 au bout de 13 à 27 s ; le modèle de secours de l'époque (Gemma 31B) dépendait du même fournisseur
+- Si le modèle principal n'a pas répondu en 3 s, un second modèle gratuit hébergé ailleurs (`nvidia/nemotron-3.5-super-vl:free`) est interrogé en parallèle ; la première fiche valide l'emporte
+- Bug trouvé en simulant OpenRouter en local (réponses lentes, 500, 504, JSON invalide) : une erreur 5xx faisait planter l'analyse au lieu de passer au modèle suivant
+- L'envoi de la photo et son analyse partent en même temps au lieu de l'un après l'autre
+- Autre cause de lenteur mesurée : sous Windows, chaque requête Symfony en mode debug coûte environ 2 s, à cause du dossier partagé avec Docker
