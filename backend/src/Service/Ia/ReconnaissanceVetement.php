@@ -35,13 +35,14 @@ final class ReconnaissanceVetement
         TXT;
 
     /**
-     * Temps total accordé à l'analyse, en secondes : il doit rester sous les 90 s d'attente
-     * de Nginx (docker/nginx/default.conf). Le modèle raisonne souvent 20 à 40 s avant de répondre.
+     * Temps total accordé à l'analyse, en secondes. Le modèle rapide répond en 2 à 4 s : au-delà,
+     * le fournisseur gratuit est saturé et l'utilisateur, qui a déjà la fiche sous les yeux,
+     * doit vite savoir qu'il remplit les champs lui-même. Reste sous les 90 s d'attente de Nginx.
      */
-    private const BUDGET_SECONDES = 80;
+    private const BUDGET_SECONDES = 20;
 
     /** En dessous de ce temps restant, un nouvel essai n'aurait pas le temps d'aboutir */
-    private const MINIMUM_POUR_REESSAYER = 20;
+    private const MINIMUM_POUR_REESSAYER = 6;
 
     public function __construct(
         private readonly HttpClientInterface $client,

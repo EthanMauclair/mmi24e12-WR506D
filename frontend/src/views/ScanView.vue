@@ -114,20 +114,17 @@ async function rechercherCode(code) {
   }
 }
 
-async function analyserVetement(image) {
-  traitement.value = 'Analyse en cours, environ une minute…'
+/**
+ * Ouvre tout de suite la fiche de l'article : l'envoi de la photo et l'analyse par l'IA
+ * se poursuivent pendant que l'utilisateur la remplit (voir le store ajoutArticle).
+ */
+async function ouvrirFiche(image) {
   erreur.value = ''
-  ajout.reinitialiser()
   try {
-    const jpeg = await reduireEnJpeg(image)
-    const formulaire = new FormData()
-    formulaire.append('photo', jpeg, 'scan.jpg')
-    const resultat = await api('/scans/vetement', { methode: 'POST', formulaire })
-    ajout.vetement = { ...resultat, apercu: URL.createObjectURL(jpeg) }
+    ajout.lancerScanVetement(await reduireEnJpeg(image))
     router.push({ name: 'article-nouveau', query: { origine: 'vetement' } })
-  } catch (e) {
-    erreur.value = e.violations?.photo ?? e.message
-    traitement.value = ''
+  } catch {
+    erreur.value = 'Impossible de lire cette image : essayez avec une autre photo.'
   }
 }
 
@@ -137,7 +134,7 @@ async function declencher() {
   }
   if (mode.value === 'vetement') {
     if (cameraDisponible.value) {
-      await analyserVetement(video.value)
+      await ouvrirFiche(video.value)
     } else {
       champFichier.value.click()
     }
@@ -161,7 +158,7 @@ async function importer(evenement) {
     return
   }
   if (mode.value === 'vetement') {
-    await analyserVetement(fichier)
+    await ouvrirFiche(fichier)
     return
   }
   const code = await lireCodeBarres(await createImageBitmap(fichier)).catch(() => null)
@@ -219,10 +216,6 @@ onBeforeUnmount(arreterCamera)
           <span class="coin coin--haut-droite"></span>
           <span class="coin coin--bas-gauche"></span>
           <span class="coin coin--bas-droite"></span>
-          <span v-if="traitement" class="badge-ia">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-            {{ traitement }}
-          </span>
         </template>
 
         <div v-else class="guide-code">
