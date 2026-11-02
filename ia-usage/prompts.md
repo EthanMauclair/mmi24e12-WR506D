@@ -313,3 +313,52 @@ Le prompt est consigné une seule fois ici, pour éviter un conflit entre les de
 - Image de la caméra en plein écran, sous l'habillage inchangé (en-tête, cadre, consigne, onglets, boutons) ; le cadre devient transparent quand la caméra est active
 - Ombre légère sous les textes pour rester lisibles sur n'importe quelle image
 - Rond central du déclencheur en blanc plein
+
+---
+
+## 2026-11-02 — Point d'étape
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : aucune (question)
+
+**Prompt :**
+
+> Cela fait maintenant plus d'une semaine que je n'ai pas travaillé sur le projet, je ne me rappel plus ou en suis-je. Dit moi ce qu'on a fait depuis le début et si je suis à jour par rapport aux PR etc, et lance le serveur pour que je vois le rendu actuel.
+
+**Résultat retenu :**
+
+- Récapitulatif des PR #1 à #9 et des deux branches restées non poussées (modification d'article, scan en plein écran), serveur relancé avec un aperçu local des deux branches
+
+---
+
+## 2026-11-02 — Fiche ouverte dès la photo prise, remplie par l'IA en arrière-plan
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/scan-fiche-immediate`
+
+**Prompt :**
+
+> c'est bon, j'ai fais le git pull. Maintenant, je veux modifier le scan. Je vex qu'une fois que la photo soit prise, on se redirige directement sur sa fiche produit. Je ne veux plus que l'analyse ce fasse avac la caméra lancé. Je veux aussi pour le scan de vetement qu'il y ai plusieurs option d'encadré, c'est à idre, un haut (t-shirt), un bas ( pantalon) pour accompagné l'utilisateur à mettre l'artcile dans cet encadré. Je veux aussi une option sans encadré pour tout autre objet.
+
+**Prompt de suivi :**
+
+> Je ne fais pas encore le git push, je viens de regarder le rendu et ça ne me convient pas. Pour les encardé, je veux pas une forme noire, je veux un cadre de pointillé pour montrer visuellement à l'utilisateur ou placer l'article pour que l'analyse soit optimisé.
+
+**Prompt de suivi :**
+
+> Je viens de regarder le rendu, est il n'est toujours pas bon. Retire le cadrage haut, bas, etc et remet celui d'avant. Je n'ai pas fait le git push donc ca devrait être plus simple. Garde la redirection sur la fiche de l'article par contre mais laisse affiché les champs. La quand j'ai fait le test, ils n'étaient visibles, c'était l'analyse de l'IA qui la fait apparaitre au bout d'un certain temps. Ce que je veux : le scan, quand la photo est prise, direction la fiche de l'article avec les champs, la note, l'emplacement à remplir manuellement. L'IA rempli les champs qu'elle peux a travaers l'image prise, délai souhaité : 6s.
+
+**Prompt de suivi** (réponse à la question sur le délai de 6 s) :
+
+> On fait cette méthode : POC ( Proof of concept ) de la reconnaissance d'images. Utilisation OPEN ROUTER Bonne pratiques : L'image doit être réduite L'image doit être convertie en JPG L'image doit être transformée en B64 Le prompt envoyé au modèle doit être précis et reformulé
+
+**Résultat écarté :**
+
+- Cadres de visée « Haut », « Bas » et « Sans cadre » (silhouettes, puis cadres en pointillés) : abandonnés, le cadre d'origine est conservé
+
+**Résultat retenu :**
+
+- La photo prise, la fiche s'ouvre aussitôt avec tous ses champs, dont un nouveau champ « Note » et l'emplacement ; l'envoi de la photo puis l'analyse se poursuivent en arrière-plan et l'IA ne remplit que les champs restés vides
+- API découpée en `POST /api/scans/photo` (enregistrement) et `POST /api/scans/analyse` (suggestions)
+- Cause de l'affichage tardif des champs : la session PHP restait verrouillée pendant l'analyse et bloquait le chargement de la fiche ; elle est libérée dès le début de l'analyse
+- Modèles gratuits OpenRouter conservés (bonnes pratiques inchangées : image réduite, JPEG, base64, prompt précis) ; le modèle le plus rapide (`gemma-4-26b-a4b-it`, 2 à 4 s) passe en premier, `gemma-4-31b-it` en secours ; analyse limitée à 20 s pour signaler vite une panne du fournisseur gratuit
