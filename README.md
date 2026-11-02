@@ -117,7 +117,7 @@ Les autres écrans (tenues, marché, profil, prêts) arrivent dans les prochaine
 | GET     | `/api/logements/{id}/rangement`         | Emplacements et étiquettes pour l'ajout        |
 | GET     | `/api/referentiels`                     | Catégories, couleurs, formats et états         |
 | POST    | `/api/scans/photo`                      | Enregistre la photo d'un article (`photo`, multipart) et renvoie son chemin |
-| POST    | `/api/scans/analyse`                    | Suggestions de l'IA pour une photo enregistrée (`{"photo": "…"}`) |
+| POST    | `/api/scans/analyse`                    | Suggestions de l'IA pour une photo : le fichier (`photo`, multipart) ou le chemin d'une photo enregistrée (`{"photo": "…"}`) |
 | GET     | `/api/scans/code-barres/{code}`         | Fiche d'un livre (ISBN) ou d'un vinyle (EAN)   |
 | POST    | `/api/articles`                         | Ajoute un article avec son détail et sa photo  |
 | GET     | `/api/articles/{id}`                    | Fiche d'un article                             |

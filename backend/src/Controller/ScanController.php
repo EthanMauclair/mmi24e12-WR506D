@@ -44,7 +44,8 @@ final class ScanController extends ApiController
     }
 
     /**
-     * Demande à l'IA de pré-remplir la fiche d'après une photo enregistrée par /api/scans/photo.
+     * Demande à l'IA de pré-remplir la fiche d'après une photo : le fichier lui-même (multipart, envoyé
+     * en même temps qu'à /api/scans/photo pour gagner du temps) ou le chemin d'une photo déjà enregistrée.
      */
     #[Route('/analyse', name: 'api_scan_analyse', methods: ['POST'])]
     public function analyse(
@@ -60,10 +61,20 @@ final class ScanController extends ApiController
         // et bloque les autres requêtes de l'utilisateur (chargement de la fiche) jusqu'à la réponse de l'IA
         $request->getSession()->save();
 
-        $donnees = $this->lireJson($request);
-        $chemin = \is_string($donnees['photo'] ?? null) ? $donnees['photo'] : '';
-        if (!$photos->existe($chemin)) {
-            return $this->reponseInvalide(['photo' => 'Cette photo n\'est plus disponible : reprenez la photo.']);
+        $fichier = $request->files->get('photo');
+        if ($fichier instanceof UploadedFile) {
+            try {
+                $image = $photos->versBase64($fichier);
+            } catch (PhotoInvalideException $e) {
+                return $this->reponseInvalide(['photo' => $e->getMessage()]);
+            }
+        } else {
+            $donnees = $this->lireJson($request);
+            $chemin = \is_string($donnees['photo'] ?? null) ? $donnees['photo'] : '';
+            if (!$photos->existe($chemin)) {
+                return $this->reponseInvalide(['photo' => 'Cette photo n\'est plus disponible : reprenez la photo.']);
+            }
+            $image = $photos->enBase64($chemin);
         }
 
         $ia = ['disponible' => $reconnaissance->estDisponible(), 'reussie' => false, 'message' => null];
@@ -75,7 +86,7 @@ final class ScanController extends ApiController
             $ia['message'] = 'Vous avez atteint la limite de scans par IA pour cette heure : remplissez les champs vous-même.';
         } else {
             $resultat = $reconnaissance->reconnaitre(
-                $photos->enBase64($chemin),
+                $image,
                 $categories->findFeuilles([FamilleCategorie::VETEMENT, FamilleCategorie::ACCESSOIRE]),
                 $couleurs->findBy([], ['id' => 'ASC']),
             );

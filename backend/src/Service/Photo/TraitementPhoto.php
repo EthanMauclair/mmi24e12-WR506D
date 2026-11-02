@@ -29,13 +29,7 @@ final class TraitementPhoto
      */
     public function enregistrer(UploadedFile $fichier): string
     {
-        $contenu = $fichier->isValid() ? @file_get_contents($fichier->getPathname()) : false;
-        $source = false === $contenu ? false : @imagecreatefromstring($contenu);
-        if (false === $source) {
-            throw new PhotoInvalideException('Ce fichier n\'est pas une image lisible (JPEG, PNG ou WebP).');
-        }
-
-        $image = $this->reduire($source);
+        $image = $this->reduire($this->lire($fichier));
 
         $dossier = $this->dossierPublic.self::DOSSIER_PUBLIC;
         if (!is_dir($dossier) && !mkdir($dossier, 0775, true) && !is_dir($dossier)) {
@@ -57,6 +51,19 @@ final class TraitementPhoto
     }
 
     /**
+     * Data URL base64 d'une photo envoyée, réduite et convertie en JPEG sans être enregistrée.
+     *
+     * @throws PhotoInvalideException si le fichier n'est pas une image lisible
+     */
+    public function versBase64(UploadedFile $fichier): string
+    {
+        ob_start();
+        imagejpeg($this->reduire($this->lire($fichier)), null, self::QUALITE_JPEG);
+
+        return 'data:image/jpeg;base64,'.base64_encode((string) ob_get_clean());
+    }
+
+    /**
      * Indique si le chemin désigne une photo de scan enregistrée par ce service.
      */
     public function existe(string $chemin): bool
@@ -67,6 +74,20 @@ final class TraitementPhoto
     private function cheminAbsolu(string $chemin): string
     {
         return $this->dossierPublic.$chemin;
+    }
+
+    /**
+     * @throws PhotoInvalideException
+     */
+    private function lire(UploadedFile $fichier): \GdImage
+    {
+        $contenu = $fichier->isValid() ? @file_get_contents($fichier->getPathname()) : false;
+        $source = false === $contenu ? false : @imagecreatefromstring($contenu);
+        if (false === $source) {
+            throw new PhotoInvalideException('Ce fichier n\'est pas une image lisible (JPEG, PNG ou WebP).');
+        }
+
+        return $source;
     }
 
     private function reduire(\GdImage $source): \GdImage
