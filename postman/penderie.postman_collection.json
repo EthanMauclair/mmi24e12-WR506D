@@ -32,6 +32,10 @@
     {
       "key": "categorieId",
       "value": ""
+    },
+    {
+      "key": "photoScan",
+      "value": ""
     }
   ],
   "item": [
@@ -627,7 +631,7 @@
           ]
         },
         {
-          "name": "Scanner un vêtement (photo)",
+          "name": "Envoyer la photo d'un article",
           "request": {
             "method": "POST",
             "header": [
@@ -637,17 +641,17 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/scans/vetement",
+              "raw": "{{baseUrl}}/api/scans/photo",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "scans",
-                "vetement"
+                "photo"
               ]
             },
-            "description": "Choisissez une photo dans le champ « photo » de l'onglet Body avant d'envoyer. La photo est réduite à 1024 px, convertie en JPEG et conservée ; si la clé OpenRouter est configurée, l'IA renvoie des suggestions (catégorie, couleur, marque, titre). 30 analyses par heure et par utilisateur.",
+            "description": "Choisissez une photo dans le champ « photo » de l'onglet Body avant d'envoyer. La photo est réduite à 1024 px, convertie en JPEG et conservée ; son chemin est gardé dans la variable photoScan pour la requête « Analyser la photo (IA) ».",
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -665,7 +669,52 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Photo enregistrée (201) ou absente (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));"
+                  "pm.test('Photo enregistrée (201) ou absente (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('photoScan', pm.response.json().photo); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analyser la photo (IA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/scans/analyse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scans",
+                "analyse"
+              ]
+            },
+            "description": "Demande à l'IA de pré-remplir la fiche d'après la photo envoyée juste avant (variable photoScan). Si la clé OpenRouter est configurée, renvoie des suggestions (catégorie, couleur, marque, titre) ; sinon ia.message explique pourquoi. 30 analyses par heure et par utilisateur.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo\": \"{{photoScan}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Analyse renvoyée (200) ou photo introuvable (422)', () => pm.expect(pm.response.code).to.be.oneOf([200, 422]));",
+                  "if (pm.response.code === 200) { pm.test('Réponse ia + suggestions', () => pm.expect(pm.response.json()).to.have.all.keys('ia', 'suggestions')); }"
                 ]
               }
             }
