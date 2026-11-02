@@ -186,6 +186,9 @@ onBeforeUnmount(arreterCamera)
 
 <template>
   <div class="ecran ecran--scan">
+    <!-- Image de la caméra en plein écran, sous l'habillage (en-tête, cadre, commandes) -->
+    <video ref="video" class="flux" :class="{ 'flux--visible': cameraDisponible }" playsinline muted></video>
+
     <header class="entete">
       <RouterLink to="/dressing" class="bouton-voile" aria-label="Fermer le scan">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -208,8 +211,7 @@ onBeforeUnmount(arreterCamera)
     <div class="visee">
       <p v-if="confirmation" class="confirmation" role="status">{{ confirmation }}</p>
 
-      <div class="cadre">
-        <video ref="video" class="cadre__video" :class="{ 'cadre__video--visible': cameraDisponible }" playsinline muted></video>
+      <div class="cadre" :class="{ 'cadre--transparent': cameraDisponible }">
         <p v-if="!cameraDisponible" class="cadre__message">{{ messageCamera }}</p>
 
         <template v-if="mode === 'vetement'">
@@ -282,8 +284,36 @@ onBeforeUnmount(arreterCamera)
 
 <style scoped>
 .ecran--scan {
+  position: relative;
   background: var(--couleur-scan-fond);
   color: var(--couleur-sur-primaire);
+}
+
+/* La vidéo occupe tout l'écran ; l'habillage passe au-dessus */
+.flux {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.flux--visible {
+  opacity: 1;
+}
+
+.entete,
+.visee,
+.commandes {
+  position: relative;
+  z-index: 1;
+}
+
+/* Textes lisibles sur n'importe quelle image de la caméra */
+.entete__titre,
+.consigne {
+  text-shadow: var(--ombre-texte-scan);
 }
 
 .entete {
@@ -344,7 +374,6 @@ onBeforeUnmount(arreterCamera)
   position: relative;
   width: 300px;
   height: 360px;
-  overflow: hidden;
   border-radius: 28px;
   background: var(--couleur-scan-cadre);
   display: flex;
@@ -352,17 +381,9 @@ onBeforeUnmount(arreterCamera)
   justify-content: center;
 }
 
-.cadre__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-}
-
-.cadre__video--visible {
-  opacity: 1;
+/* Caméra active : seuls les coins du cadre restent, on voit l'image à travers */
+.cadre--transparent {
+  background: transparent;
 }
 
 .cadre__message {
@@ -554,6 +575,6 @@ onBeforeUnmount(arreterCamera)
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: var(--couleur-primaire);
+  background: var(--couleur-sur-primaire);
 }
 </style>

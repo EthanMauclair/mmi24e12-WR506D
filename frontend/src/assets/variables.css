@@ -38,6 +38,7 @@
   --couleur-scan-texte: rgba(255, 255, 255, 0.78);
   --couleur-scan-code: rgba(255, 255, 255, 0.75);
   --couleur-scan-laser: #e0466e;
+  --ombre-texte-scan: 0 1px 4px rgba(0, 0, 0, 0.6);
 
   /* Pochette et disque de l'écran « Vinyle trouvé » */
   --couleur-pochette: #3c4a5a;
