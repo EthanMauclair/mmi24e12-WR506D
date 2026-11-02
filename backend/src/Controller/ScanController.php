@@ -23,19 +23,12 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class ScanController extends ApiController
 {
     /**
-     * Enregistre la photo d'un vêtement et demande à l'IA de pré-remplir la fiche.
-     * La photo est toujours conservée, même si l'IA est indisponible.
+     * Enregistre la photo d'un article (réduite et convertie en JPEG). L'analyse par l'IA est demandée à part,
+     * pour que la fiche s'ouvre sans attendre.
      */
-    #[Route('/vetement', name: 'api_scan_vetement', methods: ['POST'])]
-    public function vetement(
-        Request $request,
-        #[CurrentUser] Utilisateur $utilisateur,
-        TraitementPhoto $photos,
-        ReconnaissanceVetement $reconnaissance,
-        CategorieRepository $categories,
-        CouleurRepository $couleurs,
-        RateLimiterFactoryInterface $scanIaLimiter,
-    ): JsonResponse {
+    #[Route('/photo', name: 'api_scan_photo', methods: ['POST'])]
+    public function photo(Request $request, TraitementPhoto $photos): JsonResponse
+    {
         $fichier = $request->files->get('photo');
         if (!$fichier instanceof UploadedFile) {
             return $this->reponseInvalide(['photo' => 'Ajoutez une photo de l\'article.']);
@@ -45,6 +38,32 @@ final class ScanController extends ApiController
             $chemin = $photos->enregistrer($fichier);
         } catch (PhotoInvalideException $e) {
             return $this->reponseInvalide(['photo' => $e->getMessage()]);
+        }
+
+        return $this->json(['photo' => $chemin], Response::HTTP_CREATED);
+    }
+
+    /**
+     * Demande à l'IA de pré-remplir la fiche d'après une photo enregistrée par /api/scans/photo.
+     */
+    #[Route('/analyse', name: 'api_scan_analyse', methods: ['POST'])]
+    public function analyse(
+        Request $request,
+        #[CurrentUser] Utilisateur $utilisateur,
+        TraitementPhoto $photos,
+        ReconnaissanceVetement $reconnaissance,
+        CategorieRepository $categories,
+        CouleurRepository $couleurs,
+        RateLimiterFactoryInterface $scanIaLimiter,
+    ): JsonResponse {
+        // L'analyse peut durer : on libère tout de suite la session, sinon PHP la garde verrouillée
+        // et bloque les autres requêtes de l'utilisateur (chargement de la fiche) jusqu'à la réponse de l'IA
+        $request->getSession()->save();
+
+        $donnees = $this->lireJson($request);
+        $chemin = \is_string($donnees['photo'] ?? null) ? $donnees['photo'] : '';
+        if (!$photos->existe($chemin)) {
+            return $this->reponseInvalide(['photo' => 'Cette photo n\'est plus disponible : reprenez la photo.']);
         }
 
         $ia = ['disponible' => $reconnaissance->estDisponible(), 'reussie' => false, 'message' => null];
@@ -79,7 +98,7 @@ final class ScanController extends ApiController
             }
         }
 
-        return $this->json(['photo' => $chemin, 'ia' => $ia, 'suggestions' => $suggestions], Response::HTTP_CREATED);
+        return $this->json(['ia' => $ia, 'suggestions' => $suggestions]);
     }
 
     /**
