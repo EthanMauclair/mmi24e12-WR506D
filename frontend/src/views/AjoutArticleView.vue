@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import ChoixEmplacement from '@/components/ChoixEmplacement.vue'
 import { api } from '@/services/api'
@@ -39,11 +39,11 @@ const referentiels = useReferentielsStore()
 // Le même formulaire sert à l'ajout (après un scan ou en saisie manuelle) et à la modification d'un article
 const idArticle = route.name === 'article-modifier' ? route.params.id : null
 const origine = idArticle ? 'modification' : route.query.origine === 'vetement' ? 'vetement' : 'manuel'
+// Objet réactif du store : il se complète pendant que la fiche est affichée (photo envoyée, suggestions)
 const scan = origine === 'vetement' ? ajout.vetement : null
 const codeInconnu = origine === 'manuel' ? ajout.codeInconnu : null
-const suggestions = scan?.suggestions ?? {}
 
-// Article modifié : sa photo, ses droits et les valeurs absentes du formulaire (ISBN, description…)
+// Article modifié : sa photo, ses droits et les valeurs absentes du formulaire (ISBN, état…)
 const articleModifie = ref(null)
 const titreEcran = { vetement: "Vérifiez l'article", manuel: 'Nouvel article', modification: "Modifier l'article" }[origine]
 const retour = idArticle ? { name: 'article', params: { id: idArticle } } : { name: 'scan' }
@@ -58,10 +58,11 @@ const erreur = ref('')
 const erreurs = ref({})
 
 const valeurs = reactive({
-  titre: suggestions.titre ?? '',
-  categorieId: suggestions.categorie?.id ?? null,
-  marque: suggestions.marque ?? '',
-  couleurId: suggestions.couleur?.id ?? null,
+  titre: '',
+  description: '',
+  categorieId: null,
+  marque: '',
+  couleurId: null,
   taille: '',
   matiere: '',
   auteur: '',
@@ -78,17 +79,42 @@ const etiquettesChoisies = ref([])
 const estPersonnel = ref(false)
 
 // Valeurs proposées par l'IA : le champ garde son marqueur tant qu'on ne le modifie pas
-const valeursIa = {
-  titre: suggestions.titre,
-  categorieId: suggestions.categorie?.id,
-  marque: suggestions.marque,
-  couleurId: suggestions.couleur?.id,
-}
-const nbChampsIa = Object.values(valeursIa).filter((valeur) => valeur !== null && valeur !== undefined).length
+const valeursIa = reactive({})
 
 function estRempliParIa(cle) {
   return valeursIa[cle] !== undefined && valeursIa[cle] !== null && valeurs[cle] === valeursIa[cle]
 }
+
+const nbChampsIa = computed(() => Object.keys(valeursIa).filter(estRempliParIa).length)
+// L'analyse se poursuit après l'ouverture de la fiche : envoi de la photo, puis réponse de l'IA
+const analyseEnCours = computed(() => scan && scan.envoi !== 'erreur' && scan.analyse !== 'termine' && scan.analyse !== 'erreur')
+
+/**
+ * Applique les suggestions de l'IA, sans écraser ce que l'utilisateur a déjà saisi.
+ */
+function appliquerSuggestions(proposees) {
+  const valeursProposees = {
+    titre: proposees.titre,
+    categorieId: proposees.categorie?.id,
+    marque: proposees.marque,
+    couleurId: proposees.couleur?.id,
+  }
+  for (const [cle, valeur] of Object.entries(valeursProposees)) {
+    if (valeur === null || valeur === undefined) {
+      continue
+    }
+    valeursIa[cle] = valeur
+    if (valeurs[cle] === '' || valeurs[cle] === null) {
+      valeurs[cle] = valeur
+    }
+  }
+}
+
+watch(
+  () => scan?.suggestions,
+  (proposees) => proposees && appliquerSuggestions(proposees),
+  { immediate: true },
+)
 
 const famille = computed(() => referentiels.famille(valeurs.categorieId))
 const champsDetail = computed(() => CHAMPS_PAR_FAMILLE[famille.value] ?? [])
@@ -121,6 +147,7 @@ function preremplir(article) {
     }
   }
   valeurs.titre = formulaire.titre
+  valeurs.description = formulaire.description ?? ''
   valeurs.categorieId = formulaire.categorieId
   stockageId.value = formulaire.stockageId
   etiquettesChoisies.value = [...formulaire.etiquetteIds]
@@ -140,7 +167,7 @@ async function enregistrer() {
     categorieId: valeurs.categorieId,
     titre: valeurs.titre,
     etiquetteIds: etiquettesChoisies.value,
-    description: origineFormulaire.description ?? null,
+    description: valeurs.description,
     etat: origineFormulaire.etat ?? null,
   }
   if (peutChangerConfidentialite.value) {
@@ -236,24 +263,39 @@ onMounted(async () => {
       <h1 class="entete__titre">{{ titreEcran }}</h1>
     </header>
 
-    <p v-if="chargement" class="etat">Chargement…</p>
+    <!-- Affiché tout de suite, sans attendre le chargement du formulaire : photo et avancement de l'analyse -->
+    <div v-if="scan" class="resume resume--scan">
+      <img :src="scan.apercu ?? scan.photo" alt="Photo du scan" class="resume__photo" />
+      <div class="resume__textes" aria-live="polite">
+        <template v-if="scan.envoi === 'erreur'">
+          <span class="badge-ia badge-ia--neutre">{{ scan.erreur }}</span>
+          <RouterLink :to="{ name: 'scan' }" class="resume__lien">Reprendre la photo</RouterLink>
+        </template>
+        <template v-else-if="analyseEnCours">
+          <span class="badge-ia badge-ia--attente">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            Analyse de la photo par l'IA…
+          </span>
+          <span class="resume__aide">Vous pouvez déjà remplir la fiche : l'IA complétera les champs restés vides.</span>
+        </template>
+        <template v-else>
+          <span v-if="nbChampsIa" class="badge-ia">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            {{ nbChampsIa }} champ{{ nbChampsIa > 1 ? 's' : '' }} pré-rempli{{ nbChampsIa > 1 ? 's' : '' }} par l'IA
+          </span>
+          <span v-else class="badge-ia badge-ia--neutre">{{ scan.ia?.message ?? "L'IA n'a rien reconnu" }}</span>
+          <span class="resume__aide">La photo du scan est conservée. Tout reste modifiable.</span>
+        </template>
+      </div>
+    </div>
+
+    <!-- Le formulaire s'affiche tout de suite ; en modification, on attend les valeurs de l'article -->
+    <p v-if="chargement && idArticle" class="etat etat--plein">Chargement de l'article…</p>
 
     <form v-else id="formulaire-article" class="contenu" novalidate @submit.prevent="enregistrer">
       <div v-if="articleModifie?.photos.length" class="resume">
         <img :src="articleModifie.photos[0]" alt="Photo de l'article" class="resume__photo" />
         <span class="resume__aide">Modifiez les informations puis enregistrez. La photo reste la même.</span>
-      </div>
-
-      <div v-if="scan" class="resume">
-        <img :src="scan.apercu ?? scan.photo" alt="Photo du scan" class="resume__photo" />
-        <div class="resume__textes">
-          <span v-if="nbChampsIa" class="badge-ia">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-            {{ nbChampsIa }} champ{{ nbChampsIa > 1 ? 's' : '' }} pré-rempli{{ nbChampsIa > 1 ? 's' : '' }} par l'IA
-          </span>
-          <span v-else class="badge-ia badge-ia--neutre">{{ scan.ia.message ?? "L'IA n'a rien reconnu" }}</span>
-          <span class="resume__aide">La photo du scan est conservée. Tout reste modifiable.</span>
-        </div>
       </div>
 
       <p v-if="codeInconnu" class="info">
@@ -311,6 +353,12 @@ onMounted(async () => {
         </label>
       </div>
 
+      <label class="carte carte--note" :class="{ 'carte--invalide': erreurs.description }">
+        <span class="carte__libelle">Note</span>
+        <textarea v-model.trim="valeurs.description" class="carte__saisie carte__saisie--note" rows="3" placeholder="Ex. Taille un peu petit, offert par Camille…"></textarea>
+        <span v-if="erreurs.description" class="champ__erreur">{{ erreurs.description }}</span>
+      </label>
+
       <ChoixEmplacement v-model="stockageId" :stockages="stockages" :erreur="erreurs.stockageId" />
 
       <div v-if="etiquettes.length" class="etiquettes">
@@ -337,9 +385,23 @@ onMounted(async () => {
     </form>
 
     <div class="pied">
-      <button type="submit" form="formulaire-article" class="bouton-principal bouton-principal--icone" :disabled="envoiEnCours || chargement">
+      <!-- On attend seulement que la photo soit enregistrée, pas la réponse de l'IA -->
+      <button
+        type="submit"
+        form="formulaire-article"
+        class="bouton-principal bouton-principal--icone"
+        :disabled="envoiEnCours || chargement || (scan && scan.envoi !== 'termine')"
+      >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-        {{ envoiEnCours ? 'Enregistrement…' : idArticle ? 'Enregistrer les modifications' : 'Enregistrer dans le dressing' }}
+        {{
+          envoiEnCours
+            ? 'Enregistrement…'
+            : scan?.envoi === 'en-cours'
+              ? 'Envoi de la photo…'
+              : idArticle
+                ? 'Enregistrer les modifications'
+                : 'Enregistrer dans le dressing'
+        }}
       </button>
     </div>
   </div>
@@ -409,6 +471,39 @@ onMounted(async () => {
   line-height: 1.4;
 }
 
+/* Analyse en cours : l'étoile pulse */
+.badge-ia--attente svg {
+  animation: pulsation 1.2s ease-in-out infinite;
+}
+
+@keyframes pulsation {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.75);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-ia--attente svg {
+    animation: none;
+  }
+}
+
+/* Pendant le chargement, occupe la place du formulaire pour garder le bouton en bas de l'écran */
+.etat--plein {
+  flex: 1;
+}
+
+/* Hors du formulaire : reprend ses marges */
+.resume--scan {
+  padding: 16px 20px 0;
+}
+
+.resume__lien {
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .resume__aide {
   font-size: 13px;
   line-height: 1.45;
@@ -470,6 +565,16 @@ onMounted(async () => {
 
 .carte__ia {
   color: var(--couleur-primaire);
+}
+
+.carte--note {
+  margin: 0;
+}
+
+.carte__saisie--note {
+  resize: vertical;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 .carte__saisie {
