@@ -51,7 +51,6 @@ const peutChangerConfidentialite = computed(() => !idArticle || articleModifie.v
 
 const logementId = ref(null)
 const stockages = ref([])
-const etiquettes = ref([])
 const chargement = ref(true)
 const envoiEnCours = ref(false)
 const erreur = ref('')
@@ -75,6 +74,7 @@ const valeurs = reactive({
   format: null,
 })
 const stockageId = ref(null)
+// Les étiquettes ne sont plus proposées dans le formulaire : en modification, on garde celles de l'article
 const etiquettesChoisies = ref([])
 const estPersonnel = ref(false)
 
@@ -117,19 +117,13 @@ watch(
 )
 
 const famille = computed(() => referentiels.famille(valeurs.categorieId))
-const champsDetail = computed(() => CHAMPS_PAR_FAMILLE[famille.value] ?? [])
+// Après la photo d'un vêtement, marque et couleur s'affichent tout de suite, sans attendre la catégorie
+const champsDetail = computed(
+  () => CHAMPS_PAR_FAMILLE[famille.value ?? (origine === 'vetement' ? 'VETEMENT' : null)] ?? [],
+)
 const groupesCategories = computed(() =>
   referentiels.categoriesParRacine(origine === 'vetement' ? ['VETEMENT', 'ACCESSOIRE'] : null),
 )
-
-function basculerEtiquette(id) {
-  const index = etiquettesChoisies.value.indexOf(id)
-  if (index === -1) {
-    etiquettesChoisies.value.push(id)
-  } else {
-    etiquettesChoisies.value.splice(index, 1)
-  }
-}
 
 function nombre(valeur) {
   return valeur === '' || valeur === null ? null : Number(valeur)
@@ -238,7 +232,6 @@ onMounted(async () => {
     }
     const [rangement] = await Promise.all([api(`/logements/${logementId.value}/rangement`), referentiels.charger()])
     stockages.value = rangement.stockages
-    etiquettes.value = rangement.etiquettes
 
     // Code-barres inconnu : on devine la famille d'après le code (ISBN = livre, sinon disque)
     if (codeInconnu && valeurs.categorieId === null) {
@@ -360,23 +353,6 @@ onMounted(async () => {
       </label>
 
       <ChoixEmplacement v-model="stockageId" :stockages="stockages" :erreur="erreurs.stockageId" />
-
-      <div v-if="etiquettes.length" class="etiquettes">
-        <span class="etiquettes__titre">Étiquettes</span>
-        <div class="etiquettes__liste">
-          <button
-            v-for="etiquette in etiquettes"
-            :key="etiquette.id"
-            type="button"
-            class="etiquette"
-            :class="{ 'etiquette--active': etiquettesChoisies.includes(etiquette.id) }"
-            :aria-pressed="etiquettesChoisies.includes(etiquette.id)"
-            @click="basculerEtiquette(etiquette.id)"
-          >
-            {{ etiquette.nom }}
-          </button>
-        </div>
-      </div>
 
       <label v-if="peutChangerConfidentialite" class="personnel">
         <input v-model="estPersonnel" type="checkbox" class="personnel__case" />
@@ -588,43 +564,6 @@ onMounted(async () => {
   font-size: 15px;
   font-weight: 700;
   color: var(--couleur-texte);
-}
-
-.etiquettes {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.etiquettes__titre {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
-}
-
-.etiquettes__liste {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.etiquette {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.etiquette--active {
-  border-color: var(--couleur-primaire);
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
 }
 
 .personnel {
