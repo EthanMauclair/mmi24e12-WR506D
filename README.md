@@ -88,6 +88,7 @@ Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
   - parcourir les articles d'un stockage, ouvrir la fiche d'un article ;
   - rechercher « Où est rangé… ? » par titre, catégorie, marque ou couleur ;
   - rendre un article personnel (visible uniquement par la personne qui l'a ajouté).
+  - modifier un article avec le crayon de sa fiche (celui qui l'a ajouté, ou le propriétaire du logement).
 - **Ajout d'article par scan** (bouton central de la barre de navigation) :
   - **vêtement** : la photo est réduite (1024 px), convertie en JPEG puis envoyée en base64 à un modèle de vision d'OpenRouter (`google/gemma-4-31b-it:free` par défaut, modifiable avec `OPENROUTER_MODELE`), qui propose la catégorie, la couleur, la marque si elle est lisible et un titre. Si ce modèle est saturé, OpenRouter bascule sur `google/gemma-4-26b-a4b-it:free` (`OPENROUTER_MODELE_SECOURS`, vide pour désactiver). Ces modèles gratuits raisonnent avant de répondre : une analyse prend de quelques secondes à une minute (80 s au maximum). 30 analyses par heure et par utilisateur ;
   - **livre ou vinyle** : le code-barres est lu dans le navigateur, puis la fiche est cherchée dans Open Library (et Google Books en secours) pour les livres, MusicBrainz pour les disques ;
@@ -119,6 +120,7 @@ Les autres écrans (tenues, marché, profil, prêts) arrivent dans les prochaine
 | GET     | `/api/scans/code-barres/{code}`         | Fiche d'un livre (ISBN) ou d'un vinyle (EAN)   |
 | POST    | `/api/articles`                         | Ajoute un article avec son détail et sa photo  |
 | GET     | `/api/articles/{id}`                    | Fiche d'un article                             |
+| PUT     | `/api/articles/{id}`                    | Modifie toutes les informations d'un article   |
 | PATCH   | `/api/articles/{id}`                    | Rend un article personnel ou non               |
 
 Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).

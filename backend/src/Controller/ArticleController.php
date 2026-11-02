@@ -9,7 +9,7 @@ use App\Repository\LogementRepository;
 use App\Security\Voter\ArticleVoter;
 use App\Security\Voter\LogementVoter;
 use App\Service\Article\ArticleInvalideException;
-use App\Service\Article\CreationArticle;
+use App\Service\Article\EditionArticle;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -35,7 +35,7 @@ final class ArticleController extends ApiController
         Request $request,
         #[CurrentUser] Utilisateur $utilisateur,
         LogementRepository $logements,
-        CreationArticle $creation,
+        EditionArticle $edition,
     ): JsonResponse {
         $donnees = $this->lireJson($request);
         $logement = $logements->find((int) ($donnees['logementId'] ?? 0));
@@ -45,7 +45,7 @@ final class ArticleController extends ApiController
         $this->denyAccessUnlessGranted(LogementVoter::VOIR, $logement);
 
         try {
-            $article = $creation->creer($logement, $utilisateur, $donnees);
+            $article = $edition->creer($logement, $utilisateur, $donnees);
         } catch (ArticleInvalideException $e) {
             return $this->reponseInvalide($e->messages);
         }
@@ -61,7 +61,35 @@ final class ArticleController extends ApiController
     }
 
     /**
-     * Seul le champ estPersonnel est modifiable pour l'instant.
+     * Modifie toutes les informations de l'article (formulaire « Modifier l'article »).
+     * Seul celui qui l'a ajouté peut en plus changer « Article personnel ».
+     */
+    #[Route('/{id}', name: 'api_article_remplacer', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    #[IsGranted(ArticleVoter::MODIFIER, 'article')]
+    public function remplacer(#[MapEntity(id: 'id')] Article $article, Request $request, EditionArticle $edition): JsonResponse
+    {
+        $donnees = $this->lireJson($request);
+
+        if (\array_key_exists('estPersonnel', $donnees)) {
+            if (!\is_bool($donnees['estPersonnel'])) {
+                return $this->reponseInvalide(['estPersonnel' => 'Cette valeur doit être vraie ou fausse.']);
+            }
+            if ($donnees['estPersonnel'] !== $article->isEstPersonnel()) {
+                $this->denyAccessUnlessGranted(ArticleVoter::CHANGER_CONFIDENTIALITE, $article);
+            }
+        }
+
+        try {
+            $edition->modifier($article, $donnees);
+        } catch (ArticleInvalideException $e) {
+            return $this->reponseInvalide($e->messages);
+        }
+
+        return $this->json($this->presenter($article));
+    }
+
+    /**
+     * Change uniquement « Article personnel » (interrupteur de la fiche article).
      */
     #[Route('/{id}', name: 'api_article_modifier', requirements: ['id' => '\d+'], methods: ['PATCH'])]
     #[IsGranted(ArticleVoter::VOIR, 'article')]

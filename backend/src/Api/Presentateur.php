@@ -89,7 +89,7 @@ final class Presentateur
         $vetement = $details[DetailVetement::class][$article->getId()] ?? null;
         $couleur = $vetement?->getCouleurPrincipale();
         $stockage = $article->getStockage();
-        $photos = $article->getPhotos()->toArray();
+        $photos = $article->getPhotos()->getValues();
         $photoScan = array_values(array_filter($photos, static fn ($photo) => $photo->isEstImageScan()))[0] ?? null;
 
         return [
@@ -110,11 +110,59 @@ final class Presentateur
             'logementId' => $article->getLogement()->getId(),
             'etiquettes' => array_map(
                 static fn ($etiquette) => ['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()],
-                $article->getEtiquettes()->toArray(),
+                $article->getEtiquettes()->getValues(),
             ),
             'estPersonnel' => $article->isEstPersonnel(),
             'peutModifier' => $peutModifier,
             'peutChangerConfidentialite' => $peutChangerConfidentialite,
+            'formulaire' => $peutModifier ? $this->formulaire($article, $details) : null,
+        ];
+    }
+
+    /**
+     * Valeurs brutes de l'article, pour pré-remplir le formulaire de modification.
+     *
+     * @param array<class-string, array<int, object>> $details
+     *
+     * @return array<string, mixed>
+     */
+    private function formulaire(Article $article, array $details): array
+    {
+        $id = $article->getId();
+        $vetement = $details[DetailVetement::class][$id] ?? null;
+        $livre = $details[DetailLivre::class][$id] ?? null;
+        $vinyle = $details[DetailVinyle::class][$id] ?? null;
+
+        return [
+            'titre' => $article->getTitre(),
+            'description' => $article->getDescription(),
+            'etat' => $article->getEtat()?->value,
+            'categorieId' => $article->getCategorie()->getId(),
+            'stockageId' => $article->getStockage()?->getId(),
+            'etiquetteIds' => array_map(static fn ($etiquette) => $etiquette->getId(), $article->getEtiquettes()->getValues()),
+            'vetement' => null === $vetement ? null : [
+                'marque' => $vetement->getMarque()?->getNom(),
+                'couleurId' => $vetement->getCouleurPrincipale()?->getId(),
+                'taille' => $vetement->getTaille(),
+                'matiere' => $vetement->getMatiere(),
+            ],
+            'livre' => null === $livre ? null : [
+                'isbn' => $livre->getIsbn(),
+                'auteur' => $livre->getAuteur(),
+                'editeur' => $livre->getEditeur(),
+                'nbPages' => $livre->getNbPages(),
+                'anneeParution' => $livre->getAnneeParution(),
+                'serie' => $livre->getSerie(),
+                'tome' => $livre->getTome(),
+            ],
+            'vinyle' => null === $vinyle ? null : [
+                'ean' => $vinyle->getEan(),
+                'artiste' => $vinyle->getArtiste(),
+                'label' => $vinyle->getLabel(),
+                'anneeSortie' => $vinyle->getAnneeSortie(),
+                'format' => $vinyle->getFormat()?->value,
+                'nbDisques' => $vinyle->getNbDisques(),
+            ],
         ];
     }
 

@@ -48,7 +48,7 @@ final class PieceController extends ApiController
                 'type' => $stockage->getType()->value,
                 'libelleType' => $stockage->getType()->label(),
                 'nbArticles' => $nombresParStockage[$stockage->getId()] ?? 0,
-            ], $piece->getStockages()->toArray()),
+            ], $piece->getStockages()->getValues()),
             'articles' => $presentateur->articlesResumes($articlesVisibles),
         ]);
     }

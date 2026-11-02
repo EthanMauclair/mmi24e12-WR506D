@@ -24,9 +24,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Crée un article et son détail (vêtement, livre ou vinyle) à partir des données du formulaire d'ajout.
+ * Crée ou modifie un article et son détail (vêtement, livre ou vinyle) à partir des données du formulaire.
  */
-final class CreationArticle
+final class EditionArticle
 {
     /** Sites dont on accepte les couvertures proposées par la recherche de code-barres */
     private const HOTES_COUVERTURES = ['covers.openlibrary.org', 'books.google.com', 'books.googleusercontent.com', 'coverartarchive.org'];
@@ -56,30 +56,12 @@ final class CreationArticle
         $article = (new Article())
             ->setLogement($logement)
             ->setProprietaire($proprietaire)
-            ->setTitre(self::texte($donnees['titre'] ?? null) ?? '')
-            ->setDescription(self::texte($donnees['description'] ?? null))
-            ->setEstPersonnel(true === ($donnees['estPersonnel'] ?? false))
-            ->setEtat(EtatArticle::tryFrom((string) ($donnees['etat'] ?? '')));
+            ->setEstPersonnel(true === ($donnees['estPersonnel'] ?? false));
 
         $modeAjout = ModeAjout::tryFrom((string) ($donnees['modeAjout'] ?? ''));
         null === $modeAjout ? $this->erreur('modeAjout', 'Mode d\'ajout inconnu.') : $article->setModeAjout($modeAjout);
 
-        $categorie = $this->trouver(Categorie::class, $donnees['categorieId'] ?? null);
-        null === $categorie ? $this->erreur('categorieId', 'Choisissez une catégorie.') : $article->setCategorie($categorie);
-
-        if (null !== ($donnees['stockageId'] ?? null)) {
-            $stockage = $this->trouver(Stockage::class, $donnees['stockageId']);
-            null === $stockage ? $this->erreur('stockageId', 'Cet emplacement n\'existe pas.') : $article->setStockage($stockage);
-        }
-
-        foreach ((array) ($donnees['etiquetteIds'] ?? []) as $idEtiquette) {
-            $etiquette = $this->trouver(Etiquette::class, $idEtiquette);
-            if (null === $etiquette || $etiquette->getLogement() !== $logement) {
-                $this->erreur('etiquetteIds', 'Une étiquette choisie n\'appartient pas à ce logement.');
-                continue;
-            }
-            $article->addEtiquette($etiquette);
-        }
+        $categorie = $this->remplir($article, $donnees);
 
         $aValider = [$article];
         if (null !== ($photo = $this->photo($donnees, $modeAjout))) {
@@ -90,7 +72,111 @@ final class CreationArticle
             $aValider[] = $detail;
         }
 
+        $this->valider($aValider);
         foreach ($aValider as $entite) {
+            $this->em->persist($entite);
+        }
+        $this->em->flush();
+
+        return $article;
+    }
+
+    /**
+     * Modifie les informations d'un article existant (le logement, l'auteur, le mode d'ajout et les photos ne changent pas).
+     * Si la nouvelle catégorie change de famille (un vêtement devient un livre…), l'ancien détail est remplacé.
+     *
+     * @param array<string, mixed> $donnees
+     *
+     * @throws ArticleInvalideException avec un message par champ invalide
+     */
+    public function modifier(Article $article, array $donnees): Article
+    {
+        $this->erreurs = [];
+
+        if (\array_key_exists('estPersonnel', $donnees)) {
+            $article->setEstPersonnel(true === $donnees['estPersonnel']);
+        }
+        $categorie = $this->remplir($article, $donnees);
+
+        $existants = [];
+        foreach ([DetailVetement::class, DetailLivre::class, DetailVinyle::class] as $classe) {
+            if (null !== ($existant = $this->em->getRepository($classe)->findOneBy(['article' => $article]))) {
+                $existants[$classe] = $existant;
+            }
+        }
+
+        $aValider = [$article];
+        if (null !== $categorie) {
+            $detail = $this->detail($article, $categorie->getFamille(), $donnees, $existants);
+            foreach ($existants as $existant) {
+                if ($existant !== $detail) {
+                    $this->em->remove($existant);
+                }
+            }
+            if (null !== $detail) {
+                $aValider[] = $detail;
+            }
+        }
+
+        $this->valider($aValider);
+        foreach ($aValider as $entite) {
+            $this->em->persist($entite);
+        }
+        $this->em->flush();
+
+        return $article;
+    }
+
+    /**
+     * Champs communs à l'ajout et à la modification : titre, description, état, catégorie, emplacement, étiquettes.
+     *
+     * @param array<string, mixed> $donnees
+     *
+     * @return Categorie|null la catégorie choisie, qui détermine le détail à remplir
+     */
+    private function remplir(Article $article, array $donnees): ?Categorie
+    {
+        $article
+            ->setTitre(self::texte($donnees['titre'] ?? null) ?? '')
+            ->setDescription(self::texte($donnees['description'] ?? null))
+            ->setEtat(EtatArticle::tryFrom((string) ($donnees['etat'] ?? '')));
+
+        $categorie = $this->trouver(Categorie::class, $donnees['categorieId'] ?? null);
+        null === $categorie ? $this->erreur('categorieId', 'Choisissez une catégorie.') : $article->setCategorie($categorie);
+
+        // Sans emplacement, l'article est « à ranger »
+        $stockage = null;
+        if (null !== ($donnees['stockageId'] ?? null)) {
+            $stockage = $this->trouver(Stockage::class, $donnees['stockageId']);
+            if (null === $stockage) {
+                $this->erreur('stockageId', 'Cet emplacement n\'existe pas.');
+            }
+        }
+        $article->setStockage($stockage);
+
+        foreach ($article->getEtiquettes()->toArray() as $etiquette) {
+            $article->removeEtiquette($etiquette);
+        }
+        foreach ((array) ($donnees['etiquetteIds'] ?? []) as $idEtiquette) {
+            $etiquette = $this->trouver(Etiquette::class, $idEtiquette);
+            if (null === $etiquette || $etiquette->getLogement() !== $article->getLogement()) {
+                $this->erreur('etiquetteIds', 'Une étiquette choisie n\'appartient pas à ce logement.');
+                continue;
+            }
+            $article->addEtiquette($etiquette);
+        }
+
+        return $categorie;
+    }
+
+    /**
+     * @param list<object> $entites
+     *
+     * @throws ArticleInvalideException
+     */
+    private function valider(array $entites): void
+    {
+        foreach ($entites as $entite) {
             foreach ($this->validator->validate($entite) as $violation) {
                 $chemin = $violation->getPropertyPath();
                 $this->erreur(self::CHAMPS[$chemin] ?? ('' === $chemin ? 'general' : $chemin), (string) $violation->getMessage());
@@ -100,13 +186,6 @@ final class CreationArticle
         if ([] !== $this->erreurs) {
             throw new ArticleInvalideException($this->erreurs);
         }
-
-        foreach ($aValider as $entite) {
-            $this->em->persist($entite);
-        }
-        $this->em->flush();
-
-        return $article;
     }
 
     /**
@@ -143,14 +222,26 @@ final class CreationArticle
     }
 
     /**
-     * @param array<string, mixed> $donnees
+     * Détail de la famille de la catégorie : celui qui existe déjà s'il est du bon type, sinon un nouveau.
+     *
+     * @param array<string, mixed>        $donnees
+     * @param array<class-string, object> $existants détails déjà enregistrés pour l'article, par classe
      */
-    private function detail(Article $article, FamilleCategorie $famille, array $donnees): DetailVetement|DetailLivre|DetailVinyle|null
+    private function detail(Article $article, FamilleCategorie $famille, array $donnees, array $existants = []): DetailVetement|DetailLivre|DetailVinyle|null
     {
         return match ($famille) {
-            FamilleCategorie::VETEMENT, FamilleCategorie::ACCESSOIRE => $this->detailVetement($article, (array) ($donnees['vetement'] ?? [])),
-            FamilleCategorie::LIVRE => $this->detailLivre($article, (array) ($donnees['livre'] ?? [])),
-            FamilleCategorie::VINYLE => $this->detailVinyle($article, (array) ($donnees['vinyle'] ?? [])),
+            FamilleCategorie::VETEMENT, FamilleCategorie::ACCESSOIRE => $this->detailVetement(
+                $existants[DetailVetement::class] ?? new DetailVetement($article),
+                (array) ($donnees['vetement'] ?? []),
+            ),
+            FamilleCategorie::LIVRE => $this->detailLivre(
+                $existants[DetailLivre::class] ?? new DetailLivre($article),
+                (array) ($donnees['livre'] ?? []),
+            ),
+            FamilleCategorie::VINYLE => $this->detailVinyle(
+                $existants[DetailVinyle::class] ?? new DetailVinyle($article),
+                (array) ($donnees['vinyle'] ?? []),
+            ),
             FamilleCategorie::AUTRE => null,
         };
     }
@@ -158,17 +249,21 @@ final class CreationArticle
     /**
      * @param array<string, mixed> $donnees
      */
-    private function detailVetement(Article $article, array $donnees): DetailVetement
+    private function detailVetement(DetailVetement $detail, array $donnees): DetailVetement
     {
-        $detail = (new DetailVetement($article))
+        $detail
             ->setTaille(self::texte($donnees['taille'] ?? null))
             ->setMatiere(self::texte($donnees['matiere'] ?? null))
             ->setMarque($this->marque(self::texte($donnees['marque'] ?? null)));
 
+        $couleur = null;
         if (null !== ($donnees['couleurId'] ?? null)) {
             $couleur = $this->trouver(Couleur::class, $donnees['couleurId']);
-            null === $couleur ? $this->erreur('couleurId', 'Cette couleur n\'existe pas.') : $detail->setCouleurPrincipale($couleur);
+            if (null === $couleur) {
+                $this->erreur('couleurId', 'Cette couleur n\'existe pas.');
+            }
         }
+        $detail->setCouleurPrincipale($couleur);
 
         return $detail;
     }
@@ -176,11 +271,11 @@ final class CreationArticle
     /**
      * @param array<string, mixed> $donnees
      */
-    private function detailLivre(Article $article, array $donnees): DetailLivre
+    private function detailLivre(DetailLivre $detail, array $donnees): DetailLivre
     {
         $isbn = self::texte($donnees['isbn'] ?? null);
 
-        return (new DetailLivre($article))
+        return $detail
             ->setIsbn(null === $isbn ? null : RechercheCodeBarres::normaliser($isbn))
             ->setAuteur(self::texte($donnees['auteur'] ?? null))
             ->setEditeur(self::texte($donnees['editeur'] ?? null))
@@ -193,11 +288,11 @@ final class CreationArticle
     /**
      * @param array<string, mixed> $donnees
      */
-    private function detailVinyle(Article $article, array $donnees): DetailVinyle
+    private function detailVinyle(DetailVinyle $detail, array $donnees): DetailVinyle
     {
         $ean = self::texte($donnees['ean'] ?? null);
 
-        return (new DetailVinyle($article))
+        return $detail
             ->setEan(null === $ean ? null : RechercheCodeBarres::normaliser($ean))
             ->setArtiste(self::texte($donnees['artiste'] ?? null))
             ->setLabel(self::texte($donnees['label'] ?? null))

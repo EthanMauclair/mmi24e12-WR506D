@@ -36,6 +36,11 @@ const router = createRouter({
       component: () => import('../views/AjoutArticleView.vue'),
     },
     {
+      path: '/articles/:id/modifier',
+      name: 'article-modifier',
+      component: () => import('../views/AjoutArticleView.vue'),
+    },
+    {
       path: '/articles/:id',
       name: 'article',
       component: () => import('../views/ArticleView.vue'),
