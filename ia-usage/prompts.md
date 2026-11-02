@@ -362,3 +362,12 @@ Le prompt est consigné une seule fois ici, pour éviter un conflit entre les de
 - API découpée en `POST /api/scans/photo` (enregistrement) et `POST /api/scans/analyse` (suggestions)
 - Cause de l'affichage tardif des champs : la session PHP restait verrouillée pendant l'analyse et bloquait le chargement de la fiche ; elle est libérée dès le début de l'analyse
 - Modèles gratuits OpenRouter conservés (bonnes pratiques inchangées : image réduite, JPEG, base64, prompt précis) ; le modèle le plus rapide (`gemma-4-26b-a4b-it`, 2 à 4 s) passe en premier, `gemma-4-31b-it` en secours ; analyse limitée à 20 s pour signaler vite une panne du fournisseur gratuit
+
+**Prompt de suivi :**
+
+> C'est mieux, mais retire les étiquettes, ajoute un champ couleur qui sera rempli par l'ia et également un champ marque
+
+**Résultat retenu :**
+
+- Les champs Marque et Couleur existaient déjà, mais n'apparaissaient qu'une fois la catégorie choisie : après la photo d'un vêtement, ils s'affichent dès l'ouverture de la fiche et l'IA les remplit
+- Étiquettes retirées du formulaire ; en modification, celles déjà posées sur l'article sont conservées
