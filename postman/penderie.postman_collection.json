@@ -36,6 +36,14 @@
     {
       "key": "photoScan",
       "value": ""
+    },
+    {
+      "key": "pseudoMembre",
+      "value": "tom.martin"
+    },
+    {
+      "key": "commentaireId",
+      "value": ""
     }
   ],
   "item": [
@@ -874,6 +882,510 @@
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
                   "pm.test('Titre modifié', () => pm.expect(pm.response.json().titre).to.eql('Article modifié depuis Postman'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Réseau social",
+      "description": "Profils, abonnements, amis et commentaires. Lancez d'abord « Authentification › Connexion » (Léa). Les requêtes GET fonctionnent aussi sans être connecté, pour un profil public.",
+      "item": [
+        {
+          "name": "Rechercher des membres",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/membres?q=tom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "membres"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tom"
+                }
+              ]
+            },
+            "description": "Recherche par pseudo, prénom ou nom (2 caractères minimum)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Recherche (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Aucun e-mail exposé', () => pm.response.json().forEach((m) => pm.expect(m).to.not.have.property('email')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Profil d'un membre",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}"
+              ]
+            },
+            "description": "Profil, compteurs et relation avec le membre connecté."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profil (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Relation renvoyée', () => pm.expect(pm.response.json()).to.have.property('relation'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Articles d'un profil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}/articles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}",
+                "articles"
+              ]
+            },
+            "description": "Articles du membre, sans leur emplacement. 403 pour un profil privé qu'on ne suit pas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Articles ou accès refusé', () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]));",
+                  "if (pm.response.code === 200) { pm.test('Sans emplacement', () => pm.response.json().forEach((a) => pm.expect(a).to.not.have.property('emplacement'))); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Abonnés d'un membre",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}/abonnes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}",
+                "abonnes"
+              ]
+            },
+            "description": "Abonnés acceptés. Sur son propre profil, indique en plus lesquels sont des amis."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Abonnés ou accès refusé', () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Abonnements d'un membre",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}/abonnements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}",
+                "abonnements"
+              ]
+            },
+            "description": "Membres que ce membre suit."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Abonnements ou accès refusé', () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "S'abonner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}/abonnement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}",
+                "abonnement"
+              ]
+            },
+            "description": "Abonnement immédiat pour un profil public, demande en attente pour un profil privé."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Abonnement (201)', () => pm.response.to.have.status(201));",
+                  "pm.test('Statut de l\\'abonnement', () => pm.expect(pm.response.json().relation.abonnement).to.be.oneOf(['ACCEPTE', 'EN_ATTENTE']));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Se désabonner",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}/abonnement",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}",
+                "abonnement"
+              ]
+            },
+            "description": "Se désabonne, ou annule une demande en attente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Désabonnement (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Plus d\\'abonnement', () => pm.expect(pm.response.json().relation.abonnement).to.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Demandes d'abonnement reçues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/moi/demandes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "moi",
+                "demandes"
+              ]
+            },
+            "description": "Demandes en attente (profil privé). Accepter : POST /api/moi/demandes/{id}/acceptation ; refuser : DELETE /api/moi/demandes/{id}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Demandes (200)', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Choisir un abonné comme ami",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/moi/abonnes/tom.martin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "moi",
+                "abonnes",
+                "tom.martin"
+              ]
+            },
+            "description": "Seul un abonné accepté peut devenir ami. Envoyez false pour le retirer de ses amis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estAmi\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ami choisi, ou pas un abonné (422)', () => pm.expect(pm.response.code).to.be.oneOf([200, 422]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Commentaires d'un article",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{articleId}}/commentaires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{articleId}}",
+                "commentaires"
+              ]
+            },
+            "description": "Commentaires de l'article (variable articleId, remplie par l'inventaire)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Commentaires (200)', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Commenter un article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{articleId}}/commentaires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{articleId}}",
+                "commentaires"
+              ]
+            },
+            "description": "Réservé à celui qui a ajouté l'article et à ses amis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Commentaire envoyé depuis Postman\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Commentaire publié, ou réservé aux amis (403)', () => pm.expect(pm.response.code).to.be.oneOf([201, 403]));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('commentaireId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer un commentaire",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/commentaires/{{commentaireId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "commentaires",
+                "{{commentaireId}}"
+              ]
+            },
+            "description": "Son auteur, ou celui qui a ajouté l'article."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Supprimé, ou rien à supprimer', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier mon profil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/moi/profil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "moi",
+                "profil"
+              ]
+            },
+            "description": "Remplace pseudo, prénom, nom, bio et confidentialité. Un profil qui devient public accepte les demandes en attente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pseudo\": \"lea.chine\",\n  \"prenom\": \"Léa\",\n  \"nom\": \"Martin\",\n  \"bio\": \"Chineuse lyonnaise : vêtements, vinyles et comics de seconde main.\",\n  \"estPrive\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profil modifié (200)', () => pm.response.to.have.status(200));"
                 ]
               }
             }
