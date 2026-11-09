@@ -104,6 +104,29 @@ class ArticleRepository extends ServiceEntityRepository
     }
 
     /**
+     * Vêtements et accessoires que le générateur peut proposer : ceux du membre dans ce logement, disponibles,
+     * non personnels, et dont la catégorie a une zone de tenue (haut, bas, chaussures…).
+     *
+     * @return list<Article>
+     */
+    public function findPourTenue(Logement $logement, Utilisateur $membre): array
+    {
+        return $this->createQueryBuilder('a')
+            ->join('a.categorie', 'c')->addSelect('c')
+            ->leftJoin('a.etiquettes', 'e')->addSelect('e')
+            ->andWhere('a.logement = :logement')
+            ->andWhere('a.proprietaire = :membre')
+            ->andWhere('a.estPersonnel = false')
+            ->andWhere('a.statut = :disponible')
+            ->andWhere('c.zoneTenue IS NOT NULL')
+            ->setParameter('logement', $logement)
+            ->setParameter('membre', $membre)
+            ->setParameter('disponible', StatutArticle::DISPONIBLE)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Articles montrés sur le profil d'un membre : ceux qu'il a ajoutés, hors articles personnels et vendus.
      */
     private function duProfil(Utilisateur $membre): QueryBuilder

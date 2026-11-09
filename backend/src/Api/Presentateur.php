@@ -8,6 +8,7 @@ use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
 use App\Entity\DetailVinyle;
 use App\Entity\Logement;
+use App\Entity\Tenue;
 use App\Entity\Utilisateur;
 use App\Enum\RoleLogement;
 use Doctrine\ORM\EntityManagerInterface;
@@ -66,6 +67,24 @@ final class Presentateur
             static fn (array $article) => array_diff_key($article, ['stockageId' => true, 'emplacement' => true]),
             $this->articlesResumes($articles),
         );
+    }
+
+    /**
+     * Tenue enregistrée : ses articles sans leur emplacement, comme sur un profil.
+     *
+     * @return array<string, mixed>
+     */
+    public function tenue(Tenue $tenue): array
+    {
+        return [
+            'id' => $tenue->getId(),
+            'titre' => $tenue->getTitre(),
+            'description' => $tenue->getDescription(),
+            'estPrivee' => $tenue->isEstPrivee(),
+            'createdAt' => $tenue->getCreatedAt()->format(\DATE_ATOM),
+            'createur' => $this->membre($tenue->getCreateur()),
+            'articles' => $this->articlesDuProfil($tenue->getArticles()->getValues()),
+        ];
     }
 
     /**
