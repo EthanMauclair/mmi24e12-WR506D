@@ -44,6 +44,14 @@
     {
       "key": "commentaireId",
       "value": ""
+    },
+    {
+      "key": "tenueArticleIds",
+      "value": "[]"
+    },
+    {
+      "key": "tenueId",
+      "value": ""
     }
   ],
   "item": [
@@ -1386,6 +1394,255 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Profil modifié (200)', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tenues",
+      "description": "Générateur de tenue et tenues enregistrées. Lancez d'abord « Authentification › Connexion » et « Inventaire › Mes logements » (variable logementId).",
+      "item": [
+        {
+          "name": "Proposer une tenue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/logements/{{logementId}}/tenue-proposee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logements",
+                "{{logementId}}",
+                "tenue-proposee"
+              ]
+            },
+            "description": "Sans météo : la tenue suit la saison."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Proposition (200)', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().tenue.filter((l) => l.article).map((l) => l.article.id);",
+                  "pm.collectionVariables.set('tenueArticleIds', JSON.stringify(ids));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Proposer une tenue selon la météo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/logements/{{logementId}}/tenue-proposee?lat=45.764&lon=4.8357",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logements",
+                "{{logementId}}",
+                "tenue-proposee"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "45.764"
+                },
+                {
+                  "key": "lon",
+                  "value": "4.8357"
+                }
+              ]
+            },
+            "description": "Météo de Lyon (Open-Meteo) ; eviter écarte les vêtements de la proposition précédente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Proposition (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Météo renvoyée, ou indisponible', () => pm.expect(pm.response.json()).to.have.property('meteo'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer une étiquette",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/logements/{{logementId}}/etiquettes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "logements",
+                "{{logementId}}",
+                "etiquettes"
+              ]
+            },
+            "description": "Propriétaire et co-propriétaires. 422 si elle existe déjà dans le logement.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nom\": \"Travail\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Créée, ou déjà existante (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enregistrer une tenue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues"
+              ]
+            },
+            "description": "Articles de la dernière proposition (variable tenueArticleIds).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Tenue Postman\",\n  \"description\": \"Enregistrée depuis Postman\",\n  \"estPrivee\": true,\n  \"articleIds\": {{tenueArticleIds}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Tenue enregistrée (201)', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('tenueId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tenues d'un profil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profils/{{pseudoMembre}}/tenues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profils",
+                "{{pseudoMembre}}",
+                "tenues"
+              ]
+            },
+            "description": "Les tenues privées ne sont montrées qu'à leur créateur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Tenues ou accès refusé', () => pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer une tenue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/{{tenueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "{{tenueId}}"
+              ]
+            },
+            "description": "Seul son créateur peut la supprimer."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Tenue supprimée (204)', () => pm.response.to.have.status(204));"
                 ]
               }
             }

@@ -81,7 +81,8 @@ Léa possède un article personnel (« Montre de ma grand-mère ») que les autr
 Côté réseau social, le profil de Léa (`lea.chine`) est privé :
 - Tom et Camille la suivent et font partie de ses amis : ils peuvent commenter ses articles ;
 - Inès et Jules la suivent sans être ses amis ;
-- Sam a envoyé une demande d'abonnement qui attend la réponse de Léa.
+- Sam a envoyé une demande d'abonnement qui attend la réponse de Léa ;
+- Léa a partagé une tenue (« Tenue Travail »).
 
 Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
 
@@ -111,20 +112,30 @@ La caméra du navigateur n'est accessible que sur une page sécurisée : `http:/
   - commentaires sous les articles ;
   - modification du profil : pseudo, prénom, nom, bio, profil privé ou public. Un profil qui devient public accepte les demandes en attente.
 
-Les autres écrans (tenues, marché, prêts) arrivent dans les prochaines versions.
+- **Générateur de tenue** (onglet Tenues) :
+  - propose un haut et un bas (ou une robe, une combinaison), des chaussures et une veste, parmi ses propres vêtements disponibles du logement affiché (jamais un article personnel, prêté ou vendu) ;
+  - **météo en direct** : le navigateur demande la position, l'API lit la température et la pluie sur [Open-Meteo](https://open-meteo.com/) et le nom de la ville sur [OpenStreetMap](https://nominatim.org/) (gratuits, sans clé). S'il pleut, la veste imperméable ou à capuche passe devant ; s'il fait chaud et sec, pas de veste. Sans localisation, la tenue suit la saison ;
+  - **occasion** : avec une étiquette (« Travail »…), les vêtements qui ne portent que d'autres étiquettes (« Soirée »…) sont écartés ; le propriétaire et les co-propriétaires créent les étiquettes avec le bouton « + » ;
+  - « Autre idée » propose d'autres vêtements quand il y en a ; « Partager » enregistre la tenue, publique ou privée, dans l'onglet Tenues du profil.
+
+La position est arrondie à environ 1 km par l'API avant d'être envoyée à Open-Meteo et OpenStreetMap, et n'est pas enregistrée. Le générateur utilise la saison, le niveau de chaleur, la capuche et l'imperméabilité des vêtements : ces informations sont renseignées dans les données de démonstration.
+
+Les autres écrans (fil des tenues, marché, prêts) arrivent dans les prochaines versions.
 
 ### Qui voit quoi dans le réseau social
 
 | Action | Qui peut le faire |
 |---|---|
 | Voir un profil (nom, bio, compteurs) | Tout le monde, même sans compte |
-| Voir les articles, les abonnés et les abonnements d'un profil public | Tout le monde, même sans compte |
+| Voir les articles, les tenues, les abonnés et les abonnements d'un profil public | Tout le monde, même sans compte |
 | Voir ceux d'un profil privé | Le membre et ses abonnés acceptés |
 | Voir où un article est rangé | Les membres du logement uniquement, jamais un visiteur ni un abonné |
 | Voir un article personnel | Uniquement le membre qui l'a ajouté |
 | Commenter un article | Le membre qui l'a ajouté et ses amis ; jamais un article personnel |
 | Supprimer un commentaire | Son auteur, ou le membre qui a ajouté l'article |
 | Savoir qui sont les amis d'un membre | Le membre uniquement |
+| Voir une tenue privée | Uniquement le membre qui l'a créée |
+| Créer une étiquette | Le propriétaire et les co-propriétaires du logement |
 
 ## API
 
@@ -166,8 +177,13 @@ Les autres écrans (tenues, marché, prêts) arrivent dans les prochaines versio
 | DELETE  | `/api/moi/demandes/{id}`                | Refuse une demande                             |
 | PUT     | `/api/moi/abonnes/{pseudo}`             | Choisit un abonné comme ami ou non (`estAmi`)  |
 | DELETE  | `/api/moi/abonnes/{pseudo}`             | Retire un abonné                               |
+| POST    | `/api/logements/{id}/etiquettes`        | Crée une étiquette (`nom`)                     |
+| GET     | `/api/logements/{id}/tenue-proposee`    | Propose une tenue (`etiquette`, `lat`, `lon`, `eviter` facultatifs) |
+| POST    | `/api/tenues`                           | Enregistre une tenue (`titre`, `description`, `estPrivee`, `articleIds`) |
+| GET     | `/api/profils/{pseudo}/tenues`          | Tenues d'un profil                             |
+| DELETE  | `/api/tenues/{id}`                      | Supprime une de ses tenues                     |
 
-Les routes de consultation du réseau social (`GET` sur les profils, les membres, un article et ses commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
+Les routes de consultation du réseau social (`GET` sur les profils et leurs tenues, les membres, un article et ses commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
 
 Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).
 
