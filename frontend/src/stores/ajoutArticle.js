@@ -6,8 +6,8 @@ import { api } from '@/services/api'
  * Résultat du dernier scan, transmis de l'écran caméra à l'écran de vérification.
  */
 export const useAjoutArticleStore = defineStore('ajoutArticle', () => {
-  // Scan d'un vêtement : la fiche s'ouvre tout de suite, l'envoi de la photo puis l'analyse
-  // se poursuivent ici et remplissent cet objet au fur et à mesure :
+  // Scan d'un vêtement : la fiche s'ouvre tout de suite, l'envoi de la photo et son analyse
+  // se poursuivent ici, en parallèle, et remplissent cet objet au fur et à mesure :
   // { apercu, envoi, photo, analyse, ia, suggestions, erreur }
   // envoi et analyse valent 'en-cours', 'termine' ou 'erreur'
   const vetement = ref(null)
@@ -19,42 +19,30 @@ export const useAjoutArticleStore = defineStore('ajoutArticle', () => {
   const confirmation = ref('')
 
   /**
-   * Envoie la photo puis demande l'analyse à l'IA, sans bloquer l'écran.
+   * Envoie la photo et demande son analyse à l'IA en même temps, sans bloquer l'écran.
    *
    * @param {Blob} jpeg photo déjà réduite et convertie
    */
-  async function lancerScanVetement(jpeg) {
+  function lancerScanVetement(jpeg) {
     reinitialiser()
-    const scan = { apercu: URL.createObjectURL(jpeg), envoi: 'en-cours', photo: null, analyse: null, ia: null, suggestions: null, erreur: '' }
+    const scan = { apercu: URL.createObjectURL(jpeg), envoi: 'en-cours', photo: null, analyse: 'en-cours', ia: null, suggestions: null, erreur: '' }
     vetement.value = scan
     // Passer par vetement.value rend les modifications réactives ; on vérifie que ce scan est toujours le courant
     const courant = () => vetement.value?.apercu === scan.apercu ? vetement.value : null
-
-    try {
-      const formulaire = new FormData()
-      formulaire.append('photo', jpeg, 'scan.jpg')
-      const { photo } = await api('/scans/photo', { methode: 'POST', formulaire })
-      if (!courant()) {
-        return
-      }
-      Object.assign(courant(), { photo, envoi: 'termine', analyse: 'en-cours' })
-    } catch (e) {
-      if (courant()) {
-        Object.assign(courant(), { envoi: 'erreur', erreur: e.violations?.photo ?? e.message })
-      }
-      return
+    const formulaire = () => {
+      const donnees = new FormData()
+      donnees.append('photo', jpeg, 'scan.jpg')
+      return donnees
     }
 
-    try {
-      const { ia, suggestions } = await api('/scans/analyse', { methode: 'POST', corps: { photo: courant().photo } })
-      if (courant()) {
-        Object.assign(courant(), { analyse: 'termine', ia, suggestions })
-      }
-    } catch (e) {
-      if (courant()) {
-        Object.assign(courant(), { analyse: 'erreur', ia: { message: e.message } })
-      }
-    }
+    // L'enregistrement de la photo (nécessaire pour ajouter l'article) et l'analyse ne s'attendent pas
+    api('/scans/photo', { methode: 'POST', formulaire: formulaire() })
+      .then(({ photo }) => courant() && Object.assign(courant(), { photo, envoi: 'termine' }))
+      .catch((e) => courant() && Object.assign(courant(), { envoi: 'erreur', erreur: e.violations?.photo ?? e.message }))
+
+    api('/scans/analyse', { methode: 'POST', formulaire: formulaire() })
+      .then(({ ia, suggestions }) => courant() && Object.assign(courant(), { analyse: 'termine', ia, suggestions }))
+      .catch((e) => courant() && Object.assign(courant(), { analyse: 'erreur', ia: { message: e.message } }))
   }
 
   function reinitialiser() {

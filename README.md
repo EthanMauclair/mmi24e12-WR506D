@@ -90,7 +90,7 @@ Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
   - rendre un article personnel (visible uniquement par la personne qui l'a ajouté).
   - modifier un article avec le crayon de sa fiche (celui qui l'a ajouté, ou le propriétaire du logement).
 - **Ajout d'article par scan** (bouton central de la barre de navigation) :
-  - **vêtement** : dès la photo prise, la fiche de l'article s'ouvre avec tous ses champs (titre, catégorie, couleur, marque, note, emplacement…) à remplir à la main. En arrière-plan, la photo est réduite (1024 px), convertie en JPEG puis envoyée en base64 à un modèle de vision d'OpenRouter (`google/gemma-4-26b-a4b-it:free` par défaut, modifiable avec `OPENROUTER_MODELE`), qui propose la catégorie, la couleur, la marque si elle est lisible et un titre. L'IA ne remplit que les champs encore vides. Si ce modèle est saturé, OpenRouter bascule sur `google/gemma-4-31b-it:free` (`OPENROUTER_MODELE_SECOURS`, vide pour désactiver). Une analyse prend en général 3 à 6 s ; si le fournisseur gratuit ne répond pas en 20 s, la fiche l'indique et se remplit à la main. 30 analyses par heure et par utilisateur ;
+  - **vêtement** : dès la photo prise, la fiche de l'article s'ouvre avec tous ses champs (titre, catégorie, couleur, marque, note, emplacement…) à remplir à la main. En arrière-plan, la photo est réduite (1024 px), convertie en JPEG puis envoyée en base64 à un modèle de vision d'OpenRouter (`google/gemma-4-26b-a4b-it:free` par défaut, modifiable avec `OPENROUTER_MODELE`), qui propose la catégorie, la couleur, la marque si elle est lisible et un titre. L'IA ne remplit que les champs encore vides. S'il n'a pas répondu au bout de 3 s, un second modèle, hébergé ailleurs, est interrogé en parallèle : `nvidia/nemotron-3.5-super-vl:free` (`OPENROUTER_MODELE_SECOURS`, vide pour désactiver), et la première réponse valide est retenue. Une analyse prend en général 3 à 6 s ; si aucun modèle gratuit ne répond en 20 s, la fiche l'indique et se remplit à la main. 30 analyses par heure et par utilisateur ;
   - **livre ou vinyle** : le code-barres est lu dans le navigateur, puis la fiche est cherchée dans Open Library (et Google Books en secours) pour les livres, MusicBrainz pour les disques ;
   - **saisie manuelle**, aussi proposée quand un code-barres n'est dans aucune base ;
   - tous les champs restent modifiables avant l'enregistrement ; la photo du scan est conservée.
@@ -117,7 +117,7 @@ Les autres écrans (tenues, marché, profil, prêts) arrivent dans les prochaine
 | GET     | `/api/logements/{id}/rangement`         | Emplacements et étiquettes pour l'ajout        |
 | GET     | `/api/referentiels`                     | Catégories, couleurs, formats et états         |
 | POST    | `/api/scans/photo`                      | Enregistre la photo d'un article (`photo`, multipart) et renvoie son chemin |
-| POST    | `/api/scans/analyse`                    | Suggestions de l'IA pour une photo enregistrée (`{"photo": "…"}`) |
+| POST    | `/api/scans/analyse`                    | Suggestions de l'IA pour une photo : le fichier (`photo`, multipart) ou le chemin d'une photo enregistrée (`{"photo": "…"}`) |
 | GET     | `/api/scans/code-barres/{code}`         | Fiche d'un livre (ISBN) ou d'un vinyle (EAN)   |
 | POST    | `/api/articles`                         | Ajoute un article avec son détail et sa photo  |
 | GET     | `/api/articles/{id}`                    | Fiche d'un article                             |
