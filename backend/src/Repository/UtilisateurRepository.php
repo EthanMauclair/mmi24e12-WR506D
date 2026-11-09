@@ -31,4 +31,25 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $user->setMotDePasse($newHashedPassword);
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * Recherche de membres par pseudo, prénom ou nom (les pseudos qui commencent par le texte d'abord).
+     *
+     * @return list<Utilisateur>
+     */
+    public function rechercher(string $texte, int $limite = 20): array
+    {
+        $echappe = addcslashes($texte, '%_');
+
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.pseudo LIKE :texte OR u.prenom LIKE :texte OR u.nom LIKE :texte OR CONCAT(u.prenom, \' \', u.nom) LIKE :texte')
+            ->setParameter('texte', '%'.$echappe.'%')
+            ->addSelect('CASE WHEN u.pseudo LIKE :debut THEN 0 ELSE 1 END AS HIDDEN priorite')
+            ->setParameter('debut', $echappe.'%')
+            ->orderBy('priorite', 'ASC')
+            ->addOrderBy('u.pseudo', 'ASC')
+            ->setMaxResults($limite)
+            ->getQuery()
+            ->getResult();
+    }
 }

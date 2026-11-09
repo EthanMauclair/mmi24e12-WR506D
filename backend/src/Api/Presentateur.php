@@ -35,6 +35,39 @@ final class Presentateur
     }
 
     /**
+     * Membre tel que les autres le voient (listes, auteur d'un commentaire…) : jamais son e-mail.
+     *
+     * @return array<string, mixed>
+     */
+    public function membre(Utilisateur $membre): array
+    {
+        $nomComplet = trim(($membre->getPrenom() ?? '').' '.($membre->getNom() ?? ''));
+
+        return [
+            'id' => $membre->getId(),
+            'pseudo' => $membre->getPseudo(),
+            'nomComplet' => '' === $nomComplet ? null : $nomComplet,
+            'avatar' => $membre->getAvatar(),
+            'estPrive' => $membre->isEstPrive(),
+        ];
+    }
+
+    /**
+     * Articles d'un profil : comme articlesResumes, sans ce qui dit où ils sont rangés.
+     *
+     * @param list<Article> $articles
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function articlesDuProfil(array $articles): array
+    {
+        return array_map(
+            static fn (array $article) => array_diff_key($article, ['stockageId' => true, 'emplacement' => true]),
+            $this->articlesResumes($articles),
+        );
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function logementResume(Logement $logement, Utilisateur $utilisateur): array

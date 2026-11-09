@@ -102,4 +102,36 @@ class ArticleRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Articles montrés sur le profil d'un membre : ceux qu'il a ajoutés, hors articles personnels et vendus.
+     */
+    private function duProfil(Utilisateur $membre): QueryBuilder
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.proprietaire = :membre')
+            ->andWhere('a.estPersonnel = false')
+            ->andWhere('a.statut != :vendu')
+            ->setParameter('membre', $membre)
+            ->setParameter('vendu', StatutArticle::VENDU);
+    }
+
+    /**
+     * @return list<Article>
+     */
+    public function findDuProfil(Utilisateur $membre): array
+    {
+        return $this->duProfil($membre)
+            ->orderBy('a.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function compterDuProfil(Utilisateur $membre): int
+    {
+        return (int) $this->duProfil($membre)
+            ->select('COUNT(a.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
