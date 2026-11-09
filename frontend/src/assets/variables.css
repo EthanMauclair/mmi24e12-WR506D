@@ -58,6 +58,10 @@
   --couleur-vignette-grege: #b9b2aa;
   --couleur-vignette-kaki: #5b6b4e;
 
+  /* Avatars des membres sans photo (initiale sur fond coloré) */
+  --couleur-avatar-ardoise: #34465c;
+  --couleur-anneau-avatar: #d9b3bf;
+
   /* Éléments posés sur une photo */
   --couleur-photo-icone: rgba(255, 255, 255, 0.7);
   --couleur-photo-icone-grande: rgba(255, 255, 255, 0.55);

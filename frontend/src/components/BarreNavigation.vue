@@ -5,7 +5,7 @@ defineProps({
   actif: { type: String, default: 'dressing' },
 })
 
-// Les écrans Tenues, Marché et Profil n'existent pas encore : pas de route, lien provisoire '#'
+// Les écrans Tenues et Marché n'existent pas encore : pas de route, lien provisoire '#'
 const onglets = [
   {
     id: 'dressing',
@@ -28,6 +28,7 @@ const onglets = [
   {
     id: 'profil',
     libelle: 'Profil',
+    route: '/profil',
     traces: ['M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'],
     cercle: { cx: 12, cy: 7, r: 4 },
   },

@@ -44,6 +44,55 @@ const router = createRouter({
       path: '/articles/:id',
       name: 'article',
       component: () => import('../views/ArticleView.vue'),
+      // Un article d'un profil public se consulte sans compte (l'API décide de ce qui est visible)
+      meta: { ouvert: true },
+    },
+    {
+      path: '/profil',
+      name: 'profil',
+      component: () => import('../views/ProfilView.vue'),
+    },
+    {
+      path: '/profil/modifier',
+      name: 'profil-modifier',
+      component: () => import('../views/ModifierProfilView.vue'),
+    },
+    {
+      path: '/profil/demandes',
+      name: 'profil-demandes',
+      component: () => import('../views/DemandesView.vue'),
+    },
+    {
+      path: '/profil/amis',
+      name: 'profil-amis',
+      component: () => import('../views/ListeMembresView.vue'),
+      props: { liste: 'amis' },
+    },
+    {
+      path: '/membres',
+      name: 'membres',
+      component: () => import('../views/RechercheMembresView.vue'),
+      meta: { ouvert: true },
+    },
+    {
+      path: '/membres/:pseudo',
+      name: 'membre',
+      component: () => import('../views/ProfilView.vue'),
+      meta: { ouvert: true },
+    },
+    {
+      path: '/membres/:pseudo/abonnes',
+      name: 'membre-abonnes',
+      component: () => import('../views/ListeMembresView.vue'),
+      props: { liste: 'abonnes' },
+      meta: { ouvert: true },
+    },
+    {
+      path: '/membres/:pseudo/abonnements',
+      name: 'membre-abonnements',
+      component: () => import('../views/ListeMembresView.vue'),
+      props: { liste: 'abonnements' },
+      meta: { ouvert: true },
     },
     {
       path: '/scan',
@@ -59,10 +108,15 @@ const router = createRouter({
 })
 
 // Les écrans publics (connexion, inscription) renvoient vers le dressing si l'on est déjà connecté ;
+// les écrans ouverts (profils, articles d'un profil) s'affichent avec ou sans compte ;
 // les autres demandent d'être connecté.
 router.beforeEach(async (cible) => {
   const session = useSessionStore()
   await session.verifier()
+
+  if (cible.meta.ouvert) {
+    return true
+  }
 
   if (cible.meta.public) {
     return session.utilisateur ? { name: 'dressing' } : true
