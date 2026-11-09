@@ -36,7 +36,7 @@ security:
         - { path: ^/api/(health|connexion|inscription)$, roles: PUBLIC_ACCESS }
         # Réseau social : un visiteur sans compte consulte les profils publics et leurs articles
         # (les voters ProfilVoter et ArticleVoter décident ensuite au cas par cas)
-        - { path: ^/api/(membres|profils/[^/]+(/(articles|abonnes|abonnements))?|articles/\d+(/commentaires)?)$, methods: [GET], roles: PUBLIC_ACCESS }
+        - { path: ^/api/(membres|profils/[^/]+(/(articles|abonnes|abonnements|tenues))?|articles/\d+(/commentaires)?)$, methods: [GET], roles: PUBLIC_ACCESS }
         - { path: ^/api/, roles: ROLE_USER }
 
 when@test:

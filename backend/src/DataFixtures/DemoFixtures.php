@@ -17,6 +17,7 @@ use App\Entity\MembreLogement;
 use App\Entity\Piece;
 use App\Entity\Pret;
 use App\Entity\Stockage;
+use App\Entity\Tenue;
 use App\Entity\Utilisateur;
 use App\Enum\FormatVinyle;
 use App\Enum\ModeAjout;
@@ -179,6 +180,14 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
         ] as [$auteur, $titre, $contenu]) {
             $manager->persist((new Commentaire())->setAuteur($auteur)->setArticle($articles[$titre])->setContenu($contenu));
         }
+
+        // Une tenue partagée sur le profil de Léa
+        $tenue = (new Tenue())->setCreateur($lea)->setTitre('Tenue Travail')
+            ->setDescription('Lundi pluvieux, imperméable et pull bordeaux. Tout est dans le dressing !');
+        foreach (['Pull col roulé', 'Jean droit', 'Imperméable'] as $titre) {
+            $tenue->addArticle($articles[$titre]);
+        }
+        $manager->persist($tenue);
 
         $manager->flush();
     }

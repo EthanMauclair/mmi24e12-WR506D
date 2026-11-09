@@ -1,0 +1,632 @@
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import BarreNavigation from '@/components/BarreNavigation.vue'
+import { api } from '@/services/api'
+import { fondVignette } from '@/utils/couleurs'
+import { idLogementActif } from '@/utils/logementActif'
+import { lirePosition } from '@/utils/position'
+
+const router = useRouter()
+
+const onglet = ref('generer')
+const logementId = ref(null)
+const etiquettes = ref([])
+const peutCreerEtiquette = ref(false)
+const etiquetteId = ref(null)
+
+// 'recherche' (en attente de la position), 'indisponible' (refusée ou sans réponse), 'ok'
+const etatMeteo = ref('recherche')
+const position = ref(null)
+const meteo = ref(null)
+
+const tenue = ref([])
+const chargement = ref(true)
+const erreur = ref('')
+const pasDAutreIdee = ref(false)
+
+const creationEtiquette = ref(false)
+const nomEtiquette = ref('')
+const erreurEtiquette = ref('')
+
+const partage = ref(false)
+const titre = ref('')
+const description = ref('')
+const estPrivee = ref(false)
+const envoi = ref(false)
+const erreurPartage = ref('')
+
+const articlesProposes = computed(() => tenue.value.filter((ligne) => ligne.article).map((ligne) => ligne.article))
+const etiquetteChoisie = computed(() => etiquettes.value.find((etiquette) => etiquette.id === etiquetteId.value))
+const iconeMeteo = computed(() => {
+  if (meteo.value?.pluie) {
+    return 'pluie'
+  }
+  return meteo.value?.libelle === 'Ensoleillé' || meteo.value?.libelle === 'Peu nuageux' ? 'soleil' : 'nuage'
+})
+
+/**
+ * @param {boolean} autreIdee évite les vêtements de la proposition affichée
+ */
+async function generer(autreIdee = false) {
+  const precedents = articlesProposes.value.map((article) => article.id)
+  const parametres = new URLSearchParams()
+  if (etiquetteId.value) {
+    parametres.set('etiquette', etiquetteId.value)
+  }
+  if (position.value) {
+    parametres.set('lat', position.value.lat.toFixed(4))
+    parametres.set('lon', position.value.lon.toFixed(4))
+  }
+  if (autreIdee && precedents.length) {
+    parametres.set('eviter', precedents.join(','))
+  }
+
+  chargement.value = true
+  erreur.value = ''
+  try {
+    const reponse = await api(`/logements/${logementId.value}/tenue-proposee?${parametres}`)
+    meteo.value = reponse.meteo
+    etatMeteo.value = reponse.meteo ? 'ok' : 'indisponible'
+    tenue.value = reponse.tenue
+    // Avec peu de vêtements, la nouvelle proposition peut être identique
+    const nouveaux = articlesProposes.value.map((article) => article.id)
+    pasDAutreIdee.value = autreIdee && nouveaux.length > 0 && nouveaux.every((id) => precedents.includes(id))
+  } catch (e) {
+    erreur.value = e.message
+  } finally {
+    chargement.value = false
+  }
+}
+
+async function localiser() {
+  etatMeteo.value = 'recherche'
+  // Sans réponse à la demande de localisation, on génère quand même au bout de quelques secondes
+  position.value = await Promise.race([lirePosition(), new Promise((resoudre) => setTimeout(() => resoudre(null), 8000))])
+  await generer()
+}
+
+function choisirEtiquette(id) {
+  etiquetteId.value = etiquetteId.value === id ? null : id
+  generer()
+}
+
+async function creerEtiquette() {
+  erreurEtiquette.value = ''
+  try {
+    const etiquette = await api(`/logements/${logementId.value}/etiquettes`, { methode: 'POST', corps: { nom: nomEtiquette.value } })
+    etiquettes.value.push(etiquette)
+    creationEtiquette.value = false
+    nomEtiquette.value = ''
+    choisirEtiquette(etiquette.id)
+  } catch (e) {
+    erreurEtiquette.value = e.violations.nom ?? e.message
+  }
+}
+
+function ouvrirPartage() {
+  titre.value = etiquetteChoisie.value ? `Tenue ${etiquetteChoisie.value.nom}` : 'Ma tenue du jour'
+  erreurPartage.value = ''
+  partage.value = true
+}
+
+async function publier() {
+  erreurPartage.value = ''
+  envoi.value = true
+  try {
+    await api('/tenues', {
+      methode: 'POST',
+      corps: { titre: titre.value, description: description.value, estPrivee: estPrivee.value, articleIds: articlesProposes.value.map((article) => article.id) },
+    })
+    router.push({ name: 'profil', query: { onglet: 'tenues' } })
+  } catch (e) {
+    erreurPartage.value = Object.values(e.violations)[0] ?? e.message
+  } finally {
+    envoi.value = false
+  }
+}
+
+onMounted(async () => {
+  try {
+    logementId.value = await idLogementActif()
+    if (logementId.value === null) {
+      chargement.value = false
+      return
+    }
+    const rangement = await api(`/logements/${logementId.value}/rangement`)
+    etiquettes.value = rangement.etiquettes
+    peutCreerEtiquette.value = rangement.peutCreerEtiquette
+  } catch (e) {
+    erreur.value = e.message
+    chargement.value = false
+    return
+  }
+  await localiser()
+})
+</script>
+
+<template>
+  <div class="ecran">
+    <main class="contenu">
+      <div class="segments" role="tablist" aria-label="Tenues">
+        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="onglet = 'generer'">Générer</button>
+        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="onglet = 'fil'">Fil des tenues</button>
+      </div>
+
+      <p v-if="onglet === 'fil'" class="etat">Le fil des tenues de vos abonnements arrive dans la prochaine version.</p>
+
+      <template v-else-if="logementId === null && !chargement">
+        <p class="etat">Créez d'abord votre logement pour générer une tenue avec vos vêtements.</p>
+        <RouterLink :to="{ name: 'dressing' }" class="bouton-principal">Aller au dressing</RouterLink>
+      </template>
+
+      <template v-else>
+        <div class="meteo">
+          <span class="meteo__icone">
+            <svg v-if="etatMeteo === 'ok' && iconeMeteo === 'pluie'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><path d="M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2" /></svg>
+            <svg v-else-if="etatMeteo === 'ok' && iconeMeteo === 'soleil'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
+            <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg>
+          </span>
+          <span class="meteo__textes">
+            <template v-if="etatMeteo === 'ok'">
+              <span class="meteo__titre">{{ meteo.ville ?? 'Votre position' }} · {{ meteo.libelle }} · {{ meteo.temperature }} °C</span>
+              <span class="meteo__conseil">{{ meteo.conseil }}</span>
+            </template>
+            <template v-else-if="etatMeteo === 'recherche'">
+              <span class="meteo__titre">Météo en cours…</span>
+              <span class="meteo__conseil">Autorisez la localisation pour adapter la tenue au temps qu'il fait</span>
+            </template>
+            <template v-else>
+              <span class="meteo__titre">Météo indisponible</span>
+              <span class="meteo__conseil">Tenue choisie selon la saison</span>
+            </template>
+          </span>
+          <span v-if="etatMeteo === 'ok'" class="meteo__direct">En direct</span>
+          <button v-else-if="etatMeteo === 'indisponible'" type="button" class="meteo__reessayer" @click="localiser">Réessayer</button>
+        </div>
+
+        <div class="occasions">
+          <span class="occasions__titre">Pour quelle occasion ?</span>
+          <div class="occasions__liste">
+            <button
+              v-for="etiquette in etiquettes"
+              :key="etiquette.id"
+              type="button"
+              class="occasion"
+              :class="{ 'occasion--active': etiquette.id === etiquetteId }"
+              :aria-pressed="etiquette.id === etiquetteId"
+              @click="choisirEtiquette(etiquette.id)"
+            >
+              {{ etiquette.nom }}
+            </button>
+            <button
+              v-if="peutCreerEtiquette && !creationEtiquette"
+              type="button"
+              class="occasion-ajout"
+              aria-label="Créer une étiquette"
+              @click="creationEtiquette = true"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+          </div>
+          <form v-if="creationEtiquette" class="nouvelle-etiquette" @submit.prevent="creerEtiquette">
+            <input v-model.trim="nomEtiquette" class="saisie nouvelle-etiquette__nom" :class="{ 'saisie--invalide': erreurEtiquette }" type="text" maxlength="30" placeholder="Ex. Vacances" aria-label="Nom de l'étiquette" autofocus />
+            <button type="button" class="nouvelle-etiquette__annuler" @click="creationEtiquette = false">Annuler</button>
+            <button type="submit" class="nouvelle-etiquette__valider" :disabled="!nomEtiquette">Créer</button>
+          </form>
+          <span v-if="erreurEtiquette" class="champ__erreur">{{ erreurEtiquette }}</span>
+        </div>
+
+        <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+        <p v-else-if="chargement && tenue.length === 0" class="etat">On compose votre tenue…</p>
+        <p v-else-if="tenue.length && articlesProposes.length === 0" class="etat">
+          Aucun vêtement disponible pour cette occasion. Scannez vos vêtements, ou choisissez une autre occasion.
+        </p>
+        <div v-else class="tenue" :class="{ 'tenue--chargement': chargement }" aria-live="polite">
+          <template v-for="ligne in tenue" :key="ligne.zone">
+            <RouterLink
+              v-if="ligne.article"
+              :to="{ name: 'article', params: { id: ligne.article.id } }"
+              class="piece"
+              :style="{ background: fondVignette(ligne.article.couleur) }"
+            >
+              <img v-if="ligne.article.photo" :src="ligne.article.photo" alt="" class="piece__photo" />
+              <span class="piece__zone">{{ ligne.libelleZone }}</span>
+              <span v-if="ligne.pluie" class="piece__pluie">Pluie</span>
+              <span class="piece__textes">
+                <span class="piece__nom">{{ ligne.article.titre }}</span>
+                <span class="piece__emplacement">{{ ligne.article.emplacement ?? 'À ranger' }}</span>
+              </span>
+            </RouterLink>
+            <div v-else class="piece piece--vide">
+              <span class="piece__zone">{{ ligne.libelleZone }}</span>
+              <span class="piece__manque">Aucun vêtement disponible</span>
+            </div>
+          </template>
+        </div>
+        <p v-if="pasDAutreIdee" class="info">Pas d'autre idée avec vos vêtements disponibles : changez d'occasion ou scannez d'autres vêtements.</p>
+
+        <form v-if="partage" class="partage" @submit.prevent="publier">
+          <label class="champ">
+            <span class="champ__libelle">Titre</span>
+            <input v-model.trim="titre" class="saisie partage__saisie" type="text" maxlength="100" required />
+          </label>
+          <label class="champ">
+            <span class="champ__libelle">Légende</span>
+            <textarea v-model="description" class="saisie partage__zone" rows="2" maxlength="500" placeholder="Ex. Lundi pluvieux, trench et pull bordeaux"></textarea>
+          </label>
+          <label class="partage__privee">
+            <input v-model="estPrivee" type="checkbox" />
+            Tenue privée : visible uniquement par moi
+          </label>
+          <p v-if="erreurPartage" class="message-erreur" role="alert">{{ erreurPartage }}</p>
+          <div class="actions">
+            <button type="button" class="action action--secondaire" @click="partage = false">Annuler</button>
+            <button type="submit" class="action action--principale" :disabled="envoi || !titre">Publier</button>
+          </div>
+        </form>
+
+        <div v-else class="actions">
+          <button type="button" class="action action--secondaire" :disabled="chargement" @click="generer(true)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+            Autre idée
+          </button>
+          <button type="button" class="action action--principale" :disabled="chargement || articlesProposes.length === 0" @click="ouvrirPartage">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
+            Partager
+          </button>
+        </div>
+      </template>
+    </main>
+
+    <BarreNavigation actif="tenues" />
+  </div>
+</template>
+
+<style scoped>
+.contenu {
+  flex: 1;
+  padding: 20px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.segments {
+  display: flex;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--couleur-info-fond);
+}
+
+.segment {
+  flex: 1;
+  height: 38px;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  color: var(--couleur-texte-secondaire);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.segment--actif {
+  background: var(--couleur-surface);
+  color: var(--couleur-primaire);
+  font-weight: 800;
+  box-shadow: var(--ombre-segment);
+}
+
+.meteo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+}
+
+.meteo__icone {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: var(--couleur-meteo-fond);
+  color: var(--couleur-meteo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meteo__textes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meteo__titre {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.meteo__conseil {
+  font-size: 12.5px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.meteo__direct,
+.meteo__reessayer {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--couleur-meteo-fond);
+  color: var(--couleur-meteo);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.meteo__reessayer {
+  cursor: pointer;
+}
+
+.occasions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.occasions__titre {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-texte-secondaire);
+}
+
+.occasions__liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.occasion {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.occasion--active {
+  border-color: var(--couleur-primaire);
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+.occasion-ajout {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--couleur-bordure-pointillee);
+  background: none;
+  color: var(--couleur-texte-secondaire);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.nouvelle-etiquette {
+  display: flex;
+  gap: 8px;
+}
+
+.nouvelle-etiquette__nom {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+}
+
+.nouvelle-etiquette__annuler,
+.nouvelle-etiquette__valider {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nouvelle-etiquette__annuler {
+  background: none;
+  color: var(--couleur-texte-secondaire);
+}
+
+.nouvelle-etiquette__valider {
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+.nouvelle-etiquette__valider:disabled {
+  opacity: 0.5;
+}
+
+.tenue {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  transition: opacity 0.2s;
+}
+
+.tenue--chargement {
+  opacity: 0.5;
+}
+
+.piece {
+  position: relative;
+  height: 150px;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 18px;
+  /* Un vêtement blanc reste visible sur le fond de l'écran */
+  border: 1px solid var(--couleur-bordure);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: var(--couleur-texte);
+}
+
+.piece__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.piece__zone,
+.piece__pluie {
+  position: absolute;
+  top: 10px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.piece__zone {
+  left: 10px;
+  background: var(--couleur-photo-etiquette);
+  color: var(--couleur-texte);
+  font-weight: 800;
+}
+
+.piece__pluie {
+  right: 10px;
+  background: var(--couleur-meteo);
+  color: var(--couleur-sur-primaire);
+  font-weight: 700;
+}
+
+.piece__textes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--couleur-photo-bouton);
+}
+
+.piece__nom {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.piece__emplacement {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--couleur-texte-secondaire);
+}
+
+.piece--vide {
+  justify-content: center;
+  align-items: center;
+  border: 1.5px dashed var(--couleur-bordure-pointillee);
+}
+
+.piece__manque {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--couleur-texte-secondaire);
+  text-align: center;
+}
+
+.info {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--couleur-primaire);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action {
+  flex: 1;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.action--secondaire {
+  border: 1.5px solid var(--couleur-primaire);
+  background: var(--couleur-surface);
+  color: var(--couleur-primaire);
+}
+
+.action--principale {
+  border: 0;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+.partage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+}
+
+.partage .champ {
+  gap: 6px;
+}
+
+.partage__saisie {
+  height: 46px;
+}
+
+.partage__zone {
+  padding: 10px 16px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.partage__privee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  accent-color: var(--couleur-primaire);
+}
+</style>

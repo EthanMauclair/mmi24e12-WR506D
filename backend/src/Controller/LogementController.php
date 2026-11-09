@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Api\Presentateur;
+use App\Entity\Etiquette;
 use App\Entity\Logement;
 use App\Entity\Piece;
 use App\Entity\Utilisateur;
@@ -122,7 +123,36 @@ final class LogementController extends ApiController
                 static fn ($etiquette) => ['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()],
                 $logement->getEtiquettes()->getValues(),
             ),
+            'peutCreerEtiquette' => $this->isGranted(LogementVoter::GERER_ETIQUETTES, $logement),
         ]);
+    }
+
+    /**
+     * Crée une étiquette (« Travail », « Soirée »…) : propriétaire et co-propriétaires du logement.
+     */
+    #[Route('/{id}/etiquettes', name: 'api_logement_etiquette_creer', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted(LogementVoter::GERER_ETIQUETTES, 'logement')]
+    public function creerEtiquette(
+        #[MapEntity(id: 'id')] Logement $logement,
+        #[CurrentUser] Utilisateur $utilisateur,
+        Request $request,
+    ): JsonResponse {
+        $donnees = $this->lireJson($request);
+        $etiquette = (new Etiquette())
+            ->setNom(trim((string) ($donnees['nom'] ?? '')))
+            ->setCreateur($utilisateur);
+        $logement->addEtiquette($etiquette);
+
+        $messages = $this->messagesParChamp($this->validator->validate($etiquette));
+        if ([] !== $messages) {
+            $logement->removeEtiquette($etiquette);
+
+            return $this->reponseInvalide($messages);
+        }
+
+        $this->em->flush();
+
+        return $this->json(['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()], Response::HTTP_CREATED);
     }
 
     #[Route('/{id}/recherche', name: 'api_logement_recherche', requirements: ['id' => '\d+'], methods: ['GET'])]
