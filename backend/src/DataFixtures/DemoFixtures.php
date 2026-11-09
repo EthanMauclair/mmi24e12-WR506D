@@ -2,8 +2,10 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Abonnement;
 use App\Entity\Article;
 use App\Entity\Categorie;
+use App\Entity\Commentaire;
 use App\Entity\Couleur;
 use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
@@ -20,6 +22,7 @@ use App\Enum\FormatVinyle;
 use App\Enum\ModeAjout;
 use App\Enum\RoleLogement;
 use App\Enum\Saison;
+use App\Enum\StatutAbonnement;
 use App\Enum\StatutArticle;
 use App\Enum\TypeStockage;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -60,7 +63,15 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
         $tom = $this->utilisateur('tom.martin', 'tom@exemple.fr', '1994-09-02');
         $ines = $this->utilisateur('ines.r', 'ines@exemple.fr', '1998-01-25');
         $jules = $this->utilisateur('jules.chine', 'jules@exemple.fr', '2014-06-10')->setTuteur($lea);
-        $this->utilisateur('sam.invite', 'sam@exemple.fr', '1990-11-30');
+        $sam = $this->utilisateur('sam.invite', 'sam@exemple.fr', '1990-11-30');
+        $camille = $this->utilisateur('camille.vintage', 'camille@exemple.fr', '1995-03-07');
+
+        // Profils du réseau social : celui de Léa est privé, comme sur la maquette
+        $lea->setPrenom('Léa')->setNom('Martin')->setEstPrive(true)
+            ->setBio('Chineuse lyonnaise : vêtements, vinyles et comics de seconde main.');
+        $tom->setPrenom('Tom')->setNom('Martin');
+        $ines->setPrenom('Inès')->setNom('Roux');
+        $camille->setPrenom('Camille')->setBio('Friperie en ligne, pièces vintage des années 70 à 90.');
 
         $logement = (new Logement())->setNom('Appartement Lyon')->setProprietaire($lea);
         $manager->persist($logement);
@@ -102,9 +113,11 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
             ['Baskets blanches', $ines, 'Meuble à chaussures', ['Femmes', 'Chaussures', 'Baskets'], 'Veja', 'Blanc', '39', 'Cuir', ['Week-end'], []],
             ['Montre de ma grand-mère', $lea, 'Commode', ['Femmes', 'Bijoux et montres', 'Montres'], null, 'Doré', null, 'Or', [], ['personnel' => true]],
         ];
+        $articles = [];
         foreach ($vetements as [$titre, $proprietaire, $stockage, $chemin, $marque, $couleur, $taille, $matiere, $etiquettes, $options]) {
             $article = $this->article($logement, $proprietaire, $stockages[$stockage], $chemin, $titre, ModeAjout::SCAN_IMAGE)
                 ->setEstPersonnel($options['personnel'] ?? false);
+            $articles[$titre] = $article;
             foreach ($etiquettes as $nom) {
                 $article->addEtiquette($this->etiquettes[$nom]);
             }
@@ -146,6 +159,25 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
             $article = $this->article($logement, $lea, $stockages[$stockage], $chemin, $titre, ModeAjout::SCAN_CODE_BARRE);
             $manager->persist((new DetailLivre($article))
                 ->setAuteur($auteur)->setEditeur($editeur)->setAnneeParution($annee)->setTome($tome));
+        }
+
+        // Réseau social : abonnés, amis, une demande en attente et des commentaires
+        foreach ([
+            [$tom, $lea, true, true], [$camille, $lea, true, true], [$ines, $lea, true, false], [$jules, $lea, true, false],
+            [$sam, $lea, false, false], [$lea, $tom, true, false], [$lea, $camille, true, false], [$ines, $camille, true, false],
+        ] as [$abonne, $suivi, $accepte, $estAmi]) {
+            $abonnement = (new Abonnement())->setAbonne($abonne)->setSuivi($suivi);
+            if ($accepte && StatutAbonnement::EN_ATTENTE === $abonnement->getStatut()) {
+                $abonnement->accepter();
+            }
+            $manager->persist($abonnement->setEstAmi($estAmi));
+        }
+        foreach ([
+            [$camille, 'Imperméable', 'Le trench est parfait'],
+            [$tom, 'Pull col roulé', 'Tu me le prêtes pour samedi ?'],
+            [$lea, 'Pull col roulé', 'Seulement si tu le rends cette fois !'],
+        ] as [$auteur, $titre, $contenu]) {
+            $manager->persist((new Commentaire())->setAuteur($auteur)->setArticle($articles[$titre])->setContenu($contenu));
         }
 
         $manager->flush();
