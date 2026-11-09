@@ -43,6 +43,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 30)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 3, max: 30)]
+    // Le pseudo apparaît dans l'adresse du profil (/membres/{pseudo})
+    #[Assert\Regex(pattern: '/^[a-zA-Z0-9._-]+$/', message: 'Utilisez uniquement des lettres sans accent, des chiffres, des points, des tirets ou des tirets bas.')]
     private ?string $pseudo = null;
 
     #[ORM\Column(length: 50, nullable: true)]

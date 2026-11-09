@@ -74,8 +74,14 @@ Après le chargement des fixtures, tous les comptes ont le mot de passe `penderi
 | `ines@exemple.fr`  | Co-propriétaire                                        |
 | `jules@exemple.fr` | Membre mineur, rattaché à Léa                          |
 | `sam@exemple.fr`   | Aucun logement : peut créer le sien                    |
+| `camille@exemple.fr` | Aucun logement : membre du réseau social             |
 
 Léa possède un article personnel (« Montre de ma grand-mère ») que les autres membres ne voient pas.
+
+Côté réseau social, le profil de Léa (`lea.chine`) est privé :
+- Tom et Camille la suivent et font partie de ses amis : ils peuvent commenter ses articles ;
+- Inès et Jules la suivent sans être ses amis ;
+- Sam a envoyé une demande d'abonnement qui attend la réponse de Léa.
 
 Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
 
@@ -97,7 +103,28 @@ Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
 
 La caméra du navigateur n'est accessible que sur une page sécurisée : `http://localhost` fonctionne, mais depuis un téléphone sur le réseau local il faut une adresse en HTTPS. À défaut, le bouton « Importer depuis la galerie » permet de choisir ou de prendre une photo.
 
-Les autres écrans (tenues, marché, profil, prêts) arrivent dans les prochaines versions.
+- **Réseau social** (onglet Profil de la barre de navigation) :
+  - profil avec bio, nombre d'articles, d'abonnés et d'abonnements, et ses articles (sans les articles personnels ni vendus) ;
+  - recherche de membres par pseudo, prénom ou nom ;
+  - abonnement à un profil public, ou demande d'abonnement à un profil privé, que le membre accepte ou refuse ;
+  - choix des **amis** parmi ses abonnés, comme les « amis proches » d'Instagram : eux seuls commentent ses articles ;
+  - commentaires sous les articles ;
+  - modification du profil : pseudo, prénom, nom, bio, profil privé ou public. Un profil qui devient public accepte les demandes en attente.
+
+Les autres écrans (tenues, marché, prêts) arrivent dans les prochaines versions.
+
+### Qui voit quoi dans le réseau social
+
+| Action | Qui peut le faire |
+|---|---|
+| Voir un profil (nom, bio, compteurs) | Tout le monde, même sans compte |
+| Voir les articles, les abonnés et les abonnements d'un profil public | Tout le monde, même sans compte |
+| Voir ceux d'un profil privé | Le membre et ses abonnés acceptés |
+| Voir où un article est rangé | Les membres du logement uniquement, jamais un visiteur ni un abonné |
+| Voir un article personnel | Uniquement le membre qui l'a ajouté |
+| Commenter un article | Le membre qui l'a ajouté et ses amis ; jamais un article personnel |
+| Supprimer un commentaire | Son auteur, ou le membre qui a ajouté l'article |
+| Savoir qui sont les amis d'un membre | Le membre uniquement |
 
 ## API
 
@@ -123,6 +150,24 @@ Les autres écrans (tenues, marché, profil, prêts) arrivent dans les prochaine
 | GET     | `/api/articles/{id}`                    | Fiche d'un article                             |
 | PUT     | `/api/articles/{id}`                    | Modifie toutes les informations d'un article   |
 | PATCH   | `/api/articles/{id}`                    | Rend un article personnel ou non               |
+| GET     | `/api/articles/{id}/commentaires`       | Commentaires d'un article                      |
+| POST    | `/api/articles/{id}/commentaires`       | Commente un article (`contenu`), réservé aux amis |
+| DELETE  | `/api/commentaires/{id}`                | Supprime un commentaire                        |
+| GET     | `/api/membres?q=…`                      | Recherche de membres                           |
+| GET     | `/api/profils/{pseudo}`                 | Profil d'un membre et relation avec lui        |
+| GET     | `/api/profils/{pseudo}/articles`        | Articles d'un profil, sans leur emplacement    |
+| GET     | `/api/profils/{pseudo}/abonnes`         | Abonnés d'un membre                            |
+| GET     | `/api/profils/{pseudo}/abonnements`     | Membres qu'il suit                             |
+| POST    | `/api/profils/{pseudo}/abonnement`      | S'abonne, ou envoie une demande (profil privé) |
+| DELETE  | `/api/profils/{pseudo}/abonnement`      | Se désabonne, ou annule la demande             |
+| PUT     | `/api/moi/profil`                       | Modifie son profil                             |
+| GET     | `/api/moi/demandes`                     | Demandes d'abonnement reçues                   |
+| POST    | `/api/moi/demandes/{id}/acceptation`    | Accepte une demande                            |
+| DELETE  | `/api/moi/demandes/{id}`                | Refuse une demande                             |
+| PUT     | `/api/moi/abonnes/{pseudo}`             | Choisit un abonné comme ami ou non (`estAmi`)  |
+| DELETE  | `/api/moi/abonnes/{pseudo}`             | Retire un abonné                               |
+
+Les routes de consultation du réseau social (`GET` sur les profils, les membres, un article et ses commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
 
 Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).
 

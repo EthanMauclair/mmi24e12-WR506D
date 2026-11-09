@@ -124,10 +124,11 @@ final class ArticleController extends ApiController
      */
     private function presenter(Article $article): array
     {
-        return $this->presentateur->articleDetail(
-            $article,
-            $this->isGranted(ArticleVoter::MODIFIER, $article),
-            $this->isGranted(ArticleVoter::CHANGER_CONFIDENTIALITE, $article),
-        );
+        return $this->presentateur->articleDetail($article, [
+            'peutModifier' => $this->isGranted(ArticleVoter::MODIFIER, $article),
+            'peutChangerConfidentialite' => $this->isGranted(ArticleVoter::CHANGER_CONFIDENTIALITE, $article),
+            'voitEmplacement' => $this->isGranted(ArticleVoter::VOIR_EMPLACEMENT, $article),
+            'peutCommenter' => $this->isGranted(ArticleVoter::COMMENTER, $article),
+        ]);
     }
 }

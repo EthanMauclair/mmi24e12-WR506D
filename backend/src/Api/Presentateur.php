@@ -3,6 +3,7 @@
 namespace App\Api;
 
 use App\Entity\Article;
+use App\Entity\Commentaire;
 use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
 use App\Entity\DetailVinyle;
@@ -31,6 +32,53 @@ final class Presentateur
             'email' => $utilisateur->getEmail(),
             'estPrive' => $utilisateur->isEstPrive(),
             'estMineur' => $utilisateur->estMineur(),
+        ];
+    }
+
+    /**
+     * Membre tel que les autres le voient (listes, auteur d'un commentaire…) : jamais son e-mail.
+     *
+     * @return array<string, mixed>
+     */
+    public function membre(Utilisateur $membre): array
+    {
+        $nomComplet = trim(($membre->getPrenom() ?? '').' '.($membre->getNom() ?? ''));
+
+        return [
+            'id' => $membre->getId(),
+            'pseudo' => $membre->getPseudo(),
+            'nomComplet' => '' === $nomComplet ? null : $nomComplet,
+            'avatar' => $membre->getAvatar(),
+            'estPrive' => $membre->isEstPrive(),
+        ];
+    }
+
+    /**
+     * Articles d'un profil : comme articlesResumes, sans ce qui dit où ils sont rangés.
+     *
+     * @param list<Article> $articles
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function articlesDuProfil(array $articles): array
+    {
+        return array_map(
+            static fn (array $article) => array_diff_key($article, ['stockageId' => true, 'emplacement' => true]),
+            $this->articlesResumes($articles),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function commentaire(Commentaire $commentaire, bool $peutSupprimer): array
+    {
+        return [
+            'id' => $commentaire->getId(),
+            'auteur' => $this->membre($commentaire->getAuteur()),
+            'contenu' => $commentaire->getContenu(),
+            'createdAt' => $commentaire->getCreatedAt()->format(\DATE_ATOM),
+            'peutSupprimer' => $peutSupprimer,
         ];
     }
 
@@ -81,10 +129,17 @@ final class Presentateur
     }
 
     /**
+     * Fiche d'un article. Sans le droit voitEmplacement (visiteur, abonné), ni l'emplacement ni le logement
+     * ne sont renvoyés.
+     *
+     * @param array{peutModifier: bool, peutChangerConfidentialite: bool, voitEmplacement: bool, peutCommenter: bool} $droits
+     *
      * @return array<string, mixed>
      */
-    public function articleDetail(Article $article, bool $peutModifier, bool $peutChangerConfidentialite): array
+    public function articleDetail(Article $article, array $droits): array
     {
+        $peutModifier = $droits['peutModifier'];
+        $voitEmplacement = $droits['voitEmplacement'];
         $details = $this->details([$article]);
         $vetement = $details[DetailVetement::class][$article->getId()] ?? null;
         $couleur = $vetement?->getCouleurPrincipale();
@@ -103,18 +158,21 @@ final class Presentateur
             'couleur' => null === $couleur ? null : ['nom' => $couleur->getNom(), 'codeHex' => $couleur->getCodeHex()],
             'photos' => array_map(static fn ($photo) => $photo->getChemin(), $photos),
             'dateScan' => $photoScan?->getCreatedAt()->format(\DATE_ATOM),
-            'emplacement' => null === $stockage ? null : [
+            'voitEmplacement' => $voitEmplacement,
+            'emplacement' => null === $stockage || !$voitEmplacement ? null : [
                 'piece' => ['id' => $stockage->getPiece()->getId(), 'nom' => $stockage->getPiece()->getNom()],
                 'stockage' => ['id' => $stockage->getId(), 'nom' => $stockage->getNom()],
             ],
-            'logementId' => $article->getLogement()->getId(),
+            'logementId' => $voitEmplacement ? $article->getLogement()->getId() : null,
+            'proprietaire' => $this->membre($article->getProprietaire()),
             'etiquettes' => array_map(
                 static fn ($etiquette) => ['id' => $etiquette->getId(), 'nom' => $etiquette->getNom()],
                 $article->getEtiquettes()->getValues(),
             ),
             'estPersonnel' => $article->isEstPersonnel(),
             'peutModifier' => $peutModifier,
-            'peutChangerConfidentialite' => $peutChangerConfidentialite,
+            'peutChangerConfidentialite' => $droits['peutChangerConfidentialite'],
+            'peutCommenter' => $droits['peutCommenter'],
             'formulaire' => $peutModifier ? $this->formulaire($article, $details) : null,
         ];
     }

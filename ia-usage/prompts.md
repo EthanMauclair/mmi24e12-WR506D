@@ -383,3 +383,32 @@ Le prompt est consigné une seule fois ici, pour éviter un conflit entre les de
 - Bug trouvé en simulant OpenRouter en local (réponses lentes, 500, 504, JSON invalide) : une erreur 5xx faisait planter l'analyse au lieu de passer au modèle suivant
 - L'envoi de la photo et son analyse partent en même temps au lieu de l'un après l'autre
 - Autre cause de lenteur mesurée : sous Windows, chaque requête Symfony en mode debug coûte environ 2 s, à cause du dossier partagé avec Docker
+
+---
+
+## 2026-11-09 — Réseau social : profils, abonnements, amis et commentaires
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/reseau-social`
+
+**Prompt :**
+
+> C'est bon. Maintenant, faisons toute la partie sociale, avant de lancer quoi que ce soit, dit moi ce que tu as comme informations de ton coté pour la partie sociale
+
+**Prompt de suivi** (réponses aux questions sur le périmètre) :
+
+> 1. Je te suis.
+> 2. Oui
+> 3. Non
+> 4. Oui
+> 5. Non, ce fichier ne me parle pas
+
+Questions posées : commencer par le réseau social seul (les tenues attendront le générateur) ; un abonné voit-il les articles du dressing ; tout membre peut-il commenter une tenue ; les profils publics sont-ils visibles sans compte ; existe-t-il une matrice des droits.
+
+**Résultat retenu :**
+
+- API : recherche de membres, profils, abonnement immédiat (profil public) ou demande à accepter (profil privé), choix des amis parmi les abonnés, modification du profil, commentaires d'articles réservés aux amis
+- Règles regroupées dans un service `Relations` et deux voters ; un visiteur ou un abonné ne reçoit jamais l'emplacement d'un article ; les routes de consultation sont ouvertes sans compte
+- Écrans : profil (le sien et celui des autres, d'après la maquette), recherche, abonnés, abonnements, amis, demandes, modification du profil, commentaires sur la fiche article
+- Matrice des droits du réseau social rédigée dans le README, faute de document fourni
+- Données de démonstration : profil privé de Léa, abonnés, amis, une demande en attente et des commentaires
