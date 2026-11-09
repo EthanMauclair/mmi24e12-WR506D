@@ -6,6 +6,7 @@ import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
+import { ilYA } from '@/utils/dates'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,7 +18,11 @@ const chargement = ref(true)
 const erreur = ref('')
 const erreurAction = ref('')
 const actionEnCours = ref(false)
-const onglet = ref('articles')
+// Après « Partager » dans le générateur, le profil s'ouvre directement sur ses tenues
+const onglet = ref(route.query.onglet === 'tenues' ? 'tenues' : 'articles')
+// null tant que l'onglet Tenues n'a pas été ouvert
+const tenues = ref(null)
+const erreurTenues = ref('')
 
 // /profil affiche le profil de l'utilisateur connecté, /membres/:pseudo celui d'un membre
 const pseudo = computed(() => route.params.pseudo ?? session.utilisateur?.pseudo)
@@ -44,6 +49,42 @@ function pluriel(nombre, mot) {
 
 async function chargerArticles() {
   articles.value = profil.value.peutVoirContenu ? await api(`/profils/${profil.value.pseudo}/articles`) : []
+  tenues.value = null
+  if (onglet.value === 'tenues') {
+    await chargerTenues()
+  }
+}
+
+async function chargerTenues() {
+  if (!profil.value.peutVoirContenu || tenues.value !== null) {
+    return
+  }
+  erreurTenues.value = ''
+  try {
+    tenues.value = await api(`/profils/${profil.value.pseudo}/tenues`)
+  } catch (e) {
+    erreurTenues.value = e.message
+  }
+}
+
+function ouvrirOnglet(nom) {
+  onglet.value = nom
+  if (nom === 'tenues') {
+    chargerTenues()
+  }
+}
+
+async function supprimerTenue(tenue) {
+  if (!window.confirm(`Supprimer la tenue « ${tenue.titre} » ?`)) {
+    return
+  }
+  erreurTenues.value = ''
+  try {
+    await api(`/tenues/${tenue.id}`, { methode: 'DELETE' })
+    tenues.value = tenues.value.filter((autre) => autre.id !== tenue.id)
+  } catch (e) {
+    erreurTenues.value = e.message
+  }
 }
 
 async function charger() {
@@ -186,10 +227,12 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
         </template>
 
         <div role="tablist" aria-label="Contenu du profil" class="onglets">
-          <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'articles' }" :aria-selected="onglet === 'articles'" @click="onglet = 'articles'">
+          <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'articles' }" :aria-selected="onglet === 'articles'" @click="ouvrirOnglet('articles')">
             Articles<template v-if="profil.compteurs.articles !== null"> · {{ profil.compteurs.articles }}</template>
           </button>
-          <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'tenues' }" :aria-selected="onglet === 'tenues'" @click="onglet = 'tenues'">Tenues</button>
+          <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'tenues' }" :aria-selected="onglet === 'tenues'" @click="ouvrirOnglet('tenues')">
+            Tenues<template v-if="tenues"> · {{ tenues.length }}</template>
+          </button>
         </div>
 
         <div v-if="!profil.peutVoirContenu" class="verrou">
@@ -199,7 +242,43 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
           <span class="verrou__titre">Ce profil est privé</span>
           <span class="verrou__texte">Abonnez-vous pour voir ses articles et ses tenues.</span>
         </div>
-        <p v-else-if="onglet === 'tenues'" class="etat">Les tenues arriveront avec le générateur de tenue.</p>
+        <template v-else-if="onglet === 'tenues'">
+          <p v-if="erreurTenues" class="message-erreur" role="alert">{{ erreurTenues }}</p>
+          <p v-if="tenues === null" class="etat">Chargement des tenues…</p>
+          <div v-else-if="tenues.length === 0" class="vide">
+            <p class="etat">Aucune tenue partagée pour le moment.</p>
+            <RouterLink v-if="estMoi" :to="{ name: 'tenues' }" class="bouton bouton--principal">Générer une tenue</RouterLink>
+          </div>
+          <ul v-else class="tenues">
+            <li v-for="tenue in tenues" :key="tenue.id" class="tenue">
+              <div class="tenue__pieces" :class="`tenue__pieces--${Math.min(tenue.articles.length, 3)}`">
+                <RouterLink
+                  v-for="article in tenue.articles.slice(0, 3)"
+                  :key="article.id"
+                  :to="{ name: 'article', params: { id: article.id } }"
+                  class="tenue__piece"
+                  :class="{ 'vignette--claire': estCouleurClaire(article.couleur) }"
+                  :style="{ background: fondVignette(article.couleur) }"
+                  :aria-label="article.titre"
+                >
+                  <img v-if="article.photo" :src="article.photo" alt="" class="vignette__photo" />
+                  <svg v-else width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
+                </RouterLink>
+              </div>
+              <div class="tenue__textes">
+                <span class="tenue__titre">
+                  {{ tenue.titre }}
+                  <span v-if="tenue.estPrivee" class="badge">Privée</span>
+                </span>
+                <span class="tenue__date">{{ tenue.articles.length }} {{ pluriel(tenue.articles.length, 'pièce') }} · {{ ilYA(tenue.createdAt) }}</span>
+                <p v-if="tenue.description" class="tenue__description">{{ tenue.description }}</p>
+              </div>
+              <button v-if="estMoi" type="button" class="tenue__supprimer" :aria-label="`Supprimer la tenue ${tenue.titre}`" @click="supprimerTenue(tenue)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+              </button>
+            </li>
+          </ul>
+        </template>
         <p v-else-if="articles.length === 0" class="etat">Aucun article pour le moment.</p>
         <div v-else class="grille">
           <RouterLink
@@ -503,5 +582,100 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.vide {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tenues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tenue {
+  position: relative;
+  border-radius: 22px;
+  background: var(--couleur-surface);
+  border: 1px solid var(--couleur-bordure);
+  overflow: hidden;
+}
+
+/* Comme sur la maquette du fil : une grande pièce à gauche, deux petites à droite */
+.tenue__pieces {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, 100px);
+  gap: 3px;
+}
+
+.tenue__pieces--1 {
+  grid-template-columns: 1fr;
+}
+
+.tenue__pieces--1 .tenue__piece,
+.tenue__pieces--3 .tenue__piece:first-child {
+  grid-row: span 2;
+}
+
+.tenue__pieces--2 .tenue__piece {
+  grid-row: span 2;
+}
+
+.tenue__piece {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--couleur-photo-icone);
+}
+
+.tenue__textes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 16px 14px;
+}
+
+.tenue__titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.tenue__date {
+  font-size: 12px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.tenue__description {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tenue__supprimer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--couleur-photo-bouton);
+  color: var(--couleur-texte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 </style>
