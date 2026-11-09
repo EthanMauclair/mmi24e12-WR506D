@@ -412,3 +412,27 @@ Questions posées : commencer par le réseau social seul (les tenues attendront 
 - Écrans : profil (le sien et celui des autres, d'après la maquette), recherche, abonnés, abonnements, amis, demandes, modification du profil, commentaires sur la fiche article
 - Matrice des droits du réseau social rédigée dans le README, faute de document fourni
 - Données de démonstration : profil privé de Léa, abonnés, amis, une demande en attente et des commentaires
+
+---
+
+## 2026-11-09 — Générateur de tenue
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/generateur-tenue`
+
+**Prompt :**
+
+> J'ai fait tout ce que tu m'as donné, que fais t-on maintenant ?
+
+Proposition faite : le générateur de tenue, puis le fil des tenues ; météo avec Open-Meteo (gratuit, sans clé) et la position du navigateur ; un vêtement choisi par zone selon l'occasion et la météo, « Autre idée » pour relancer, enregistrement de la tenue.
+
+**Prompt de suivi :**
+
+> On part la dessus
+
+**Résultat retenu :**
+
+- API : proposition de tenue (haut et bas ou pièce unique, chaussures, veste s'il fait frais ou s'il pleut) parmi ses vêtements disponibles du logement ; filtre par étiquette qui écarte les vêtements portant seulement d'autres étiquettes ; météo en direct (Open-Meteo, ville via OpenStreetMap, position arrondie et réponses en cache) ; création d'étiquettes par le propriétaire et les co-propriétaires ; enregistrement, liste et suppression des tenues
+- Écran « Générer » d'après la maquette (carte météo, occasions, quatre cases, « Autre idée », « Partager ») et onglet Tenues du profil
+- Correctif trouvé en testant : les liens de la barre de navigation avaient un attribut `href="null"`
+- Limite signalée : la saison, la chaleur, la capuche et l'imperméabilité des vêtements ne sont pas encore saisies à l'ajout d'un article
