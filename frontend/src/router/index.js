@@ -48,6 +48,11 @@ const router = createRouter({
       meta: { ouvert: true },
     },
     {
+      path: '/tenues',
+      name: 'tenues',
+      component: () => import('../views/TenuesView.vue'),
+    },
+    {
       path: '/profil',
       name: 'profil',
       component: () => import('../views/ProfilView.vue'),

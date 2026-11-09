@@ -58,6 +58,10 @@
   --couleur-vignette-grege: #b9b2aa;
   --couleur-vignette-kaki: #5b6b4e;
 
+  /* Carte météo du générateur de tenue */
+  --couleur-meteo: #2f5576;
+  --couleur-meteo-fond: #eaf0f5;
+
   /* Avatars des membres sans photo (initiale sur fond coloré) */
   --couleur-avatar-ardoise: #34465c;
   --couleur-anneau-avatar: #d9b3bf;
@@ -74,6 +78,7 @@
   --ombre-bouton-scan: 0 8px 20px rgba(110, 26, 51, 0.32);
   --ombre-curseur: 0 1px 3px rgba(0, 0, 0, 0.2);
   --ombre-menu: 0 12px 32px rgba(30, 20, 22, 0.16);
+  --ombre-segment: 0 1px 3px rgba(30, 20, 22, 0.08);
 
   --police: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
