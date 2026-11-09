@@ -44,8 +44,7 @@ const onglets = [
       <component
         :is="onglet.route ? RouterLink : 'a'"
         v-else
-        :to="onglet.route"
-        :href="onglet.route ? undefined : '#'"
+        v-bind="onglet.route ? { to: onglet.route } : { href: '#' }"
         class="onglet"
         :class="{ 'onglet--actif': onglet.id === actif }"
         :aria-current="onglet.id === actif ? 'page' : undefined"
