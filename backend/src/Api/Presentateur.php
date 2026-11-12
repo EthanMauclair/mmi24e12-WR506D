@@ -8,6 +8,7 @@ use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
 use App\Entity\DetailVinyle;
 use App\Entity\Logement;
+use App\Entity\Pret;
 use App\Entity\Tenue;
 use App\Entity\Utilisateur;
 use App\Enum\RoleLogement;
@@ -88,6 +89,46 @@ final class Presentateur
     }
 
     /**
+     * Prêts avec un résumé de leur article (photo, couleur, titre), en une requête par type de détail.
+     *
+     * @param list<Pret> $prets
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function prets(array $prets): array
+    {
+        $resumes = [];
+        foreach ($this->articlesResumes(array_map(static fn (Pret $pret) => $pret->getArticle(), $prets)) as $resume) {
+            $resumes[$resume['id']] = array_intersect_key($resume, array_flip(['id', 'titre', 'infos', 'photo', 'couleur']));
+        }
+
+        return array_map(fn (Pret $pret) => $this->pret($pret) + ['article' => $resumes[$pret->getArticle()->getId()]], $prets);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function pret(Pret $pret): array
+    {
+        $prevue = $pret->getDateRetourPrevue();
+
+        return [
+            'id' => $pret->getId(),
+            'emprunteur' => null === $pret->getEmprunteur() ? null : $this->membre($pret->getEmprunteur()),
+            'emprunteurNom' => $pret->getEmprunteurNom(),
+            'datePret' => $pret->getDatePret()->format('Y-m-d'),
+            'dateRetourPrevue' => $prevue?->format('Y-m-d'),
+            'dateRetourReelle' => $pret->getDateRetourReelle()?->format('Y-m-d'),
+            'note' => $pret->getNote(),
+            'enCours' => $pret->estEnCours(),
+            // Négatif quand le retour prévu est dépassé
+            'joursRestants' => $pret->estEnCours() && null !== $prevue
+                ? (int) (new \DateTimeImmutable('today'))->diff($prevue)->format('%r%a')
+                : null,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function commentaire(Commentaire $commentaire, bool $peutSupprimer): array
@@ -148,14 +189,14 @@ final class Presentateur
     }
 
     /**
-     * Fiche d'un article. Sans le droit voitEmplacement (visiteur, abonné), ni l'emplacement ni le logement
-     * ne sont renvoyés.
+     * Fiche d'un article. Sans le droit voitEmplacement (visiteur, abonné), ni l'emplacement, ni le logement,
+     * ni le prêt en cours ne sont renvoyés.
      *
      * @param array{peutModifier: bool, peutChangerConfidentialite: bool, voitEmplacement: bool, peutCommenter: bool} $droits
      *
      * @return array<string, mixed>
      */
-    public function articleDetail(Article $article, array $droits): array
+    public function articleDetail(Article $article, array $droits, ?Pret $pretEnCours = null): array
     {
         $peutModifier = $droits['peutModifier'];
         $voitEmplacement = $droits['voitEmplacement'];
@@ -192,6 +233,7 @@ final class Presentateur
             'peutModifier' => $peutModifier,
             'peutChangerConfidentialite' => $droits['peutChangerConfidentialite'],
             'peutCommenter' => $droits['peutCommenter'],
+            'pretEnCours' => null === $pretEnCours || !$voitEmplacement ? null : $this->pret($pretEnCours),
             'formulaire' => $peutModifier ? $this->formulaire($article, $details) : null,
         ];
     }

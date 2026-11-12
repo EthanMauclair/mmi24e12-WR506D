@@ -6,6 +6,7 @@ use App\Api\Presentateur;
 use App\Entity\Article;
 use App\Entity\Utilisateur;
 use App\Repository\LogementRepository;
+use App\Repository\PretRepository;
 use App\Security\Voter\ArticleVoter;
 use App\Security\Voter\LogementVoter;
 use App\Service\Article\ArticleInvalideException;
@@ -23,8 +24,10 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/api/articles')]
 final class ArticleController extends ApiController
 {
-    public function __construct(private readonly Presentateur $presentateur)
-    {
+    public function __construct(
+        private readonly Presentateur $presentateur,
+        private readonly PretRepository $prets,
+    ) {
     }
 
     /**
@@ -129,6 +132,6 @@ final class ArticleController extends ApiController
             'peutChangerConfidentialite' => $this->isGranted(ArticleVoter::CHANGER_CONFIDENTIALITE, $article),
             'voitEmplacement' => $this->isGranted(ArticleVoter::VOIR_EMPLACEMENT, $article),
             'peutCommenter' => $this->isGranted(ArticleVoter::COMMENTER, $article),
-        ]);
+        ], $this->prets->findEnCours($article));
     }
 }

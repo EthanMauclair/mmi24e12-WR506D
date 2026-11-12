@@ -1,6 +1,41 @@
 const FORMAT_JOUR = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
 /**
+ * Date du jour au format AAAA-MM-JJ (valeur d'un champ date), dans le fuseau de l'utilisateur.
+ */
+export function aujourdhui() {
+  const date = new Date()
+  return [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((n) => String(n).padStart(2, '0')).join('-')
+}
+
+/**
+ * « 12 nov. » à partir d'une date AAAA-MM-JJ (lue comme une date locale, sans décalage de fuseau).
+ */
+export function jourCourt(dateIso) {
+  const [annee, mois, jour] = dateIso.split('-').map(Number)
+  return FORMAT_JOUR.format(new Date(annee, mois - 1, jour))
+}
+
+/**
+ * Échéance d'un prêt d'après le nombre de jours avant le retour prévu (négatif : en retard).
+ */
+export function echeance(joursRestants) {
+  if (joursRestants === null) {
+    return 'Sans date'
+  }
+  if (joursRestants < 0) {
+    return 'En retard'
+  }
+  if (joursRestants === 0) {
+    return "Aujourd'hui"
+  }
+  if (joursRestants === 1) {
+    return 'Demain'
+  }
+  return joursRestants < 21 ? `Dans ${joursRestants} j` : `Dans ${Math.round(joursRestants / 7)} sem.`
+}
+
+/**
  * Date relative courte, comme sur les réseaux sociaux : « à l'instant », « il y a 5 min », « il y a 2 h »,
  * « hier », puis la date (« 3 nov. »).
  *

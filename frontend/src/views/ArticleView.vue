@@ -6,6 +6,7 @@ import BlocCommentaires from '@/components/BlocCommentaires.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
+import { echeance, jourCourt } from '@/utils/dates'
 
 const FORMAT_DATE_SCAN = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -16,6 +17,7 @@ const article = ref(null)
 const chargement = ref(true)
 const erreur = ref('')
 const erreurConfidentialite = ref('')
+const erreurPret = ref('')
 const indexPhoto = ref(0)
 
 // Un membre du logement revient à la pièce ; un abonné ou un visiteur, au profil de celui qui a ajouté l'article
@@ -41,6 +43,16 @@ async function charger(id) {
     erreur.value = e.message
   } finally {
     chargement.value = false
+  }
+}
+
+async function marquerRendu() {
+  erreurPret.value = ''
+  try {
+    await api(`/prets/${article.value.pretEnCours.id}/retour`, { methode: 'POST' })
+    article.value = await api(`/articles/${article.value.id}`)
+  } catch (e) {
+    erreurPret.value = e.violations.general ?? e.message
   }
 }
 
@@ -131,6 +143,19 @@ watch(() => route.params.id, charger, { immediate: true })
           </span>
         </div>
 
+        <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="pret" :class="{ 'pret--retard': article.pretEnCours.joursRestants < 0 }">
+          <span class="pret__textes">
+            <span class="pret__qui">
+              Prêté à {{ article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }}
+            </span>
+            <span class="pret__dates">
+              Depuis le {{ jourCourt(article.pretEnCours.datePret) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · retour prévu le {{ jourCourt(article.pretEnCours.dateRetourPrevue) }}</template>
+            </span>
+          </span>
+          <span class="pret__echeance">{{ echeance(article.pretEnCours.joursRestants) }}</span>
+        </RouterLink>
+        <p v-if="erreurPret" class="message-erreur" role="alert">{{ erreurPret }}</p>
+
         <dl class="caracteristiques">
           <div class="caracteristique">
             <dt class="caracteristique__libelle">Catégorie</dt>
@@ -176,12 +201,16 @@ watch(() => route.params.id, charger, { immediate: true })
       </main>
 
       <div v-if="article.peutModifier" class="actions">
-        <a href="#" class="action action--secondaire">
+        <button v-if="article.pretEnCours" type="button" class="action action--secondaire" @click="marquerRendu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+          Marquer rendu
+        </button>
+        <RouterLink v-else-if="article.statut === 'DISPONIBLE'" :to="{ name: 'article-preter', params: { id: article.id } }" class="action action--secondaire">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
           Prêter
-        </a>
-        <!-- Un article personnel ne peut pas être mis en vente -->
-        <a v-if="!article.estPersonnel" href="#" class="action action--principale">
+        </RouterLink>
+        <!-- Un article personnel, prêté ou déjà en vente ne peut pas être mis en vente -->
+        <a v-if="!article.estPersonnel && article.statut === 'DISPONIBLE'" href="#" class="action action--principale">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
           Mettre en vente
         </a>
@@ -557,6 +586,55 @@ watch(() => route.params.id, charger, { immediate: true })
   flex-direction: column;
   gap: 12px;
   padding: 24px 20px;
+}
+
+/* « Marquer rendu » est un bouton, « Prêter » un lien : même apparence */
+button.action--secondaire {
+  background: var(--couleur-surface);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pret {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--couleur-primaire-pale);
+  color: var(--couleur-primaire-fonce);
+}
+
+.pret--retard {
+  background: var(--couleur-alerte-fond);
+  color: var(--couleur-alerte);
+}
+
+.pret__textes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pret__qui {
+  font-size: 14px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.pret__dates {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.pret__echeance {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 /* Sans barre d'actions, le contenu garde une marge en bas */
