@@ -106,7 +106,7 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
         // Vêtements : [titre, propriétaire, stockage, catégorie, marque, couleur, taille, matière, étiquettes, options]
         $vetements = [
             ['Pull col roulé', $lea, 'Armoire', ['Femmes', 'Pulls et sweats', 'Pulls'], 'COS', 'Bordeaux', 'M', 'Laine mérinos', ['Travail', 'Hiver', 'Week-end'], ['saison' => Saison::AUTOMNE_HIVER, 'chaleur' => 4]],
-            ['Veste en jean', $lea, 'Armoire', ['Femmes', 'Manteaux et vestes', 'Vestes en jean'], "Levi's", 'Bleu', 'S', 'Denim', ['Week-end'], ['pretee' => 'Camille']],
+            ['Veste en jean', $lea, 'Armoire', ['Femmes', 'Manteaux et vestes', 'Vestes en jean'], "Levi's", 'Bleu', 'S', 'Denim', ['Week-end'], []],
             ['Chemise rayée', $lea, 'Armoire', ['Femmes', 'Hauts et t-shirts', 'Chemises'], 'Uniqlo', 'Blanc', 'M', 'Coton', ['Travail'], []],
             ['Sweat zippé', $tom, 'Armoire', ['Hommes', 'Pulls et sweats', 'Sweats zippés'], 'Carhartt', 'Vert', 'L', 'Coton', ['Week-end', 'Sport'], ['capuche' => true]],
             ['T-shirt blanc', $ines, 'Commode', ['Femmes', 'Hauts et t-shirts', 'T-shirts'], 'Uniqlo', 'Blanc', 'S', 'Coton', [], ['saison' => Saison::PRINTEMPS_ETE, 'chaleur' => 1]],
@@ -132,16 +132,26 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
                 ->setNiveauChaleur($options['chaleur'] ?? 3)
                 ->setACapuche($options['capuche'] ?? false)
                 ->setEstImpermeable($options['impermeable'] ?? false));
+        }
 
-            if (isset($options['pretee'])) {
-                $article->setStatut(StatutArticle::PRETE);
-                $manager->persist((new Pret())
-                    ->setArticle($article)
-                    ->setPreteur($proprietaire)
-                    ->setEmprunteurNom($options['pretee'])
-                    ->setDatePret(new \DateTimeImmutable('-12 days'))
-                    ->setDateRetourPrevue(new \DateTimeImmutable('+18 days')));
+        // Prêts de Léa, comme sur la maquette : en cours à un membre, en retard à un simple nom, et un prêt rendu
+        foreach ([
+            ['Veste en jean', $camille, '-12 days', '+18 days', null, 'Week-end à Annecy'],
+            ['Chemise rayée', 'Marc', '-30 days', '-3 days', null, 'Pour son entretien'],
+            ['Jean droit', $ines, '-40 days', '-26 days', '-27 days', null],
+        ] as [$titre, $emprunteur, $depuis, $retourPrevu, $rendu, $note]) {
+            $pret = (new Pret())
+                ->setArticle($articles[$titre])
+                ->setPreteur($lea)
+                ->setDatePret(new \DateTimeImmutable("today $depuis"))
+                ->setDateRetourPrevue(new \DateTimeImmutable("today $retourPrevu"))
+                ->setDateRetourReelle(null === $rendu ? null : new \DateTimeImmutable("today $rendu"))
+                ->setNote($note);
+            $emprunteur instanceof Utilisateur ? $pret->setEmprunteur($emprunteur) : $pret->setEmprunteurNom($emprunteur);
+            if (null === $rendu) {
+                $articles[$titre]->setStatut(StatutArticle::PRETE);
             }
+            $manager->persist($pret);
         }
 
         foreach ([
