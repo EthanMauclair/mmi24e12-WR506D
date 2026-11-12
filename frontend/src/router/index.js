@@ -51,6 +51,31 @@ const router = createRouter({
       component: () => import('../views/PretsView.vue'),
     },
     {
+      path: '/articles/:id/vendre',
+      name: 'article-vendre',
+      component: () => import('../views/VendreView.vue'),
+    },
+    {
+      path: '/marche',
+      name: 'marche',
+      component: () => import('../views/MarcheView.vue'),
+    },
+    {
+      path: '/annonces/:id',
+      name: 'annonce',
+      component: () => import('../views/AnnonceView.vue'),
+    },
+    {
+      path: '/messages',
+      name: 'messages',
+      component: () => import('../views/ConversationsView.vue'),
+    },
+    {
+      path: '/messages/:id',
+      name: 'conversation',
+      component: () => import('../views/ConversationView.vue'),
+    },
+    {
       path: '/articles/:id',
       name: 'article',
       component: () => import('../views/ArticleView.vue'),

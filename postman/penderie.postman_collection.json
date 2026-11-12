@@ -56,6 +56,14 @@
     {
       "key": "pretId",
       "value": ""
+    },
+    {
+      "key": "annonceId",
+      "value": ""
+    },
+    {
+      "key": "conversationId",
+      "value": ""
     }
   ],
   "item": [
@@ -2028,6 +2036,371 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Supprimé, ou rien à supprimer', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Marché",
+      "description": "Annonces et messagerie. Connecté avec Léa, les requêtes « vendeur » portent sur ses annonces ; pour écrire à un vendeur, connectez-vous avec un autre compte (sam@exemple.fr).",
+      "item": [
+        {
+          "name": "Mettre un article en vente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{articleId}}/annonce",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{articleId}}",
+                "annonce"
+              ]
+            },
+            "description": "Réservé au membre qui a ajouté l'article, disponible et non personnel.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prix\": \"18\",\n  \"description\": \"Annonce créée depuis Postman\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('En vente, ou refusé (403 ou 422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 403, 422]));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('annonceId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Annonces du marché",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/annonces",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "annonces"
+              ]
+            },
+            "description": "Paramètres facultatifs : q, famille (vetements, vinyles, livres), mes=1. Garde la première annonce dans annonceId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Annonces (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Aucun emplacement', () => pm.response.json().annonces.forEach((a) => pm.expect(a.article).to.not.have.property('emplacement')));",
+                  "const annonces = pm.response.json().annonces; if (annonces.length && !pm.collectionVariables.get('annonceId')) { pm.collectionVariables.set('annonceId', annonces[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mes annonces",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/annonces?mes=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "annonces"
+              ],
+              "query": [
+                {
+                  "key": "mes",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Mes annonces (200)', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Voir une annonce",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/annonces/{{annonceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "annonces",
+                "{{annonceId}}"
+              ]
+            },
+            "description": "Le vendeur voit toutes les conversations de son annonce ; un acheteur, la sienne."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Annonce (200)', () => pm.response.to.have.status(200));",
+                  "const conversations = pm.response.json().conversations; if (conversations.length) { pm.collectionVariables.set('conversationId', conversations[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Écrire au vendeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/annonces/{{annonceId}}/conversations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "annonces",
+                "{{annonceId}}",
+                "conversations"
+              ]
+            },
+            "description": "Crée la conversation au premier message. 422 si l'on est le vendeur.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Bonjour ! Est-ce toujours disponible ?\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Message envoyé, ou vendeur (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('conversationId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mes conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/conversations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "conversations"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Conversations (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Non lus', () => pm.expect(pm.response.json()).to.have.property('nonLus'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lire une conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/conversations/{{conversationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "conversations",
+                "{{conversationId}}"
+              ]
+            },
+            "description": "Marque les messages reçus comme lus."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Conversation, ou pas participant (404)', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Envoyer un message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/conversations/{{conversationId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "conversations",
+                "{{conversationId}}",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Message envoyé depuis Postman\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Envoyé, ou pas participant (404)', () => pm.expect(pm.response.code).to.be.oneOf([201, 404]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Réserver une annonce",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/annonces/{{annonceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "annonces",
+                "{{annonceId}}"
+              ]
+            },
+            "description": "Statuts : RESERVEE, EN_LIGNE, VENDUE (avec acheteur : pseudo), RETIREE. Réservé au vendeur.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"RESERVEE\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Modifiée, ou pas vendeur (403), ou terminée (422)', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 422]));"
                 ]
               }
             }

@@ -3,9 +3,11 @@
 namespace App\DataFixtures;
 
 use App\Entity\Abonnement;
+use App\Entity\Annonce;
 use App\Entity\Article;
 use App\Entity\Categorie;
 use App\Entity\Commentaire;
+use App\Entity\Conversation;
 use App\Entity\Couleur;
 use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
@@ -15,6 +17,7 @@ use App\Entity\LikeTenue;
 use App\Entity\Logement;
 use App\Entity\Marque;
 use App\Entity\MembreLogement;
+use App\Entity\Message;
 use App\Entity\Piece;
 use App\Entity\Pret;
 use App\Entity\Stockage;
@@ -25,6 +28,7 @@ use App\Enum\ModeAjout;
 use App\Enum\RoleLogement;
 use App\Enum\Saison;
 use App\Enum\StatutAbonnement;
+use App\Enum\StatutAnnonce;
 use App\Enum\StatutArticle;
 use App\Enum\TypeStockage;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -159,6 +163,7 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
             ['Rumours', 'Fleetwood Mac', 'Warner Bros.', 1977, FormatVinyle::LP_33T, 1],
         ] as [$titre, $artiste, $label, $annee, $format, $disques]) {
             $article = $this->article($logement, $lea, $stockages['Étagère vinyles'], ['Musique', 'Vinyles', 'Albums (33 tours)'], $titre, ModeAjout::SCAN_CODE_BARRE);
+            $articles[$titre] = $article;
             $manager->persist((new DetailVinyle($article))
                 ->setArtiste($artiste)->setLabel($label)->setAnneeSortie($annee)->setFormat($format)->setNbDisques($disques));
         }
@@ -191,6 +196,31 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
         ] as [$auteur, $titre, $contenu]) {
             $manager->persist((new Commentaire())->setAuteur($auteur)->setArticle($articles[$titre])->setContenu($contenu));
         }
+
+        // Place de marché : trois annonces, dont une réservée, et la conversation de la maquette entre Sam et Léa
+        $annonces = [];
+        foreach ([
+            ['Random Access Memories', '25.00', '2 LP en très bon état, pochette intacte.', StatutAnnonce::EN_LIGNE],
+            ['Sweat zippé', '30.00', null, StatutAnnonce::EN_LIGNE],
+            ['Baskets blanches', '35.00', 'Portées une saison, semelles comme neuves.', StatutAnnonce::RESERVEE],
+        ] as [$titre, $prix, $description, $statut]) {
+            $articles[$titre]->setStatut(StatutArticle::EN_VENTE);
+            $annonces[$titre] = (new Annonce())->setArticle($articles[$titre])->setPrix($prix)->setDescription($description)->setStatut($statut);
+            $manager->persist($annonces[$titre]);
+        }
+        $conversation = (new Conversation())->setAnnonce($annonces['Random Access Memories'])->setAcheteur($sam);
+        foreach ([
+            [$sam, 'Bonjour ! Le vinyle est toujours disponible ?', '-50 minutes', true],
+            [$lea, 'Oui, il est rangé et prêt à partir.', '-45 minutes', true],
+            [$sam, 'Super. Remise en main propre à Lyon samedi ?', '-44 minutes', true],
+            [$lea, 'Parfait, place Bellecour vers 14 h ?', '-40 minutes', false],
+        ] as [$expediteur, $contenu, $quand, $lu]) {
+            $message = (new Message())->setExpediteur($expediteur)->setContenu($contenu);
+            // Les messages gardent l'ordre de la conversation de la maquette
+            (new \ReflectionProperty(Message::class, 'envoyeAt'))->setValue($message, new \DateTimeImmutable($quand));
+            $conversation->addMessage($message->setLuAt($lu ? new \DateTimeImmutable($quand) : null));
+        }
+        $manager->persist($conversation);
 
         // Une tenue partagée sur le profil de Léa
         $tenue = (new Tenue())->setCreateur($lea)->setTitre('Tenue Travail')

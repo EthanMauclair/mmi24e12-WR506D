@@ -7,6 +7,7 @@ import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 import { echeance, jourCourt } from '@/utils/dates'
+import { formatPrix } from '@/utils/prix'
 
 const FORMAT_DATE_SCAN = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -143,6 +144,14 @@ watch(() => route.params.id, charger, { immediate: true })
           </span>
         </div>
 
+        <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="vente">
+          <span class="vente__textes">
+            <span class="vente__statut">{{ article.annonce.statut === 'RESERVEE' ? 'Réservé sur le marché' : 'En vente sur le marché' }}</span>
+            <span class="vente__prix">{{ formatPrix(article.annonce.prix) }}</span>
+          </span>
+          <span class="vente__voir">Voir l'annonce</span>
+        </RouterLink>
+
         <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="pret" :class="{ 'pret--retard': article.pretEnCours.joursRestants < 0 }">
           <span class="pret__textes">
             <span class="pret__qui">
@@ -209,11 +218,19 @@ watch(() => route.params.id, charger, { immediate: true })
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
           Prêter
         </RouterLink>
-        <!-- Un article personnel, prêté ou déjà en vente ne peut pas être mis en vente -->
-        <a v-if="!article.estPersonnel && article.statut === 'DISPONIBLE'" href="#" class="action action--principale">
+        <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="action action--principale">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
+          Voir l'annonce
+        </RouterLink>
+        <!-- Seul celui qui a ajouté l'article le vend ; un article personnel ou prêté ne peut pas être mis en vente -->
+        <RouterLink
+          v-else-if="article.peutVendre && !article.estPersonnel && article.statut === 'DISPONIBLE'"
+          :to="{ name: 'article-vendre', params: { id: article.id } }"
+          class="action action--principale"
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
           Mettre en vente
-        </a>
+        </RouterLink>
       </div>
     </template>
   </div>
@@ -595,6 +612,42 @@ button.action--secondaire {
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.vente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--couleur-surface);
+  border: 1.5px solid var(--couleur-primaire);
+  color: var(--couleur-texte);
+}
+
+.vente__textes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vente__statut {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--couleur-texte-secondaire);
+}
+
+.vente__prix {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--couleur-primaire);
+}
+
+.vente__voir {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-primaire);
 }
 
 .pret {

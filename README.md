@@ -80,6 +80,8 @@ Léa possède un article personnel (« Montre de ma grand-mère ») que les autr
 
 Léa a prêté sa veste en jean à Camille (membre de l'application) et sa chemise rayée à Marc (simple nom), dont le retour est en retard ; Inès lui a déjà rendu son jean.
 
+Sur le marché : Léa vend le vinyle « Random Access Memories » (Sam lui a écrit, sa dernière réponse n'est pas encore lue), Tom son sweat zippé, et Inès ses baskets (annonce réservée).
+
 Côté réseau social, le profil de Léa (`lea.chine`) est privé :
 - Tom et Camille la suivent et font partie de ses amis : ils peuvent commenter ses articles ;
 - Inès et Jules la suivent sans être ses amis ;
@@ -133,7 +135,12 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
   - écran « Prêts » : prêts en cours (le retour le plus proche d'abord, « En retard » une fois la date dépassée) et rendus ; « Marquer rendu » enregistre la date de retour et rend l'article disponible ;
   - un prêt saisi par erreur peut être supprimé.
 
-Le marché arrive dans une prochaine version.
+- **Place de marché** (onglet Marché) :
+  - mettre en vente un de ses articles depuis sa fiche (prix, description) : il passe « En vente » ; un article personnel ou prêté ne peut pas être vendu ;
+  - le marché montre les annonces en ligne et réservées de tous les membres, avec une recherche et des filtres (vêtements, vinyles, livres et BD, mes annonces) ; jamais l'emplacement des articles ;
+  - l'acheteur écrit au vendeur depuis l'annonce : une conversation privée par acheteur et par annonce, mise à jour toutes les 5 secondes, avec un badge des messages non lus sur le marché ;
+  - le vendeur change le prix, réserve l'annonce ou la remet en ligne, la marque vendue (à un membre qui lui a écrit, ou à quelqu'un hors de l'application) ou la retire. Vendu, l'article quitte le dressing ; retiré, il redevient disponible ;
+  - aucun paiement : acheteur et vendeur s'arrangent entre eux.
 
 ### Qui voit quoi dans le réseau social
 
@@ -151,6 +158,9 @@ Le marché arrive dans une prochaine version.
 | Aimer une tenue | Tout membre connecté qui la voit |
 | Commenter une tenue | Le membre qui l'a créée et ses amis |
 | Créer une étiquette | Le propriétaire et les co-propriétaires du logement |
+| Mettre un article en vente, gérer son annonce | Le membre qui a ajouté l'article |
+| Voir les annonces du marché (et l'article en vente) | Tout membre connecté, même si le profil du vendeur est privé |
+| Lire et écrire dans une conversation | L'acheteur et le vendeur uniquement |
 
 ## API
 
@@ -180,6 +190,14 @@ Le marché arrive dans une prochaine version.
 | GET     | `/api/prets`                            | Ses prêts, en cours et rendus                  |
 | POST    | `/api/prets/{id}/retour`                | Marque un prêt comme rendu aujourd'hui         |
 | DELETE  | `/api/prets/{id}`                       | Supprime un prêt saisi par erreur              |
+| GET     | `/api/annonces`                         | Annonces du marché (`q`, `famille` : vetements, vinyles, livres ; `mes=1`) et messages non lus |
+| POST    | `/api/articles/{id}/annonce`            | Met un article en vente (`prix`, `description`) |
+| GET     | `/api/annonces/{id}`                    | Une annonce et ses conversations (le vendeur les voit toutes, l'acheteur la sienne) |
+| PATCH   | `/api/annonces/{id}`                    | Prix, description ou statut (`RESERVEE`, `EN_LIGNE`, `VENDUE` avec `acheteur`, `RETIREE`) |
+| POST    | `/api/annonces/{id}/conversations`      | Écrit au vendeur (`contenu`) : crée la conversation au premier message |
+| GET     | `/api/conversations`                    | Ses conversations et le nombre de messages non lus |
+| GET     | `/api/conversations/{id}`               | Une conversation ; marque les messages reçus comme lus |
+| POST    | `/api/conversations/{id}/messages`      | Envoie un message (`contenu`)                  |
 | GET     | `/api/articles/{id}/commentaires`       | Commentaires d'un article                      |
 | POST    | `/api/articles/{id}/commentaires`       | Commente un article (`contenu`), réservé aux amis |
 | DELETE  | `/api/commentaires/{id}`                | Supprime un commentaire                        |

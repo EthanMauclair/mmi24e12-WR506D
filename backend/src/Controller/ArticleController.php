@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Api\Presentateur;
 use App\Entity\Article;
 use App\Entity\Utilisateur;
+use App\Repository\AnnonceRepository;
 use App\Repository\LogementRepository;
 use App\Repository\PretRepository;
 use App\Security\Voter\ArticleVoter;
@@ -27,6 +28,7 @@ final class ArticleController extends ApiController
     public function __construct(
         private readonly Presentateur $presentateur,
         private readonly PretRepository $prets,
+        private readonly AnnonceRepository $annonces,
     ) {
     }
 
@@ -127,11 +129,17 @@ final class ArticleController extends ApiController
      */
     private function presenter(Article $article): array
     {
+        $annonce = $this->annonces->findActive($article);
+
         return $this->presentateur->articleDetail($article, [
             'peutModifier' => $this->isGranted(ArticleVoter::MODIFIER, $article),
             'peutChangerConfidentialite' => $this->isGranted(ArticleVoter::CHANGER_CONFIDENTIALITE, $article),
             'voitEmplacement' => $this->isGranted(ArticleVoter::VOIR_EMPLACEMENT, $article),
             'peutCommenter' => $this->isGranted(ArticleVoter::COMMENTER, $article),
-        ], $this->prets->findEnCours($article));
+        ], $this->prets->findEnCours($article)) + [
+            'peutVendre' => $this->isGranted(ArticleVoter::VENDRE, $article),
+            // Annonce en ligne ou réservée : son prix est public, comme sur le marché
+            'annonce' => null === $annonce ? null : ['id' => $annonce->getId(), 'prix' => (float) $annonce->getPrix(), 'statut' => $annonce->getStatut()->value],
+        ];
     }
 }

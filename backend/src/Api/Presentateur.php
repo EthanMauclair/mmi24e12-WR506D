@@ -2,12 +2,15 @@
 
 namespace App\Api;
 
+use App\Entity\Annonce;
 use App\Entity\Article;
 use App\Entity\Commentaire;
+use App\Entity\Conversation;
 use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
 use App\Entity\DetailVinyle;
 use App\Entity\Logement;
+use App\Entity\Message;
 use App\Entity\Pret;
 use App\Entity\Tenue;
 use App\Entity\Utilisateur;
@@ -85,6 +88,81 @@ final class Presentateur
             'createdAt' => $tenue->getCreatedAt()->format(\DATE_ATOM),
             'createur' => $this->membre($tenue->getCreateur()),
             'articles' => $this->articlesDuProfil($tenue->getArticles()->getValues()),
+        ];
+    }
+
+    /**
+     * Annonces du marché avec le résumé de leur article, sans son emplacement.
+     *
+     * @param list<Annonce> $annonces
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function annonces(array $annonces): array
+    {
+        $resumes = [];
+        foreach ($this->articlesDuProfil(array_map(static fn (Annonce $annonce) => $annonce->getArticle(), $annonces)) as $resume) {
+            $resumes[$resume['id']] = $resume;
+        }
+
+        return array_map(fn (Annonce $annonce) => [
+            'id' => $annonce->getId(),
+            'prix' => (float) $annonce->getPrix(),
+            'description' => $annonce->getDescription(),
+            'statut' => $annonce->getStatut()->value,
+            'createdAt' => $annonce->getCreatedAt()->format(\DATE_ATOM),
+            'vendeur' => $this->membre($annonce->getArticle()->getProprietaire()),
+            'acheteur' => null === $annonce->getAcheteur() ? null : $this->membre($annonce->getAcheteur()),
+            'article' => $resumes[$annonce->getArticle()->getId()],
+        ], $annonces);
+    }
+
+    /**
+     * Conversations vues par le membre : son interlocuteur, son rôle, le dernier message et les non lus.
+     *
+     * @param list<Conversation>                                    $conversations
+     * @param array<int, array{dernier: ?Message, nonLus: int}>     $resumes       voir ConversationRepository::resumer
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function conversations(array $conversations, array $resumes, Utilisateur $membre): array
+    {
+        $uniques = [];
+        foreach ($conversations as $conversation) {
+            $uniques[$conversation->getAnnonce()->getId()] = $conversation->getAnnonce();
+        }
+        $annonces = [];
+        foreach ($this->annonces(array_values($uniques)) as $annonce) {
+            $annonces[$annonce['id']] = $annonce;
+        }
+
+        return array_map(function (Conversation $conversation) use ($annonces, $resumes, $membre) {
+            $estVendeur = $conversation->getAnnonce()->getArticle()->getProprietaire() === $membre;
+            $dernier = $resumes[$conversation->getId()]['dernier'] ?? null;
+
+            return [
+                'id' => $conversation->getId(),
+                'annonce' => $annonces[$conversation->getAnnonce()->getId()],
+                'acheteur' => $this->membre($conversation->getAcheteur()),
+                'estVendeur' => $estVendeur,
+                'interlocuteur' => $this->membre($estVendeur ? $conversation->getAcheteur() : $conversation->getAnnonce()->getArticle()->getProprietaire()),
+                'dernierMessage' => null === $dernier ? null : $this->message($dernier, $membre),
+                'nonLus' => $resumes[$conversation->getId()]['nonLus'] ?? 0,
+            ];
+        }, $conversations);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function message(Message $message, Utilisateur $membre): array
+    {
+        return [
+            'id' => $message->getId(),
+            'contenu' => $message->getContenu(),
+            'envoyeAt' => $message->getEnvoyeAt()->format(\DATE_ATOM),
+            'deMoi' => $message->getExpediteur() === $membre,
+            'lu' => null !== $message->getLuAt(),
         ];
     }
 
