@@ -456,3 +456,23 @@ Réponse à la question : faut-il que l'IA du scan devine la saison, la chaleur,
 - Écrans : onglet « Fil des tenues » et carte d'une tenue d'après la maquette, page d'une tenue avec ses commentaires, onglet Tenues du profil avec la même carte
 - Partage Instagram : Instagram n'accepte pas de publication depuis un site ; le bouton génère une image de la tenue au format portrait (partagée depuis le téléphone, téléchargée sur ordinateur) et propose de copier son lien
 - Bloc de commentaires extrait en composant, commun à la fiche article et à la page d'une tenue
+
+---
+
+## 2026-11-12 — Suivi des prêts
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/suivi-prets`
+
+**Prompt :**
+
+> Fais donc ça
+
+Réponse à la proposition de faire le suivi des prêts avant la place de marché.
+
+**Résultat retenu :**
+
+- API : prêter un article à un membre (pseudo) ou à un simple nom, avec date de prêt, retour prévu et note ; liste de ses prêts en cours et rendus ; retour d'un prêt ; suppression d'un prêt saisi par erreur ; l'article passe « Prêté » puis redevient disponible
+- Règles : prêter demande le droit de modifier l'article ; un seul prêt en cours par article ; pas de prêt d'un article en vente ou vendu ; date de prêt jamais dans le futur ; le prêt en cours n'est visible que des membres du logement
+- Écrans : « Prêts » d'après la maquette (En cours / Rendus, badge « En retard » ou « Dans 10 j »), formulaire « Prêter », prêt en cours et « Marquer rendu » sur la fiche article, onglet « Prêts · N » du profil
+- Données de démonstration : un prêt à un membre, un prêt en retard à un simple nom, un prêt rendu
