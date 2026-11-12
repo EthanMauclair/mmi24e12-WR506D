@@ -3,10 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import BarreNavigation from '@/components/BarreNavigation.vue'
+import CarteTenue from '@/components/CarteTenue.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
-import { ilYA } from '@/utils/dates'
 
 const route = useRoute()
 const router = useRouter()
@@ -74,17 +74,8 @@ function ouvrirOnglet(nom) {
   }
 }
 
-async function supprimerTenue(tenue) {
-  if (!window.confirm(`Supprimer la tenue « ${tenue.titre} » ?`)) {
-    return
-  }
-  erreurTenues.value = ''
-  try {
-    await api(`/tenues/${tenue.id}`, { methode: 'DELETE' })
-    tenues.value = tenues.value.filter((autre) => autre.id !== tenue.id)
-  } catch (e) {
-    erreurTenues.value = e.message
-  }
+function retirerTenue(tenue) {
+  tenues.value = tenues.value.filter((autre) => autre.id !== tenue.id)
 }
 
 async function charger() {
@@ -249,35 +240,9 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
             <p class="etat">Aucune tenue partagée pour le moment.</p>
             <RouterLink v-if="estMoi" :to="{ name: 'tenues' }" class="bouton bouton--principal">Générer une tenue</RouterLink>
           </div>
-          <ul v-else class="tenues">
-            <li v-for="tenue in tenues" :key="tenue.id" class="tenue">
-              <div class="tenue__pieces" :class="`tenue__pieces--${Math.min(tenue.articles.length, 3)}`">
-                <RouterLink
-                  v-for="article in tenue.articles.slice(0, 3)"
-                  :key="article.id"
-                  :to="{ name: 'article', params: { id: article.id } }"
-                  class="tenue__piece"
-                  :class="{ 'vignette--claire': estCouleurClaire(article.couleur) }"
-                  :style="{ background: fondVignette(article.couleur) }"
-                  :aria-label="article.titre"
-                >
-                  <img v-if="article.photo" :src="article.photo" alt="" class="vignette__photo" />
-                  <svg v-else width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-                </RouterLink>
-              </div>
-              <div class="tenue__textes">
-                <span class="tenue__titre">
-                  {{ tenue.titre }}
-                  <span v-if="tenue.estPrivee" class="badge">Privée</span>
-                </span>
-                <span class="tenue__date">{{ tenue.articles.length }} {{ pluriel(tenue.articles.length, 'pièce') }} · {{ ilYA(tenue.createdAt) }}</span>
-                <p v-if="tenue.description" class="tenue__description">{{ tenue.description }}</p>
-              </div>
-              <button v-if="estMoi" type="button" class="tenue__supprimer" :aria-label="`Supprimer la tenue ${tenue.titre}`" @click="supprimerTenue(tenue)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
-              </button>
-            </li>
-          </ul>
+          <div v-else class="tenues">
+            <CarteTenue v-for="tenue in tenues" :key="tenue.id" :tenue="tenue" @supprimee="retirerTenue" />
+          </div>
         </template>
         <p v-else-if="articles.length === 0" class="etat">Aucun article pour le moment.</p>
         <div v-else class="grille">
@@ -591,91 +556,8 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
 }
 
 .tenues {
-  margin: 0;
-  padding: 0;
-  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-.tenue {
-  position: relative;
-  border-radius: 22px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
-  overflow: hidden;
-}
-
-/* Comme sur la maquette du fil : une grande pièce à gauche, deux petites à droite */
-.tenue__pieces {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, 100px);
-  gap: 3px;
-}
-
-.tenue__pieces--1 {
-  grid-template-columns: 1fr;
-}
-
-.tenue__pieces--1 .tenue__piece,
-.tenue__pieces--3 .tenue__piece:first-child {
-  grid-row: span 2;
-}
-
-.tenue__pieces--2 .tenue__piece {
-  grid-row: span 2;
-}
-
-.tenue__piece {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--couleur-photo-icone);
-}
-
-.tenue__textes {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 12px 16px 14px;
-}
-
-.tenue__titre {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.tenue__date {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.tenue__description {
-  margin: 4px 0 0;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.tenue__supprimer {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--couleur-photo-bouton);
-  color: var(--couleur-texte);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
 }
 </style>

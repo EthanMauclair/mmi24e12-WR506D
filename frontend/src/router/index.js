@@ -53,6 +53,13 @@ const router = createRouter({
       component: () => import('../views/TenuesView.vue'),
     },
     {
+      // Lien partagé d'une tenue : ouvert sans compte pour une tenue publique d'un profil public
+      path: '/tenues/:id',
+      name: 'tenue',
+      component: () => import('../views/TenueView.vue'),
+      meta: { ouvert: true },
+    },
+    {
       path: '/profil',
       name: 'profil',
       component: () => import('../views/ProfilView.vue'),
