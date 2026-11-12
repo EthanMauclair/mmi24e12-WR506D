@@ -82,7 +82,7 @@ Côté réseau social, le profil de Léa (`lea.chine`) est privé :
 - Tom et Camille la suivent et font partie de ses amis : ils peuvent commenter ses articles ;
 - Inès et Jules la suivent sans être ses amis ;
 - Sam a envoyé une demande d'abonnement qui attend la réponse de Léa ;
-- Léa a partagé une tenue (« Tenue Travail »).
+- Léa a partagé une tenue (« Tenue Travail »), aimée par Tom, Camille et Inès, et commentée par Camille.
 
 Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
 
@@ -120,7 +120,12 @@ La caméra du navigateur n'est accessible que sur une page sécurisée : `http:/
 
 La position est arrondie à environ 1 km par l'API avant d'être envoyée à Open-Meteo et OpenStreetMap, et n'est pas enregistrée. Le générateur utilise la saison, le niveau de chaleur, la capuche et l'imperméabilité des vêtements : ces informations sont renseignées dans les données de démonstration.
 
-Les autres écrans (fil des tenues, marché, prêts) arrivent dans les prochaines versions.
+- **Fil des tenues** (onglet Tenues › Fil des tenues) :
+  - les tenues partagées par les membres suivis et les siennes, les plus récentes d'abord, par pages de 10 ;
+  - likes, aperçu du dernier commentaire, et page de chaque tenue avec tous ses commentaires (seuls son créateur et ses amis commentent) ;
+  - **partage vers Instagram** : Instagram ne permet pas de publier depuis un site. Le bouton génère une image de la tenue (1080 × 1350, le format portrait d'Instagram), que le téléphone partage directement vers l'application et que l'ordinateur télécharge, et propose de copier le lien de la tenue (`/tenues/{id}`, ouvert sans compte pour une tenue publique d'un profil public).
+
+Les autres écrans (marché, prêts) arrivent dans les prochaines versions.
 
 ### Qui voit quoi dans le réseau social
 
@@ -135,6 +140,8 @@ Les autres écrans (fil des tenues, marché, prêts) arrivent dans les prochaine
 | Supprimer un commentaire | Son auteur, ou le membre qui a ajouté l'article |
 | Savoir qui sont les amis d'un membre | Le membre uniquement |
 | Voir une tenue privée | Uniquement le membre qui l'a créée |
+| Aimer une tenue | Tout membre connecté qui la voit |
+| Commenter une tenue | Le membre qui l'a créée et ses amis |
 | Créer une étiquette | Le propriétaire et les co-propriétaires du logement |
 
 ## API
@@ -182,8 +189,14 @@ Les autres écrans (fil des tenues, marché, prêts) arrivent dans les prochaine
 | POST    | `/api/tenues`                           | Enregistre une tenue (`titre`, `description`, `estPrivee`, `articleIds`) |
 | GET     | `/api/profils/{pseudo}/tenues`          | Tenues d'un profil                             |
 | DELETE  | `/api/tenues/{id}`                      | Supprime une de ses tenues                     |
+| GET     | `/api/tenues/fil`                       | Fil des tenues (`avant` : page suivante)       |
+| GET     | `/api/tenues/{id}`                      | Une tenue, avec ses likes et son dernier commentaire |
+| PUT     | `/api/tenues/{id}/like`                 | Aime une tenue                                 |
+| DELETE  | `/api/tenues/{id}/like`                 | N'aime plus une tenue                          |
+| GET     | `/api/tenues/{id}/commentaires`         | Commentaires d'une tenue                       |
+| POST    | `/api/tenues/{id}/commentaires`         | Commente une tenue (`contenu`), réservé aux amis |
 
-Les routes de consultation du réseau social (`GET` sur les profils et leurs tenues, les membres, un article et ses commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
+Les routes de consultation du réseau social (`GET` sur les profils, les membres, un article ou une tenue et leurs commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
 
 Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).
 

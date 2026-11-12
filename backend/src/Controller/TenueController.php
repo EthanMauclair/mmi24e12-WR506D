@@ -4,15 +4,19 @@ namespace App\Controller;
 
 use App\Api\Presentateur;
 use App\Entity\DetailVetement;
+use App\Entity\LikeTenue;
 use App\Entity\Logement;
 use App\Entity\Tenue;
 use App\Entity\Utilisateur;
 use App\Enum\ZoneTenue;
 use App\Repository\ArticleRepository;
+use App\Repository\CommentaireRepository;
 use App\Repository\EtiquetteRepository;
+use App\Repository\LikeTenueRepository;
 use App\Repository\TenueRepository;
 use App\Security\Voter\LogementVoter;
 use App\Security\Voter\ProfilVoter;
+use App\Security\Voter\TenueVoter;
 use App\Service\Meteo\Meteo;
 use App\Service\Meteo\ServiceMeteo;
 use App\Service\Tenue\GenerateurTenue;
@@ -32,8 +36,11 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/api')]
 final class TenueController extends ApiController
 {
-    public function __construct(private readonly Presentateur $presentateur)
-    {
+    public function __construct(
+        private readonly Presentateur $presentateur,
+        private readonly LikeTenueRepository $likes,
+        private readonly CommentaireRepository $commentaires,
+    ) {
     }
 
     /**
@@ -123,7 +130,64 @@ final class TenueController extends ApiController
         $em->persist($tenue);
         $em->flush();
 
-        return $this->json($this->presentateur->tenue($tenue), Response::HTTP_CREATED);
+        return $this->json($this->presenterTenues([$tenue], $utilisateur)[0], Response::HTTP_CREATED);
+    }
+
+    /**
+     * Fil des tenues : celles des membres suivis et les siennes, par pages de 10 (avant = dernière tenue affichée).
+     */
+    #[Route('/tenues/fil', name: 'api_tenues_fil', methods: ['GET'])]
+    public function fil(Request $request, #[CurrentUser] Utilisateur $utilisateur, TenueRepository $tenues): JsonResponse
+    {
+        $avant = $request->query->has('avant') ? $request->query->getInt('avant') : null;
+        $page = $tenues->findFil($utilisateur, $avant);
+
+        return $this->json([
+            'tenues' => $this->presenterTenues($page, $utilisateur),
+            'suite' => \count($page) === TenueRepository::TAILLE_PAGE,
+        ]);
+    }
+
+    /**
+     * Une tenue : page ouverte par le lien partagé, visiteurs compris pour une tenue publique d'un profil public.
+     */
+    #[Route('/tenues/{id}', name: 'api_tenue', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[IsGranted(TenueVoter::VOIR, 'tenue')]
+    public function detail(#[MapEntity(id: 'id')] Tenue $tenue, #[CurrentUser] ?Utilisateur $visiteur): JsonResponse
+    {
+        return $this->json($this->presenterTenues([$tenue], $visiteur)[0]);
+    }
+
+    #[Route('/tenues/{id}/like', name: 'api_tenue_aimer', requirements: ['id' => '\d+'], methods: ['PUT'])]
+    #[IsGranted(TenueVoter::AIMER, 'tenue')]
+    public function aimer(
+        #[MapEntity(id: 'id')] Tenue $tenue,
+        #[CurrentUser] Utilisateur $utilisateur,
+        LikeTenueRepository $likes,
+        EntityManagerInterface $em,
+    ): JsonResponse {
+        if (null === $likes->findOneBy(['tenue' => $tenue, 'utilisateur' => $utilisateur])) {
+            $em->persist((new LikeTenue())->setTenue($tenue)->setUtilisateur($utilisateur));
+            $em->flush();
+        }
+
+        return $this->json($this->resumeLikes($tenue, $utilisateur, $likes));
+    }
+
+    #[Route('/tenues/{id}/like', name: 'api_tenue_ne_plus_aimer', requirements: ['id' => '\d+'], methods: ['DELETE'])]
+    #[IsGranted(TenueVoter::AIMER, 'tenue')]
+    public function nePlusAimer(
+        #[MapEntity(id: 'id')] Tenue $tenue,
+        #[CurrentUser] Utilisateur $utilisateur,
+        LikeTenueRepository $likes,
+        EntityManagerInterface $em,
+    ): JsonResponse {
+        if (null !== $like = $likes->findOneBy(['tenue' => $tenue, 'utilisateur' => $utilisateur])) {
+            $em->remove($like);
+            $em->flush();
+        }
+
+        return $this->json($this->resumeLikes($tenue, $utilisateur, $likes));
     }
 
     /**
@@ -138,23 +202,58 @@ final class TenueController extends ApiController
     ): JsonResponse {
         $criteres = ['createur' => $membre] + ($visiteur === $membre ? [] : ['estPrivee' => false]);
 
-        return $this->json(array_map(
-            $this->presentateur->tenue(...),
-            $tenues->findBy($criteres, ['createdAt' => 'DESC', 'id' => 'DESC']),
-        ));
+        return $this->json($this->presenterTenues($tenues->findBy($criteres, ['createdAt' => 'DESC', 'id' => 'DESC']), $visiteur));
     }
 
     #[Route('/tenues/{id}', name: 'api_tenue_supprimer', requirements: ['id' => '\d+'], methods: ['DELETE'])]
-    public function supprimer(#[MapEntity(id: 'id')] Tenue $tenue, #[CurrentUser] Utilisateur $utilisateur, EntityManagerInterface $em): JsonResponse
+    #[IsGranted(TenueVoter::SUPPRIMER, 'tenue', message: 'Seul son créateur peut supprimer cette tenue.')]
+    public function supprimer(#[MapEntity(id: 'id')] Tenue $tenue, EntityManagerInterface $em): JsonResponse
     {
-        if ($tenue->getCreateur() !== $utilisateur) {
-            throw $this->createAccessDeniedException('Seul son créateur peut supprimer cette tenue.');
-        }
-
         $em->remove($tenue);
         $em->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Tenues avec leurs likes, leurs commentaires (nombre et dernier) et les droits du visiteur,
+     * en deux requêtes pour toute la liste.
+     *
+     * @param list<Tenue> $tenues
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function presenterTenues(array $tenues, ?Utilisateur $visiteur): array
+    {
+        $likes = $this->likes->resumer($tenues, $visiteur);
+        $commentaires = $this->commentaires->resumerTenues($tenues);
+
+        return array_map(function (Tenue $tenue) use ($likes, $commentaires) {
+            $dernier = $commentaires[$tenue->getId()]['dernier'] ?? null;
+
+            return $this->presentateur->tenue($tenue) + [
+                'nbLikes' => $likes[$tenue->getId()]['nombre'] ?? 0,
+                'aime' => $likes[$tenue->getId()]['aime'] ?? false,
+                'nbCommentaires' => $commentaires[$tenue->getId()]['nombre'] ?? 0,
+                'dernierCommentaire' => null === $dernier ? null : [
+                    'auteur' => $this->presentateur->membre($dernier->getAuteur()),
+                    'contenu' => $dernier->getContenu(),
+                ],
+                'peutAimer' => $this->isGranted(TenueVoter::AIMER, $tenue),
+                'peutCommenter' => $this->isGranted(TenueVoter::COMMENTER, $tenue),
+                'peutSupprimer' => $this->isGranted(TenueVoter::SUPPRIMER, $tenue),
+            ];
+        }, $tenues);
+    }
+
+    /**
+     * @return array{nbLikes: int, aime: bool}
+     */
+    private function resumeLikes(Tenue $tenue, Utilisateur $utilisateur, LikeTenueRepository $likes): array
+    {
+        $resume = $likes->resumer([$tenue], $utilisateur)[$tenue->getId()] ?? ['nombre' => 0, 'aime' => false];
+
+        return ['nbLikes' => $resume['nombre'], 'aime' => $resume['aime']];
     }
 
     /**

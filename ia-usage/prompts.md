@@ -436,3 +436,23 @@ Proposition faite : le générateur de tenue, puis le fil des tenues ; météo a
 - Écran « Générer » d'après la maquette (carte météo, occasions, quatre cases, « Autre idée », « Partager ») et onglet Tenues du profil
 - Correctif trouvé en testant : les liens de la barre de navigation avaient un attribut `href="null"`
 - Limite signalée : la saison, la chaleur, la capuche et l'imperméabilité des vêtements ne sont pas encore saisies à l'ajout d'un article
+
+---
+
+## 2026-11-12 — Fil des tenues
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/fil-tenues`
+
+**Prompt :**
+
+> Non, pas besoin de deviner.
+
+Réponse à la question : faut-il que l'IA du scan devine la saison, la chaleur, la capuche et l'imperméabilité des vêtements avant d'attaquer le fil des tenues ? Le fil a été réalisé avec les règles déjà convenues : commentaires réservés aux amis, likes ouverts aux membres qui voient la tenue.
+
+**Résultat retenu :**
+
+- API : fil des tenues des membres suivis (par pages de 10), page d'une tenue ouverte aux visiteurs pour une tenue publique d'un profil public, likes, commentaires de tenues réservés au créateur et à ses amis ; likes et commentaires comptés en une requête pour toute la liste
+- Écrans : onglet « Fil des tenues » et carte d'une tenue d'après la maquette, page d'une tenue avec ses commentaires, onglet Tenues du profil avec la même carte
+- Partage Instagram : Instagram n'accepte pas de publication depuis un site ; le bouton génère une image de la tenue au format portrait (partagée depuis le téléphone, téléchargée sur ordinateur) et propose de copier son lien
+- Bloc de commentaires extrait en composant, commun à la fiche article et à la page d'une tenue

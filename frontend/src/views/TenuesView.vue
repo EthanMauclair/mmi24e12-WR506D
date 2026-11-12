@@ -1,15 +1,24 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
+import CarteTenue from '@/components/CarteTenue.vue'
 import { api } from '@/services/api'
 import { fondVignette } from '@/utils/couleurs'
 import { idLogementActif } from '@/utils/logementActif'
 import { lirePosition } from '@/utils/position'
 
+const route = useRoute()
 const router = useRouter()
 
-const onglet = ref('generer')
+const onglet = ref(route.query.onglet === 'fil' ? 'fil' : 'generer')
+// null tant que le fil n'a pas été chargé
+const fil = ref(null)
+const suiteFil = ref(false)
+const chargementFil = ref(false)
+const erreurFil = ref('')
+// Le générateur ne se lance qu'à la première ouverture de son onglet (il demande la position)
+let generateurDemarre = false
 const logementId = ref(null)
 const etiquettes = ref([])
 const peutCreerEtiquette = ref(false)
@@ -114,11 +123,19 @@ async function publier() {
   erreurPartage.value = ''
   envoi.value = true
   try {
-    await api('/tenues', {
+    const tenue = await api('/tenues', {
       methode: 'POST',
       corps: { titre: titre.value, description: description.value, estPrivee: estPrivee.value, articleIds: articlesProposes.value.map((article) => article.id) },
     })
-    router.push({ name: 'profil', query: { onglet: 'tenues' } })
+    partage.value = false
+    description.value = ''
+    // Comme sur la maquette, une tenue partagée s'affiche en tête du fil ; une tenue privée, sur le profil
+    if (tenue.estPrivee) {
+      router.push({ name: 'profil', query: { onglet: 'tenues' } })
+    } else {
+      fil.value = fil.value === null ? null : [tenue, ...fil.value]
+      ouvrirOnglet('fil')
+    }
   } catch (e) {
     erreurPartage.value = Object.values(e.violations)[0] ?? e.message
   } finally {
@@ -126,7 +143,42 @@ async function publier() {
   }
 }
 
-onMounted(async () => {
+/**
+ * @param {boolean} suite charge les tenues plus anciennes que la dernière affichée
+ */
+async function chargerFil(suite = false) {
+  chargementFil.value = true
+  erreurFil.value = ''
+  try {
+    const avant = suite ? `?avant=${fil.value.at(-1).id}` : ''
+    const page = await api(`/tenues/fil${avant}`)
+    fil.value = suite ? [...fil.value, ...page.tenues] : page.tenues
+    suiteFil.value = page.suite
+  } catch (e) {
+    erreurFil.value = e.message
+    fil.value ??= []
+  } finally {
+    chargementFil.value = false
+  }
+}
+
+function retirerDuFil(tenue) {
+  fil.value = fil.value.filter((autre) => autre.id !== tenue.id)
+}
+
+function ouvrirOnglet(nom) {
+  onglet.value = nom
+  router.replace({ query: nom === 'fil' ? { onglet: 'fil' } : {} })
+  if (nom === 'fil' && fil.value === null) {
+    chargerFil()
+  }
+  if (nom === 'generer' && !generateurDemarre) {
+    demarrerGenerateur()
+  }
+}
+
+async function demarrerGenerateur() {
+  generateurDemarre = true
   try {
     logementId.value = await idLogementActif()
     if (logementId.value === null) {
@@ -142,18 +194,31 @@ onMounted(async () => {
     return
   }
   await localiser()
-})
+}
+
+onMounted(() => ouvrirOnglet(onglet.value))
 </script>
 
 <template>
   <div class="ecran">
     <main class="contenu">
       <div class="segments" role="tablist" aria-label="Tenues">
-        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="onglet = 'generer'">Générer</button>
-        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="onglet = 'fil'">Fil des tenues</button>
+        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="ouvrirOnglet('generer')">Générer</button>
+        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="ouvrirOnglet('fil')">Fil des tenues</button>
       </div>
 
-      <p v-if="onglet === 'fil'" class="etat">Le fil des tenues de vos abonnements arrive dans la prochaine version.</p>
+      <template v-if="onglet === 'fil'">
+        <p v-if="erreurFil" class="message-erreur" role="alert">{{ erreurFil }}</p>
+        <p v-if="fil === null" class="etat">Chargement du fil…</p>
+        <div v-else-if="fil.length === 0" class="fil-vide">
+          <p class="etat">Votre fil est vide : abonnez-vous à des membres pour voir leurs tenues, ou partagez la vôtre.</p>
+          <RouterLink :to="{ name: 'membres' }" class="bouton-principal">Rechercher des membres</RouterLink>
+        </div>
+        <template v-else>
+          <CarteTenue v-for="tenueDuFil in fil" :key="tenueDuFil.id" :tenue="tenueDuFil" @supprimee="retirerDuFil" />
+          <button v-if="suiteFil" type="button" class="voir-plus" :disabled="chargementFil" @click="chargerFil(true)">Voir plus de tenues</button>
+        </template>
+      </template>
 
       <template v-else-if="logementId === null && !chargement">
         <p class="etat">Créez d'abord votre logement pour générer une tenue avec vos vêtements.</p>
@@ -290,6 +355,24 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.fil-vide {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voir-plus {
+  height: 44px;
+  border-radius: 14px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .segments {
