@@ -8,6 +8,7 @@ use App\Entity\Utilisateur;
 use App\Enum\StatutAbonnement;
 use App\Repository\AbonnementRepository;
 use App\Repository\ArticleRepository;
+use App\Repository\PretRepository;
 use App\Repository\UtilisateurRepository;
 use App\Security\Voter\ProfilVoter;
 use App\Service\Social\Relations;
@@ -34,6 +35,7 @@ final class ProfilController extends ApiController
         private readonly Presentateur $presentateur,
         private readonly Relations $relations,
         private readonly AbonnementRepository $abonnements,
+        private readonly PretRepository $prets,
     ) {
     }
 
@@ -286,7 +288,11 @@ final class ProfilController extends ApiController
                 'estAmi' => true === $abonnement?->isEstAmi(),
                 'mEstAbonne' => StatutAbonnement::ACCEPTE === $reciproque?->getStatut(),
             ],
-            'moi' => $estMoi ? ['demandes' => $compteurs['demandes'], 'amis' => $compteurs['amis']] : null,
+            'moi' => $estMoi ? [
+                'demandes' => $compteurs['demandes'],
+                'amis' => $compteurs['amis'],
+                'pretsEnCours' => $this->prets->compterEnCours($membre),
+            ] : null,
         ];
     }
 }
