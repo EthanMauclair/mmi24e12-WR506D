@@ -476,3 +476,21 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - Règles : prêter demande le droit de modifier l'article ; un seul prêt en cours par article ; pas de prêt d'un article en vente ou vendu ; date de prêt jamais dans le futur ; le prêt en cours n'est visible que des membres du logement
 - Écrans : « Prêts » d'après la maquette (En cours / Rendus, badge « En retard » ou « Dans 10 j »), formulaire « Prêter », prêt en cours et « Marquer rendu » sur la fiche article, onglet « Prêts · N » du profil
 - Données de démonstration : un prêt à un membre, un prêt en retard à un simple nom, un prêt rendu
+
+---
+
+## 2026-11-12 — Place de marché
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/place-de-marche`
+
+**Prompt :**
+
+> Passons à la place de marché
+
+**Résultat retenu :**
+
+- API : mise en vente d'un article par le membre qui l'a ajouté (prix, description), marché des annonces en ligne et réservées (recherche, filtres par famille, « mes annonces »), gestion de l'annonce par le vendeur (prix, réservée, en ligne, vendue à un acheteur, retirée), messagerie : une conversation par acheteur et par annonce, messages non lus
+- Règles : un article personnel ou prêté ne se vend pas ; une seule annonce active par article ; vendu, l'article quitte le dressing ; retiré, il redevient disponible ; une conversation n'est visible que par ses deux participants ; le marché ne montre jamais l'emplacement
+- Écrans : « Marché » et « Conversation » d'après les maquettes, page d'une annonce (contact ou gestion par le vendeur), liste des messages, formulaire « Mettre en vente », prix et annonce sur la fiche article ; la conversation se met à jour toutes les 5 secondes
+- Données de démonstration : trois annonces dont une réservée, et la conversation de la maquette
