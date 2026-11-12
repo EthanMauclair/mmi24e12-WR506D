@@ -224,6 +224,8 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
           <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'tenues' }" :aria-selected="onglet === 'tenues'" @click="ouvrirOnglet('tenues')">
             Tenues<template v-if="tenues"> · {{ tenues.length }}</template>
           </button>
+          <!-- Les prêts sont privés : un lien vers leur écran, sur son propre profil uniquement -->
+          <RouterLink v-if="estMoi" :to="{ name: 'prets' }" class="onglet onglet--lien">Prêts · {{ profil.moi.pretsEnCours }}</RouterLink>
         </div>
 
         <div v-if="!profil.peutVoirContenu" class="verrou">
@@ -483,6 +485,13 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
   border-bottom-color: var(--couleur-primaire);
   color: var(--couleur-primaire);
   font-weight: 800;
+}
+
+.onglet--lien {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .grille {

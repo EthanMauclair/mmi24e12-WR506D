@@ -41,6 +41,16 @@ const router = createRouter({
       component: () => import('../views/AjoutArticleView.vue'),
     },
     {
+      path: '/articles/:id/preter',
+      name: 'article-preter',
+      component: () => import('../views/PreterView.vue'),
+    },
+    {
+      path: '/prets',
+      name: 'prets',
+      component: () => import('../views/PretsView.vue'),
+    },
+    {
       path: '/articles/:id',
       name: 'article',
       component: () => import('../views/ArticleView.vue'),

@@ -22,6 +22,11 @@
   --couleur-succes: #1f5a35;
   --couleur-succes-fond: #e6f1ea;
 
+  /* Prêt en retard */
+  --couleur-alerte: #8a4209;
+  --couleur-alerte-fond: #fcebd9;
+  --couleur-alerte-bordure: #f0c9a0;
+
   --couleur-erreur: #b42318;
   --couleur-erreur-fond: #fdecea;
 
