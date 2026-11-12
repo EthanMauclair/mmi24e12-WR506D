@@ -11,6 +11,7 @@ use App\Entity\DetailLivre;
 use App\Entity\DetailVetement;
 use App\Entity\DetailVinyle;
 use App\Entity\Etiquette;
+use App\Entity\LikeTenue;
 use App\Entity\Logement;
 use App\Entity\Marque;
 use App\Entity\MembreLogement;
@@ -188,6 +189,10 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
             $tenue->addArticle($articles[$titre]);
         }
         $manager->persist($tenue);
+        foreach ([$tom, $camille, $ines] as $fan) {
+            $manager->persist((new LikeTenue())->setTenue($tenue)->setUtilisateur($fan));
+        }
+        $manager->persist((new Commentaire())->setAuteur($camille)->setTenue($tenue)->setContenu('Le trench est parfait'));
 
         $manager->flush();
     }
