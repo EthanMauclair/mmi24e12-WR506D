@@ -5,7 +5,6 @@ defineProps({
   actif: { type: String, default: 'dressing' },
 })
 
-// L'écran Marché n'existe pas encore : pas de route, lien provisoire '#'
 const onglets = [
   {
     id: 'dressing',
@@ -23,6 +22,7 @@ const onglets = [
   {
     id: 'marche',
     libelle: 'Marché',
+    route: '/marche',
     traces: ['M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'],
     cercle: { cx: 7, cy: 7, r: 1 },
   },
@@ -42,10 +42,9 @@ const onglets = [
       <RouterLink v-if="onglet.central" to="/scan" class="scan" aria-label="Scanner un article">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10" /></svg>
       </RouterLink>
-      <component
-        :is="onglet.route ? RouterLink : 'a'"
+      <RouterLink
         v-else
-        v-bind="onglet.route ? { to: onglet.route } : { href: '#' }"
+        :to="onglet.route"
         class="onglet"
         :class="{ 'onglet--actif': onglet.id === actif }"
         :aria-current="onglet.id === actif ? 'page' : undefined"
@@ -55,7 +54,7 @@ const onglets = [
           <circle v-if="onglet.cercle" v-bind="onglet.cercle" />
         </svg>
         {{ onglet.libelle }}
-      </component>
+      </RouterLink>
     </template>
   </nav>
 </template>
