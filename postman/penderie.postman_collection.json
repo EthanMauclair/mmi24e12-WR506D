@@ -52,6 +52,10 @@
     {
       "key": "tenueId",
       "value": ""
+    },
+    {
+      "key": "pretId",
+      "value": ""
     }
   ],
   "item": [
@@ -1867,6 +1871,163 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Tenue supprimée (204)', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Prêts",
+      "description": "Suivi des prêts. Lancez d'abord « Authentification › Connexion » et « Inventaire › Détail d'un article » (variable articleId).",
+      "item": [
+        {
+          "name": "Mes prêts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prets"
+              ]
+            },
+            "description": "Prêts en cours (retour le plus proche d'abord) et rendus."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Prêts (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('En cours et rendus', () => pm.expect(pm.response.json()).to.have.all.keys('enCours', 'rendus'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prêter un article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/articles/{{articleId}}/prets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "articles",
+                "{{articleId}}",
+                "prets"
+              ]
+            },
+            "description": "À un simple nom (emprunteurNom) ou à un membre (emprunteur : son pseudo). 422 si l'article est déjà prêté.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emprunteurNom\": \"Marc\",\n  \"dateRetourPrevue\": \"2030-01-15\",\n  \"note\": \"Prêt créé depuis Postman\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Prêté, ou déjà prêté (422)', () => pm.expect(pm.response.code).to.be.oneOf([201, 422]));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('pretId', pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marquer un prêt rendu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prets/{{pretId}}/retour",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prets",
+                "{{pretId}}",
+                "retour"
+              ]
+            },
+            "description": "L'article redevient disponible."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rendu, ou rien à rendre', () => pm.expect(pm.response.code).to.be.oneOf([200, 404, 422]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer un prêt",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/prets/{{pretId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "prets",
+                "{{pretId}}"
+              ]
+            },
+            "description": "Pour un prêt saisi par erreur."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Supprimé, ou rien à supprimer', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
                 ]
               }
             }

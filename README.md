@@ -78,6 +78,8 @@ Après le chargement des fixtures, tous les comptes ont le mot de passe `penderi
 
 Léa possède un article personnel (« Montre de ma grand-mère ») que les autres membres ne voient pas.
 
+Léa a prêté sa veste en jean à Camille (membre de l'application) et sa chemise rayée à Marc (simple nom), dont le retour est en retard ; Inès lui a déjà rendu son jean.
+
 Côté réseau social, le profil de Léa (`lea.chine`) est privé :
 - Tom et Camille la suivent et font partie de ses amis : ils peuvent commenter ses articles ;
 - Inès et Jules la suivent sans être ses amis ;
@@ -125,7 +127,13 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
   - likes, aperçu du dernier commentaire, et page de chaque tenue avec tous ses commentaires (seuls son créateur et ses amis commentent) ;
   - **partage vers Instagram** : Instagram ne permet pas de publier depuis un site. Le bouton génère une image de la tenue (1080 × 1350, le format portrait d'Instagram), que le téléphone partage directement vers l'application et que l'ordinateur télécharge, et propose de copier le lien de la tenue (`/tenues/{id}`, ouvert sans compte pour une tenue publique d'un profil public).
 
-Les autres écrans (marché, prêts) arrivent dans les prochaines versions.
+- **Suivi des prêts** (bouton « Prêter » de la fiche article, onglet « Prêts » de son profil) :
+  - prêter un article à un membre de l'application (recherche par pseudo) ou à un simple nom, avec la date de prêt, la date de retour prévue et une note ; celui qui a ajouté l'article ou le propriétaire du logement peut le prêter ;
+  - l'article passe « Prêté » (il n'est plus proposé par le générateur de tenue ni mis en vente) ; sa fiche indique à qui et jusqu'à quand, pour les membres du logement uniquement ;
+  - écran « Prêts » : prêts en cours (le retour le plus proche d'abord, « En retard » une fois la date dépassée) et rendus ; « Marquer rendu » enregistre la date de retour et rend l'article disponible ;
+  - un prêt saisi par erreur peut être supprimé.
+
+Le marché arrive dans une prochaine version.
 
 ### Qui voit quoi dans le réseau social
 
@@ -168,6 +176,10 @@ Les autres écrans (marché, prêts) arrivent dans les prochaines versions.
 | GET     | `/api/articles/{id}`                    | Fiche d'un article                             |
 | PUT     | `/api/articles/{id}`                    | Modifie toutes les informations d'un article   |
 | PATCH   | `/api/articles/{id}`                    | Rend un article personnel ou non               |
+| POST    | `/api/articles/{id}/prets`              | Prête un article (`emprunteur` (pseudo) ou `emprunteurNom`, `datePret`, `dateRetourPrevue`, `note`) |
+| GET     | `/api/prets`                            | Ses prêts, en cours et rendus                  |
+| POST    | `/api/prets/{id}/retour`                | Marque un prêt comme rendu aujourd'hui         |
+| DELETE  | `/api/prets/{id}`                       | Supprime un prêt saisi par erreur              |
 | GET     | `/api/articles/{id}/commentaires`       | Commentaires d'un article                      |
 | POST    | `/api/articles/{id}/commentaires`       | Commente un article (`contenu`), réservé aux amis |
 | DELETE  | `/api/commentaires/{id}`                | Supprime un commentaire                        |
