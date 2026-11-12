@@ -1614,6 +1614,230 @@
           ]
         },
         {
+          "name": "Fil des tenues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/fil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "fil"
+              ]
+            },
+            "description": "Tenues des membres suivis et les siennes. Page suivante : ?avant={identifiant de la dernière tenue}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fil (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Tenues et suite', () => pm.expect(pm.response.json()).to.have.all.keys('tenues', 'suite'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Voir une tenue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/{{tenueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "{{tenueId}}"
+              ]
+            },
+            "description": "Tenue avec ses likes, son dernier commentaire et les droits du membre connecté."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Tenue (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Compteurs', () => pm.expect(pm.response.json()).to.include.keys('nbLikes', 'aime', 'nbCommentaires', 'peutCommenter'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aimer une tenue",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/{{tenueId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "{{tenueId}}",
+                "like"
+              ]
+            },
+            "description": "Aimer deux fois ne compte qu'une fois."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Aimée', () => pm.expect(pm.response.json().aime).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ne plus aimer une tenue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/{{tenueId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "{{tenueId}}",
+                "like"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Plus aimée', () => pm.expect(pm.response.json().aime).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Commenter une tenue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/{{tenueId}}/commentaires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "{{tenueId}}",
+                "commentaires"
+              ]
+            },
+            "description": "Réservé au créateur de la tenue et à ses amis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenu\": \"Commentaire envoyé depuis Postman\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Commentaire publié, ou réservé aux amis (403)', () => pm.expect(pm.response.code).to.be.oneOf([201, 403]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Commentaires d'une tenue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tenues/{{tenueId}}/commentaires",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tenues",
+                "{{tenueId}}",
+                "commentaires"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Commentaires (200)', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Supprimer une tenue",
           "request": {
             "method": "DELETE",
