@@ -2,10 +2,10 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
+import BlocCommentaires from '@/components/BlocCommentaires.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
-import { ilYA } from '@/utils/dates'
 
 const FORMAT_DATE_SCAN = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -17,11 +17,6 @@ const chargement = ref(true)
 const erreur = ref('')
 const erreurConfidentialite = ref('')
 const indexPhoto = ref(0)
-
-const commentaires = ref([])
-const nouveauCommentaire = ref('')
-const envoiCommentaire = ref(false)
-const erreurCommentaire = ref('')
 
 // Un membre du logement revient à la pièce ; un abonné ou un visiteur, au profil de celui qui a ajouté l'article
 const retour = computed(() => {
@@ -42,36 +37,10 @@ async function charger(id) {
   try {
     article.value = await api(`/articles/${id}`)
     indexPhoto.value = 0
-    // Un article personnel ne peut pas être commenté : inutile de charger ses commentaires
-    commentaires.value = article.value.estPersonnel ? [] : await api(`/articles/${id}/commentaires`)
   } catch (e) {
     erreur.value = e.message
   } finally {
     chargement.value = false
-  }
-}
-
-async function commenter() {
-  erreurCommentaire.value = ''
-  envoiCommentaire.value = true
-  try {
-    const commentaire = await api(`/articles/${article.value.id}/commentaires`, { methode: 'POST', corps: { contenu: nouveauCommentaire.value } })
-    commentaires.value.push(commentaire)
-    nouveauCommentaire.value = ''
-  } catch (e) {
-    erreurCommentaire.value = e.violations.contenu ?? e.message
-  } finally {
-    envoiCommentaire.value = false
-  }
-}
-
-async function supprimerCommentaire(commentaire) {
-  erreurCommentaire.value = ''
-  try {
-    await api(`/commentaires/${commentaire.id}`, { methode: 'DELETE' })
-    commentaires.value = commentaires.value.filter((autre) => autre.id !== commentaire.id)
-  } catch (e) {
-    erreurCommentaire.value = e.message
   }
 }
 
@@ -197,53 +166,13 @@ watch(() => route.params.id, charger, { immediate: true })
         </label>
         <p v-if="erreurConfidentialite" class="message-erreur" role="alert">{{ erreurConfidentialite }}</p>
 
-        <section v-if="!article.estPersonnel" class="commentaires" aria-labelledby="titre-commentaires">
-          <h2 id="titre-commentaires" class="commentaires__titre">
-            Commentaires<template v-if="commentaires.length"> · {{ commentaires.length }}</template>
-          </h2>
-          <ul v-if="commentaires.length" class="commentaires__liste">
-            <li v-for="commentaire in commentaires" :key="commentaire.id" class="commentaire">
-              <RouterLink :to="{ name: 'membre', params: { pseudo: commentaire.auteur.pseudo } }" :aria-label="commentaire.auteur.pseudo">
-                <AvatarMembre :membre="commentaire.auteur" :taille="32" />
-              </RouterLink>
-              <div class="commentaire__corps">
-                <p class="commentaire__texte">
-                  <RouterLink :to="{ name: 'membre', params: { pseudo: commentaire.auteur.pseudo } }" class="commentaire__auteur">{{ commentaire.auteur.pseudo }}</RouterLink>
-                  {{ commentaire.contenu }}
-                </p>
-                <span class="commentaire__date">{{ ilYA(commentaire.createdAt) }}</span>
-              </div>
-              <button
-                v-if="commentaire.peutSupprimer"
-                type="button"
-                class="commentaire__supprimer"
-                :aria-label="`Supprimer le commentaire de ${commentaire.auteur.pseudo}`"
-                @click="supprimerCommentaire(commentaire)"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
-              </button>
-            </li>
-          </ul>
-          <p v-else class="commentaires__vide">Aucun commentaire pour le moment.</p>
-
-          <form v-if="article.peutCommenter" class="nouveau-commentaire" @submit.prevent="commenter">
-            <textarea
-              v-model="nouveauCommentaire"
-              class="saisie nouveau-commentaire__saisie"
-              rows="1"
-              maxlength="1000"
-              placeholder="Ajouter un commentaire…"
-              aria-label="Votre commentaire"
-            ></textarea>
-            <button type="submit" class="nouveau-commentaire__envoyer" :disabled="envoiCommentaire || !nouveauCommentaire.trim()">Publier</button>
-          </form>
-          <p v-else-if="!session.utilisateur" class="commentaires__aide">
-            <RouterLink :to="{ name: 'connexion', query: { redirection: route.fullPath } }">Connectez-vous</RouterLink>
-            pour suivre {{ article.proprietaire.pseudo }}.
-          </p>
-          <p v-else class="commentaires__aide">Seuls les amis de {{ article.proprietaire.pseudo }} peuvent commenter ses articles.</p>
-          <p v-if="erreurCommentaire" class="message-erreur" role="alert">{{ erreurCommentaire }}</p>
-        </section>
+        <BlocCommentaires
+          v-if="!article.estPersonnel"
+          :key="article.id"
+          :source="`/articles/${article.id}`"
+          :peut-commenter="article.peutCommenter"
+          :auteur="article.proprietaire.pseudo"
+        />
       </main>
 
       <div v-if="article.peutModifier" class="actions">
@@ -658,110 +587,4 @@ watch(() => route.params.id, charger, { immediate: true })
   font-weight: 800;
 }
 
-.commentaires {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-bottom: 8px;
-}
-
-.commentaires__titre {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.commentaires__liste {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.commentaire {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.commentaire__corps {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.commentaire__texte {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-  white-space: pre-line;
-}
-
-.commentaire__auteur {
-  font-weight: 800;
-  color: var(--couleur-texte);
-}
-
-.commentaire__date {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.commentaire__supprimer {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.commentaires__vide,
-.commentaires__aide {
-  margin: 0;
-  font-size: 13.5px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.nouveau-commentaire {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.nouveau-commentaire__saisie {
-  flex: 1;
-  min-height: 44px;
-  padding: 11px 14px;
-  resize: vertical;
-  line-height: 1.4;
-}
-
-.nouveau-commentaire__envoyer {
-  height: 44px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.nouveau-commentaire__envoyer:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
 </style>
