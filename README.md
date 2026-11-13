@@ -75,6 +75,7 @@ Après le chargement des fixtures, tous les comptes ont le mot de passe `penderi
 | `jules@exemple.fr` | Membre mineur, rattaché à Léa                          |
 | `sam@exemple.fr`   | Aucun logement : peut créer le sien                    |
 | `camille@exemple.fr` | Aucun logement : membre du réseau social             |
+| `admin@exemple.fr` | Super admin (propriétaire du site) : accès au back office |
 
 Léa possède un article personnel (« Montre de ma grand-mère ») que les autres membres ne voient pas.
 
@@ -89,6 +90,14 @@ Côté réseau social, le profil de Léa (`lea.chine`) est privé :
 - Léa a partagé une tenue (« Tenue Travail »), aimée par Tom, Camille et Inès, et commentée par Camille.
 
 Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
+
+Pour donner un rôle d'administration à un compte existant (par exemple sur une base créée avant ce compte de démonstration) :
+
+```bash
+docker compose exec php bin/console app:admin:nommer admin@exemple.fr                 # super admin
+docker compose exec php bin/console app:admin:nommer tom@exemple.fr --role=admin      # administrateur
+docker compose exec php bin/console app:admin:nommer tom@exemple.fr --role=membre     # simple membre
+```
 
 ## Fonctionnalités disponibles
 
@@ -147,6 +156,22 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
   - l'API répond dans la langue envoyée par le front dans l'en-tête `Accept-Language` : messages d'erreur, catégories, couleurs, états, formats et météo (`backend/translations/`, le texte français servant de clé) ;
   - au scan, l'IA propose le titre de l'article dans la langue de l'utilisateur ;
   - les textes saisis par les membres (titres, notes, noms de pièces, étiquettes, commentaires) restent tels qu'ils ont été écrits. La recherche porte sur les noms français des catégories et des couleurs.
+
+- **Mon espace** (bouton « Mon espace » de son profil) : les chiffres de son inventaire et de son activité, pour chaque membre :
+  - articles (dont personnels), ventes (montant, articles vendus et en vente), prêts en cours et en retard, abonnés ;
+  - articles ajoutés chaque mois sur un an ; répartition par famille, statut, logement et mode d'ajout (photo analysée par l'IA, code-barres, saisie manuelle) ;
+  - couleurs et marques les plus présentes ; tenues créées, j'aime et commentaires reçus.
+- **Back office** (`/admin`, bouton « Back office » du profil, visible seulement des administrateurs), sur grand écran comme sur téléphone :
+  - **tableau de bord** (super admin) : membres inscrits, nouveaux et actifs sur 30 jours, comptes bloqués ; inscriptions et articles ajoutés par jour sur 30 jours ; articles par famille, statut et mode d'ajout, part des articles ajoutés par un scan ; catégories et marques les plus utilisées ; volume et prix moyen des ventes, annonces en ligne, conversations ; prêts en cours et en retard ; tenues, j'aime, commentaires et abonnements ;
+  - **membres** (super admin) : recherche, bloquer ou débloquer un compte (il ne peut plus se connecter et sa session en cours est fermée), changer son rôle, supprimer son compte après avoir vu tout ce que la suppression efface (ses articles, ses logements avec les articles que d'autres y ont rangés, ses tenues, ses commentaires). Personne ne modifie son propre compte depuis le back office ;
+  - **référentiels** : ajouter, renommer ou supprimer une catégorie (sous une catégorie existante, dont elle prend la famille) et changer sa zone de tenue, utilisée par le générateur ; ajouter, modifier ou supprimer une couleur ; renommer ou supprimer une marque. Une catégorie ou une couleur utilisée par des articles ne peut pas être supprimée ; une marque supprimée est retirée des articles qui la portaient. Les noms se saisissent en français : leurs traductions anglaise et portugaise s'ajoutent dans `backend/translations/referentiels.{en,pt}.yaml` ;
+  - **modération** : supprimer un commentaire ou une tenue publique, retirer une annonce du marché (l'article redevient disponible).
+
+| Rôle | Accès |
+|---|---|
+| Membre | L'application et « Mon espace » |
+| Administrateur (`ROLE_ADMIN`) | En plus : référentiels et modération |
+| Super admin (`ROLE_SUPER_ADMIN`, propriétaire du site) | En plus : tableau de bord et gestion des membres et de leurs rôles |
 
 ### Qui voit quoi dans le réseau social
 
@@ -231,8 +256,29 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
 | DELETE  | `/api/tenues/{id}/like`                 | N'aime plus une tenue                          |
 | GET     | `/api/tenues/{id}/commentaires`         | Commentaires d'une tenue                       |
 | POST    | `/api/tenues/{id}/commentaires`         | Commente une tenue (`contenu`), réservé aux amis |
+| GET     | `/api/moi/statistiques`                 | Statistiques de « Mon espace »                 |
+| GET     | `/api/admin/indicateurs`                | Indicateurs du site (super admin)              |
+| GET     | `/api/admin/membres`                    | Membres, 20 par page (`q`, `page`) (super admin) |
+| GET     | `/api/admin/membres/{id}`               | Un membre et ce que supprimer son compte effacerait (super admin) |
+| PATCH   | `/api/admin/membres/{id}`               | Bloque ou débloque (`estBloque`), change le rôle (`role` : `MEMBRE`, `ADMIN`, `SUPER_ADMIN`) (super admin) |
+| DELETE  | `/api/admin/membres/{id}`               | Supprime un compte (super admin)               |
+| GET     | `/api/admin/referentiels`               | Catégories, couleurs et marques avec leur nombre d'articles |
+| POST    | `/api/admin/categories`                 | Ajoute une catégorie (`parentId`, `nom`, `zoneTenue`) |
+| PUT     | `/api/admin/categories/{id}`            | Renomme une catégorie ou change sa zone de tenue |
+| DELETE  | `/api/admin/categories/{id}`            | Supprime une catégorie inutilisée et sans sous-catégorie |
+| POST    | `/api/admin/couleurs`                   | Ajoute une couleur (`nom`, `codeHex`)          |
+| PUT     | `/api/admin/couleurs/{id}`              | Modifie une couleur                            |
+| DELETE  | `/api/admin/couleurs/{id}`              | Supprime une couleur inutilisée                |
+| PUT     | `/api/admin/marques/{id}`               | Renomme une marque                             |
+| DELETE  | `/api/admin/marques/{id}`               | Supprime une marque et la retire des articles  |
+| GET     | `/api/admin/moderation`                 | Commentaires, annonces en ligne et tenues publiques récents |
+| DELETE  | `/api/admin/moderation/commentaires/{id}` | Supprime un commentaire                      |
+| DELETE  | `/api/admin/moderation/annonces/{id}`   | Retire une annonce du marché                   |
+| DELETE  | `/api/admin/moderation/tenues/{id}`     | Supprime une tenue                             |
 
 Les routes de consultation du réseau social (`GET` sur les profils, les membres, un article ou une tenue et leurs commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
+
+Les routes `/api/admin/…` demandent le rôle administrateur (403 sinon) ; les indicateurs et la gestion des membres, le rôle super admin.
 
 Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).
 
@@ -261,7 +307,7 @@ docker compose up -d php
 
 ## Postman
 
-Importez `postman/penderie.postman_collection.json` dans Postman. Lancez d'abord « Authentification › Connexion » : Postman garde le cookie de session pour les requêtes suivantes, et les requêtes d'inventaire remplissent elles-mêmes les identifiants (logement, pièce, article) à réutiliser.
+Importez `postman/penderie.postman_collection.json` dans Postman. Lancez d'abord « Authentification › Connexion » : Postman garde le cookie de session pour les requêtes suivantes, et les requêtes d'inventaire remplissent elles-mêmes les identifiants (logement, pièce, article) à réutiliser. Le dossier « Back office » se connecte avec le compte super admin de démonstration.
 
 ## Structure
 
