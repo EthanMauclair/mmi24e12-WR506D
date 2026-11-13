@@ -1,18 +1,16 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 import { formatPrix } from '@/utils/prix'
 
-const FILTRES = [
-  { id: '', libelle: 'Tout' },
-  { id: 'vetements', libelle: 'Vêtements' },
-  { id: 'vinyles', libelle: 'Vinyles' },
-  { id: 'livres', libelle: 'Livres et BD' },
-  { id: 'mes', libelle: 'Mes annonces' },
-]
+// Libellés : marche.filtres.<id> (« tout » pour l'identifiant vide)
+const FILTRES = ['', 'vetements', 'vinyles', 'livres', 'mes']
+
+const { t } = useI18n()
 
 const annonces = ref([])
 const nonLus = ref(0)
@@ -70,8 +68,8 @@ onMounted(charger)
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <h1 class="entete__titre">Marché</h1>
-        <RouterLink :to="{ name: 'messages' }" class="bouton-icone messages" :aria-label="nonLus ? `Messages, ${nonLus} non lus` : 'Messages'">
+        <h1 class="entete__titre">{{ t('navigation.marche') }}</h1>
+        <RouterLink :to="{ name: 'messages' }" class="bouton-icone messages" :aria-label="nonLus ? t('marche.messagesNonLus', { n: nonLus }) : t('messages.titre')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
           <span v-if="nonLus" class="messages__badge" aria-hidden="true">{{ nonLus }}</span>
         </RouterLink>
@@ -79,33 +77,33 @@ onMounted(charger)
 
       <label class="saisie saisie--groupe champ-recherche">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        <input v-model="recherche" type="search" aria-label="Rechercher une annonce" placeholder="Rechercher une annonce" />
+        <input v-model="recherche" type="search" :aria-label="t('marche.rechercher')" :placeholder="t('marche.rechercher')" />
       </label>
 
       <div class="filtres">
         <button
           v-for="choix in FILTRES"
-          :key="choix.id"
+          :key="choix"
           type="button"
           class="filtre"
-          :class="{ 'filtre--actif': filtre === choix.id }"
-          :aria-pressed="filtre === choix.id"
-          @click="filtre = choix.id"
+          :class="{ 'filtre--actif': filtre === choix }"
+          :aria-pressed="filtre === choix"
+          @click="filtre = choix"
         >
-          {{ choix.libelle }}
+          {{ t(`marche.filtres.${choix || 'tout'}`) }}
         </button>
       </div>
 
       <p class="info">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
-        Paiement et remise s'organisent entre acheteur et vendeur.
+        {{ t('marche.paiement') }}
       </p>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-else-if="chargement && annonces.length === 0" class="etat">Chargement des annonces…</p>
+      <p v-else-if="chargement && annonces.length === 0" class="etat">{{ t('marche.chargement') }}</p>
       <p v-else-if="annonces.length === 0" class="etat">
-        <template v-if="filtre === 'mes'">Vous n'avez aucune annonce. Pour vendre un article, ouvrez sa fiche et touchez « Mettre en vente ».</template>
-        <template v-else>Aucune annonce pour le moment.</template>
+        <template v-if="filtre === 'mes'">{{ t('marche.aucuneMienne') }}</template>
+        <template v-else>{{ t('marche.aucune') }}</template>
       </p>
       <div v-else class="annonces" :class="{ 'annonces--chargement': chargement }">
         <RouterLink v-for="annonce in annonces" :key="annonce.id" :to="{ name: 'annonce', params: { id: annonce.id } }" class="annonce">
@@ -116,7 +114,7 @@ onMounted(charger)
           >
             <img v-if="annonce.article.photo" :src="annonce.article.photo" alt="" class="annonce__photo" />
             <svg v-else width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-            <span v-if="annonce.statut === 'RESERVEE'" class="annonce__reservee">Réservée</span>
+            <span v-if="annonce.statut === 'RESERVEE'" class="annonce__reservee">{{ t('annonce.statuts.RESERVEE') }}</span>
           </span>
           <span class="annonce__textes">
             <span class="annonce__prix">{{ formatPrix(annonce.prix) }}</span>

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import BarreNavigation from '@/components/BarreNavigation.vue'
@@ -8,6 +9,7 @@ import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
@@ -32,20 +34,16 @@ const nomAffiche = computed(() => profil.value.nomComplet ?? profil.value.pseudo
 const actionAbonnement = computed(() => {
   const relation = profil.value.relation
   if (relation.abonnement === 'ACCEPTE') {
-    return { libelle: 'Abonné', secondaire: true }
+    return { libelle: t('profil.abonne'), secondaire: true }
   }
   if (relation.abonnement === 'EN_ATTENTE') {
-    return { libelle: 'Demande envoyée', secondaire: true }
+    return { libelle: t('profil.demandeEnvoyee'), secondaire: true }
   }
   if (relation.mEstAbonne) {
-    return { libelle: "S'abonner en retour", secondaire: false }
+    return { libelle: t('profil.abonnerEnRetour'), secondaire: false }
   }
-  return { libelle: profil.value.estPrive ? 'Demander à suivre' : "S'abonner", secondaire: false }
+  return { libelle: t(profil.value.estPrive ? 'profil.demanderSuivre' : 'profil.abonner'), secondaire: false }
 })
-
-function pluriel(nombre, mot) {
-  return nombre > 1 ? `${mot}s` : mot
-}
 
 async function chargerArticles() {
   articles.value = profil.value.peutVoirContenu ? await api(`/profils/${profil.value.pseudo}/articles`) : []
@@ -86,7 +84,7 @@ async function charger() {
     profil.value = await api(`/profils/${pseudo.value}`)
     await chargerArticles()
   } catch (e) {
-    erreur.value = e.statut === 404 ? "Ce membre n'existe pas." : e.message
+    erreur.value = e.statut === 404 ? t('profil.inexistant') : e.message
   } finally {
     chargement.value = false
   }
@@ -100,7 +98,7 @@ async function basculerAbonnement() {
   const relation = profil.value.relation
   // Se désabonner d'un profil privé fait perdre l'accès à son contenu : on demande confirmation
   if (relation.abonnement === 'ACCEPTE' && profil.value.estPrive
-    && !window.confirm(`Ne plus suivre ${profil.value.pseudo} ? Son profil est privé : il faudra refaire une demande pour revoir ses articles.`)) {
+    && !window.confirm(t('profil.confirmerDesabonnement', { pseudo: profil.value.pseudo }))) {
     return
   }
 
@@ -122,16 +120,16 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
 <template>
   <div class="ecran">
     <main class="contenu">
-      <p v-if="chargement && !profil" class="etat">Chargement du profil…</p>
+      <p v-if="chargement && !profil" class="etat">{{ t('profil.chargement') }}</p>
       <div v-else-if="erreur" class="contenu-erreur">
         <p class="message-erreur" role="alert">{{ erreur }}</p>
-        <RouterLink :to="{ name: 'membres' }">Rechercher un membre</RouterLink>
+        <RouterLink :to="{ name: 'membres' }">{{ t('profil.rechercherMembre') }}</RouterLink>
       </div>
 
       <template v-else-if="profil">
         <RouterLink v-if="!estMoi" :to="{ name: 'membres' }" class="retour">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-          Membres
+          {{ t('profil.membres') }}
         </RouterLink>
 
         <header class="entete">
@@ -141,10 +139,10 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
             <span class="entete__pseudo">@{{ profil.pseudo }}</span>
             <span v-if="profil.estPrive" class="badge">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-              Profil privé
+              {{ t('commun.profilPrive') }}
             </span>
           </div>
-          <RouterLink v-if="estMoi" :to="{ name: 'profil-modifier' }" class="bouton-icone entete__bouton" aria-label="Paramètres du profil">
+          <RouterLink v-if="estMoi" :to="{ name: 'profil-modifier' }" class="bouton-icone entete__bouton" :aria-label="t('profil.parametres')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
           </RouterLink>
         </header>
@@ -154,7 +152,7 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
         <div class="compteurs">
           <div class="compteur">
             <span class="compteur__nombre">{{ profil.compteurs.articles ?? '—' }}</span>
-            <span class="compteur__libelle">{{ pluriel(profil.compteurs.articles ?? 0, 'article') }}</span>
+            <span class="compteur__libelle">{{ t('dressing.articles', profil.compteurs.articles ?? 0) }}</span>
           </div>
           <component
             :is="profil.peutVoirContenu ? RouterLink : 'div'"
@@ -162,7 +160,7 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
             class="compteur compteur--milieu"
           >
             <span class="compteur__nombre">{{ profil.compteurs.abonnes }}</span>
-            <span class="compteur__libelle">{{ pluriel(profil.compteurs.abonnes, 'abonné') }}</span>
+            <span class="compteur__libelle">{{ t('profil.abonnes', profil.compteurs.abonnes) }}</span>
           </component>
           <component
             :is="profil.peutVoirContenu ? RouterLink : 'div'"
@@ -170,7 +168,7 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
             class="compteur"
           >
             <span class="compteur__nombre">{{ profil.compteurs.abonnements }}</span>
-            <span class="compteur__libelle">{{ pluriel(profil.compteurs.abonnements, 'abonnement') }}</span>
+            <span class="compteur__libelle">{{ t('profil.abonnements', profil.compteurs.abonnements) }}</span>
           </component>
         </div>
 
@@ -179,21 +177,21 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
             <span class="demandes__icone">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>
             </span>
-            <span class="demandes__texte">{{ profil.moi.demandes }} {{ pluriel(profil.moi.demandes, "demande") }} d'abonnement</span>
+            <span class="demandes__texte">{{ t('profil.demandes', profil.moi.demandes) }}</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
           </RouterLink>
 
           <div class="boutons">
-            <RouterLink :to="{ name: 'profil-modifier' }" class="bouton bouton--secondaire">Modifier le profil</RouterLink>
+            <RouterLink :to="{ name: 'profil-modifier' }" class="bouton bouton--secondaire">{{ t('profil.modifier') }}</RouterLink>
             <RouterLink :to="{ name: 'profil-amis' }" class="bouton bouton--principal">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z" /></svg>
-              Amis · {{ profil.moi.amis }}
+              {{ t('profil.amis', { n: profil.moi.amis }) }}
             </RouterLink>
           </div>
 
           <RouterLink :to="{ name: 'membres' }" class="recherche">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-            Rechercher des membres
+            {{ t('profil.rechercherMembres') }}
           </RouterLink>
         </template>
 
@@ -212,41 +210,41 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
           </div>
           <p v-if="profil.relation.estAmi" class="ami">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z" /></svg>
-            Vous faites partie de ses amis : vous pouvez commenter ses articles.
+            {{ t('profil.estAmi') }}
           </p>
           <p v-if="erreurAction" class="message-erreur" role="alert">{{ erreurAction }}</p>
         </template>
 
-        <div role="tablist" aria-label="Contenu du profil" class="onglets">
+        <div role="tablist" :aria-label="t('profil.contenu')" class="onglets">
           <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'articles' }" :aria-selected="onglet === 'articles'" @click="ouvrirOnglet('articles')">
-            Articles<template v-if="profil.compteurs.articles !== null"> · {{ profil.compteurs.articles }}</template>
+            {{ t('profil.ongletArticles') }}<template v-if="profil.compteurs.articles !== null"> · {{ profil.compteurs.articles }}</template>
           </button>
           <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'tenues' }" :aria-selected="onglet === 'tenues'" @click="ouvrirOnglet('tenues')">
-            Tenues<template v-if="tenues"> · {{ tenues.length }}</template>
+            {{ t('profil.ongletTenues') }}<template v-if="tenues"> · {{ tenues.length }}</template>
           </button>
           <!-- Les prêts sont privés : un lien vers leur écran, sur son propre profil uniquement -->
-          <RouterLink v-if="estMoi" :to="{ name: 'prets' }" class="onglet onglet--lien">Prêts · {{ profil.moi.pretsEnCours }}</RouterLink>
+          <RouterLink v-if="estMoi" :to="{ name: 'prets' }" class="onglet onglet--lien">{{ t('profil.ongletPrets') }} · {{ profil.moi.pretsEnCours }}</RouterLink>
         </div>
 
         <div v-if="!profil.peutVoirContenu" class="verrou">
           <span class="verrou__icone">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
           </span>
-          <span class="verrou__titre">Ce profil est privé</span>
-          <span class="verrou__texte">Abonnez-vous pour voir ses articles et ses tenues.</span>
+          <span class="verrou__titre">{{ t('profil.prive') }}</span>
+          <span class="verrou__texte">{{ t('profil.abonnezVous') }}</span>
         </div>
         <template v-else-if="onglet === 'tenues'">
           <p v-if="erreurTenues" class="message-erreur" role="alert">{{ erreurTenues }}</p>
-          <p v-if="tenues === null" class="etat">Chargement des tenues…</p>
+          <p v-if="tenues === null" class="etat">{{ t('profil.chargementTenues') }}</p>
           <div v-else-if="tenues.length === 0" class="vide">
-            <p class="etat">Aucune tenue partagée pour le moment.</p>
-            <RouterLink v-if="estMoi" :to="{ name: 'tenues' }" class="bouton bouton--principal">Générer une tenue</RouterLink>
+            <p class="etat">{{ t('profil.aucuneTenue') }}</p>
+            <RouterLink v-if="estMoi" :to="{ name: 'tenues' }" class="bouton bouton--principal">{{ t('profil.genererTenue') }}</RouterLink>
           </div>
           <div v-else class="tenues">
             <CarteTenue v-for="tenue in tenues" :key="tenue.id" :tenue="tenue" @supprimee="retirerTenue" />
           </div>
         </template>
-        <p v-else-if="articles.length === 0" class="etat">Aucun article pour le moment.</p>
+        <p v-else-if="articles.length === 0" class="etat">{{ t('profil.aucunArticle') }}</p>
         <div v-else class="grille">
           <RouterLink
             v-for="article in articles"

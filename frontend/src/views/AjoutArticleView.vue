@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import ChoixEmplacement from '@/components/ChoixEmplacement.vue'
 import { api } from '@/services/api'
@@ -7,30 +8,31 @@ import { useAjoutArticleStore } from '@/stores/ajoutArticle'
 import { useReferentielsStore } from '@/stores/referentiels'
 import { idLogementActif } from '@/utils/logementActif'
 
-// Champs du détail selon la famille de la catégorie choisie
+// Champs du détail selon la famille de la catégorie choisie (libellés et exemples : ajout.champs et ajout.exemples)
 const CHAMPS_PAR_FAMILLE = {
   VETEMENT: [
-    { cle: 'marque', libelle: 'Marque', type: 'texte', placeholder: 'Ex. COS' },
-    { cle: 'couleurId', libelle: 'Couleur', type: 'couleur' },
-    { cle: 'taille', libelle: 'Taille', type: 'texte', placeholder: 'Ex. M' },
-    { cle: 'matiere', libelle: 'Matière', type: 'texte', placeholder: 'Ex. Laine' },
+    { cle: 'marque', type: 'texte' },
+    { cle: 'couleurId', type: 'couleur' },
+    { cle: 'taille', type: 'texte' },
+    { cle: 'matiere', type: 'texte' },
   ],
   LIVRE: [
-    { cle: 'auteur', libelle: 'Auteur', type: 'texte', placeholder: 'Ex. Albert Camus' },
-    { cle: 'editeur', libelle: 'Éditeur', type: 'texte', placeholder: 'Ex. Gallimard' },
-    { cle: 'nbPages', libelle: 'Pages', type: 'nombre', placeholder: 'Ex. 194' },
-    { cle: 'anneeParution', libelle: 'Année', type: 'nombre', placeholder: 'Ex. 1942' },
+    { cle: 'auteur', type: 'texte' },
+    { cle: 'editeur', type: 'texte' },
+    { cle: 'nbPages', type: 'nombre' },
+    { cle: 'anneeParution', type: 'nombre' },
   ],
   VINYLE: [
-    { cle: 'artiste', libelle: 'Artiste', type: 'texte', placeholder: 'Ex. Daft Punk' },
-    { cle: 'label', libelle: 'Label', type: 'texte', placeholder: 'Ex. Virgin' },
-    { cle: 'anneeSortie', libelle: 'Année', type: 'nombre', placeholder: 'Ex. 2001' },
-    { cle: 'format', libelle: 'Format', type: 'format' },
+    { cle: 'artiste', type: 'texte' },
+    { cle: 'label', type: 'texte' },
+    { cle: 'anneeSortie', type: 'nombre' },
+    { cle: 'format', type: 'format' },
   ],
 }
 CHAMPS_PAR_FAMILLE.ACCESSOIRE = CHAMPS_PAR_FAMILLE.VETEMENT
 const DETAIL_PAR_FAMILLE = { VETEMENT: 'vetement', ACCESSOIRE: 'vetement', LIVRE: 'livre', VINYLE: 'vinyle' }
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const ajout = useAjoutArticleStore()
@@ -45,7 +47,7 @@ const codeInconnu = origine === 'manuel' ? ajout.codeInconnu : null
 
 // Article modifié : sa photo, ses droits et les valeurs absentes du formulaire (ISBN, état…)
 const articleModifie = ref(null)
-const titreEcran = { vetement: "Vérifiez l'article", manuel: 'Nouvel article', modification: "Modifier l'article" }[origine]
+const titreEcran = t(`ajout.titres.${origine}`)
 const retour = idArticle ? { name: 'article', params: { id: idArticle } } : { name: 'scan' }
 const peutChangerConfidentialite = computed(() => !idArticle || articleModifie.value?.peutChangerConfidentialite)
 
@@ -204,7 +206,7 @@ async function enregistrer() {
     router.replace({ name: 'article', params: { id: article.id } })
   } catch (e) {
     erreurs.value = e.violations
-    erreur.value = Object.keys(e.violations).length ? 'Vérifiez les champs signalés.' : e.message
+    erreur.value = Object.keys(e.violations).length ? t('commun.verifierChamps') : e.message
   } finally {
     envoiEnCours.value = false
   }
@@ -237,7 +239,7 @@ onMounted(async () => {
     if (codeInconnu && valeurs.categorieId === null) {
       const estIsbn = /^(97[89]\d{10}|\d{9}[\dX])$/.test(codeInconnu)
       const chemin = estIsbn ? 'Livres › Romans › Romans' : 'Musique › Vinyles › Albums (33 tours)'
-      valeurs.categorieId = referentiels.categories.find((c) => c.chemin === chemin)?.id ?? null
+      valeurs.categorieId = referentiels.categories.find((c) => c.reference === chemin)?.id ?? null
     }
   } catch (e) {
     erreur.value = e.message
@@ -250,7 +252,7 @@ onMounted(async () => {
 <template>
   <div class="ecran">
     <header class="entete">
-      <RouterLink :to="retour" class="bouton-icone" :aria-label="idArticle ? 'Retour à la fiche' : scan ? 'Reprendre la photo' : 'Retour au scan'">
+      <RouterLink :to="retour" class="bouton-icone" :aria-label="t(idArticle ? 'ajout.retourFiche' : scan ? 'ajout.reprendrePhoto' : 'ajout.retourScan')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
       </RouterLink>
       <h1 class="entete__titre">{{ titreEcran }}</h1>
@@ -258,41 +260,41 @@ onMounted(async () => {
 
     <!-- Affiché tout de suite, sans attendre le chargement du formulaire : photo et avancement de l'analyse -->
     <div v-if="scan" class="resume resume--scan">
-      <img :src="scan.apercu ?? scan.photo" alt="Photo du scan" class="resume__photo" />
+      <img :src="scan.apercu ?? scan.photo" :alt="t('ajout.photoScan')" class="resume__photo" />
       <div class="resume__textes" aria-live="polite">
         <template v-if="scan.envoi === 'erreur'">
           <span class="badge-ia badge-ia--neutre">{{ scan.erreur }}</span>
-          <RouterLink :to="{ name: 'scan' }" class="resume__lien">Reprendre la photo</RouterLink>
+          <RouterLink :to="{ name: 'scan' }" class="resume__lien">{{ t('ajout.reprendrePhoto') }}</RouterLink>
         </template>
         <template v-else-if="analyseEnCours">
           <span class="badge-ia badge-ia--attente">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-            Analyse de la photo par l'IA…
+            {{ t('ajout.analyseEnCours') }}
           </span>
-          <span class="resume__aide">Vous pouvez déjà remplir la fiche : l'IA complétera les champs restés vides.</span>
+          <span class="resume__aide">{{ t('ajout.remplirPendantAnalyse') }}</span>
         </template>
         <template v-else>
           <span v-if="nbChampsIa" class="badge-ia">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-            {{ nbChampsIa }} champ{{ nbChampsIa > 1 ? 's' : '' }} pré-rempli{{ nbChampsIa > 1 ? 's' : '' }} par l'IA
+            {{ t('ajout.champsPreRemplis', nbChampsIa) }}
           </span>
-          <span v-else class="badge-ia badge-ia--neutre">{{ scan.ia?.message ?? "L'IA n'a rien reconnu" }}</span>
-          <span class="resume__aide">La photo du scan est conservée. Tout reste modifiable.</span>
+          <span v-else class="badge-ia badge-ia--neutre">{{ scan.ia?.message ?? t('ajout.rienReconnu') }}</span>
+          <span class="resume__aide">{{ t('ajout.photoConservee') }}</span>
         </template>
       </div>
     </div>
 
     <!-- Le formulaire s'affiche tout de suite ; en modification, on attend les valeurs de l'article -->
-    <p v-if="chargement && idArticle" class="etat etat--plein">Chargement de l'article…</p>
+    <p v-if="chargement && idArticle" class="etat etat--plein">{{ t('article.chargement') }}</p>
 
     <form v-else id="formulaire-article" class="contenu" novalidate @submit.prevent="enregistrer">
       <div v-if="articleModifie?.photos.length" class="resume">
-        <img :src="articleModifie.photos[0]" alt="Photo de l'article" class="resume__photo" />
-        <span class="resume__aide">Modifiez les informations puis enregistrez. La photo reste la même.</span>
+        <img :src="articleModifie.photos[0]" :alt="t('ajout.photoArticle')" class="resume__photo" />
+        <span class="resume__aide">{{ t('ajout.aideModification') }}</span>
       </div>
 
       <p v-if="codeInconnu" class="info">
-        Le code-barres {{ codeInconnu }} n'est dans aucune base : complétez la fiche, il sera enregistré avec l'article.
+        {{ t('ajout.codeInconnu', { code: codeInconnu }) }}
       </p>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
@@ -300,20 +302,20 @@ onMounted(async () => {
       <div class="champs">
         <label class="carte carte--pleine" :class="{ 'carte--ia': estRempliParIa('titre'), 'carte--invalide': erreurs.titre }">
           <span class="carte__libelle">
-            Nom de l'article
-            <svg v-if="estRempliParIa('titre')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Pré-rempli par l'IA" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            {{ t('ajout.nom') }}
+            <svg v-if="estRempliParIa('titre')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
           </span>
-          <input v-model.trim="valeurs.titre" class="carte__saisie" type="text" placeholder="Ex. Pull col roulé" required />
+          <input v-model.trim="valeurs.titre" class="carte__saisie" type="text" :placeholder="t('ajout.exempleNom')" required />
           <span v-if="erreurs.titre" class="champ__erreur">{{ erreurs.titre }}</span>
         </label>
 
         <label class="carte carte--pleine" :class="{ 'carte--ia': estRempliParIa('categorieId'), 'carte--invalide': erreurs.categorieId }">
           <span class="carte__libelle">
-            Catégorie
-            <svg v-if="estRempliParIa('categorieId')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Pré-rempli par l'IA" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            {{ t('article.categorie') }}
+            <svg v-if="estRempliParIa('categorieId')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
           </span>
           <select v-model="valeurs.categorieId" class="carte__saisie">
-            <option :value="null" disabled>Choisir une catégorie</option>
+            <option :value="null" disabled>{{ t('ajout.choisirCategorie') }}</option>
             <optgroup v-for="groupe in groupesCategories" :key="groupe.racine" :label="groupe.racine">
               <option v-for="categorie in groupe.elements" :key="categorie.id" :value="categorie.id">{{ categorie.libelle }}</option>
             </optgroup>
@@ -323,8 +325,8 @@ onMounted(async () => {
 
         <label v-for="champ in champsDetail" :key="champ.cle" class="carte" :class="{ 'carte--ia': estRempliParIa(champ.cle), 'carte--invalide': erreurs[champ.cle] }">
           <span class="carte__libelle">
-            {{ champ.libelle }}
-            <svg v-if="estRempliParIa(champ.cle)" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Pré-rempli par l'IA" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            {{ t(`ajout.champs.${champ.cle}`) }}
+            <svg v-if="estRempliParIa(champ.cle)" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
           </span>
           <select v-if="champ.type === 'couleur'" v-model="valeurs[champ.cle]" class="carte__saisie">
             <option :value="null">—</option>
@@ -340,15 +342,15 @@ onMounted(async () => {
             class="carte__saisie"
             :type="champ.type === 'nombre' ? 'number' : 'text'"
             :inputmode="champ.type === 'nombre' ? 'numeric' : undefined"
-            :placeholder="champ.placeholder"
+            :placeholder="t(`ajout.exemples.${champ.cle}`)"
           />
           <span v-if="erreurs[champ.cle]" class="champ__erreur">{{ erreurs[champ.cle] }}</span>
         </label>
       </div>
 
       <label class="carte carte--note" :class="{ 'carte--invalide': erreurs.description }">
-        <span class="carte__libelle">Note</span>
-        <textarea v-model.trim="valeurs.description" class="carte__saisie carte__saisie--note" rows="3" placeholder="Ex. Taille un peu petit, offert par Camille…"></textarea>
+        <span class="carte__libelle">{{ t('ajout.note') }}</span>
+        <textarea v-model.trim="valeurs.description" class="carte__saisie carte__saisie--note" rows="3" :placeholder="t('ajout.exempleNote')"></textarea>
         <span v-if="erreurs.description" class="champ__erreur">{{ erreurs.description }}</span>
       </label>
 
@@ -356,7 +358,7 @@ onMounted(async () => {
 
       <label v-if="peutChangerConfidentialite" class="personnel">
         <input v-model="estPersonnel" type="checkbox" class="personnel__case" />
-        Article personnel — visible uniquement par moi
+        {{ t('ajout.personnel') }}
       </label>
     </form>
 
@@ -370,13 +372,15 @@ onMounted(async () => {
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
         {{
-          envoiEnCours
-            ? 'Enregistrement…'
-            : scan?.envoi === 'en-cours'
-              ? 'Envoi de la photo…'
-              : idArticle
-                ? 'Enregistrer les modifications'
-                : 'Enregistrer dans le dressing'
+          t(
+            envoiEnCours
+              ? 'ajout.enregistrement'
+              : scan?.envoi === 'en-cours'
+                ? 'ajout.envoiPhoto'
+                : idArticle
+                  ? 'ajout.enregistrerModifications'
+                  : 'ajout.enregistrerDressing',
+          )
         }}
       </button>
     </div>

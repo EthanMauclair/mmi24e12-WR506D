@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import { api } from '@/services/api'
@@ -15,6 +16,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['supprimee'])
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
@@ -48,7 +50,7 @@ async function basculerLike() {
 
 async function supprimer() {
   menu.value = false
-  if (!window.confirm(`Supprimer la tenue « ${props.tenue.titre} » ?`)) {
+  if (!window.confirm(t('carteTenue.confirmerSuppression', { titre: props.tenue.titre }))) {
     return
   }
   try {
@@ -64,7 +66,7 @@ async function supprimer() {
  * partage (vers Instagram, une story…) ou que l'ordinateur télécharge, avec le lien de la tenue.
  */
 async function partagerImage() {
-  messagePartage.value = 'Préparation de l\'image…'
+  messagePartage.value = t('carteTenue.preparation')
   const fichier = new File([await imageTenue(props.tenue)], `tenue-${props.tenue.id}.png`, { type: 'image/png' })
   const lien = new URL(router.resolve(lienTenue.value).href, window.location.origin).href
 
@@ -83,14 +85,14 @@ async function partagerImage() {
   const telechargement = Object.assign(document.createElement('a'), { href: adresse, download: fichier.name })
   telechargement.click()
   URL.revokeObjectURL(adresse)
-  messagePartage.value = 'Image téléchargée : publiez-la depuis Instagram.'
+  messagePartage.value = t('carteTenue.telechargee')
 }
 
 async function copierLien() {
   const lien = new URL(router.resolve(lienTenue.value).href, window.location.origin).href
   try {
     await navigator.clipboard.writeText(lien)
-    messagePartage.value = 'Lien copié.'
+    messagePartage.value = t('carteTenue.lienCopie')
   } catch {
     messagePartage.value = lien
   }
@@ -106,15 +108,15 @@ async function copierLien() {
       <span class="carte__auteur">
         <RouterLink :to="{ name: 'membre', params: { pseudo: tenue.createur.pseudo } }" class="carte__pseudo">{{ tenue.createur.pseudo }}</RouterLink>
         <span class="carte__sous-titre">
-          {{ tenue.titre }} · {{ ilYA(tenue.createdAt) }}<template v-if="tenue.estPrivee"> · privée</template>
+          {{ tenue.titre }} · {{ ilYA(tenue.createdAt) }}<template v-if="tenue.estPrivee"> · {{ t('carteTenue.privee') }}</template>
         </span>
       </span>
       <div v-if="tenue.peutSupprimer" class="carte__options">
-        <button type="button" class="carte__bouton-options" aria-label="Plus d'options" :aria-expanded="menu" @click="menu = !menu">
+        <button type="button" class="carte__bouton-options" :aria-label="t('carteTenue.options')" :aria-expanded="menu" @click="menu = !menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
         </button>
         <div v-if="menu" class="menu">
-          <button type="button" class="menu__element" @click="supprimer">Supprimer la tenue</button>
+          <button type="button" class="menu__element" @click="supprimer">{{ t('carteTenue.supprimer') }}</button>
         </div>
       </div>
     </header>
@@ -140,14 +142,14 @@ async function copierLien() {
         class="action"
         :class="{ 'action--aime': tenue.aime }"
         :aria-pressed="tenue.aime"
-        aria-label="J'aime"
+        :aria-label="t('carteTenue.aime')"
         :disabled="session.utilisateur && !tenue.peutAimer"
         @click="basculerLike"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" :fill="tenue.aime ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
         {{ tenue.nbLikes }}
       </button>
-      <RouterLink :to="lienTenue" class="action" aria-label="Commentaires">
+      <RouterLink :to="lienTenue" class="action" :aria-label="t('commentaires.titre')">
         <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
         {{ tenue.nbCommentaires }}
       </RouterLink>
@@ -160,9 +162,9 @@ async function copierLien() {
 
     <div v-if="partage" class="partage">
       <button type="button" class="partage__choix" @click="partagerImage">
-        {{ peutPartagerFichier ? "Partager l'image" : "Télécharger l'image" }}
+        {{ t(peutPartagerFichier ? 'carteTenue.partagerImage' : 'carteTenue.telechargerImage') }}
       </button>
-      <button type="button" class="partage__choix" @click="copierLien">Copier le lien</button>
+      <button type="button" class="partage__choix" @click="copierLien">{{ t('carteTenue.copierLien') }}</button>
       <span v-if="messagePartage" class="partage__message" role="status">{{ messagePartage }}</span>
     </div>
 
@@ -175,7 +177,7 @@ async function copierLien() {
           <strong>{{ tenue.dernierCommentaire.auteur.pseudo }}</strong> {{ tenue.dernierCommentaire.contenu }}
         </p>
         <RouterLink v-if="tenue.nbCommentaires > 1" :to="lienTenue" class="carte__voir">
-          Voir les {{ tenue.nbCommentaires }} commentaires
+          {{ t('carteTenue.voirCommentaires', { n: tenue.nbCommentaires }) }}
         </RouterLink>
       </template>
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import LigneMembre from '@/components/LigneMembre.vue'
@@ -11,6 +12,7 @@ const props = defineProps({
   liste: { type: String, required: true },
 })
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
@@ -22,7 +24,7 @@ const erreur = ref('')
 const pseudo = computed(() => (props.liste === 'amis' ? session.utilisateur?.pseudo : route.params.pseudo))
 // Sur ses propres abonnés, l'API indique lesquels sont des amis : on peut alors les choisir ou les retirer
 const gereSesAbonnes = computed(() => props.liste !== 'abonnements' && pseudo.value === session.utilisateur?.pseudo)
-const titre = computed(() => ({ abonnes: 'Abonnés', abonnements: 'Abonnements', amis: 'Amis' })[props.liste])
+const titre = computed(() => t(`membres.titres.${props.liste}`))
 const nbAmis = computed(() => membres.value.filter((membre) => membre.estAmi).length)
 
 async function charger() {
@@ -49,7 +51,7 @@ async function basculerAmi(membre) {
 }
 
 async function retirer(membre) {
-  if (!window.confirm(`Retirer ${membre.pseudo} de vos abonnés ? Il ne verra plus votre contenu si votre profil est privé.`)) {
+  if (!window.confirm(t('membres.confirmerRetrait', { pseudo: membre.pseudo }))) {
     return
   }
   erreur.value = ''
@@ -68,7 +70,7 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <button type="button" class="bouton-icone" aria-label="Retour" @click="router.back()">
+        <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
         <div class="entete__titres">
@@ -78,14 +80,13 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
       </header>
 
       <p v-if="liste === 'amis'" class="aide">
-        Comme les « amis proches », vos amis sont choisis parmi vos abonnés. Eux seuls peuvent commenter vos articles.
-        Personne d'autre ne voit qui sont vos amis.
+        {{ t('membres.aideAmis') }}
       </p>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-if="chargement" class="etat">Chargement…</p>
+      <p v-if="chargement" class="etat">{{ t('commun.chargement') }}</p>
       <p v-else-if="membres.length === 0" class="etat">
-        {{ liste === 'abonnements' ? 'Aucun abonnement pour le moment.' : 'Aucun abonné pour le moment.' }}
+        {{ t(liste === 'abonnements' ? 'membres.aucunAbonnement' : 'membres.aucunAbonne') }}
       </p>
       <ul v-else class="liste">
         <LigneMembre v-for="membre in membres" :key="membre.id" :membre="membre">
@@ -95,13 +96,13 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
               class="ami"
               :class="{ 'ami--actif': membre.estAmi }"
               :aria-pressed="membre.estAmi"
-              :aria-label="membre.estAmi ? `Retirer ${membre.pseudo} de vos amis` : `Choisir ${membre.pseudo} comme ami`"
+              :aria-label="t(membre.estAmi ? 'membres.retirerAmi' : 'membres.choisirAmi', { pseudo: membre.pseudo })"
               @click="basculerAmi(membre)"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" :fill="membre.estAmi ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z" /></svg>
-              {{ membre.estAmi ? 'Ami' : 'Ajouter' }}
+              {{ t(membre.estAmi ? 'membres.ami' : 'commun.ajouter') }}
             </button>
-            <button type="button" class="retirer" :aria-label="`Retirer ${membre.pseudo} de vos abonnés`" @click="retirer(membre)">
+            <button type="button" class="retirer" :aria-label="t('membres.retirerAbonne', { pseudo: membre.pseudo })" @click="retirer(membre)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
           </template>

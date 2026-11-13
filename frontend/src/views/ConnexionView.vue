@@ -1,8 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import SelecteurLangue from '@/components/SelecteurLangue.vue'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const session = useSessionStore()
 const route = useRoute()
 const router = useRouter()
@@ -29,34 +32,37 @@ async function seConnecter() {
 
 const typeMotDePasse = computed(() => (afficherMotDePasse.value ? 'text' : 'password'))
 const libelleBascule = computed(() =>
-  afficherMotDePasse.value ? 'Masquer le mot de passe' : 'Afficher le mot de passe',
+  t(afficherMotDePasse.value ? 'connexion.masquer' : 'connexion.afficher'),
 )
 </script>
 
 <template>
   <div class="ecran">
     <div class="bandeau">
-      <span class="bandeau__logo">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6a2 2 0 1 1 2 2c-1 0-2 .7-2 1.6v.9" /><path d="M12 10.5 2.6 17a1.4 1.4 0 0 0 .8 2.5h17.2a1.4 1.4 0 0 0 .8-2.5z" /></svg>
-      </span>
+      <div class="bandeau__haut">
+        <span class="bandeau__logo">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6a2 2 0 1 1 2 2c-1 0-2 .7-2 1.6v.9" /><path d="M12 10.5 2.6 17a1.4 1.4 0 0 0 .8 2.5h17.2a1.4 1.4 0 0 0 .8-2.5z" /></svg>
+        </span>
+        <SelecteurLangue />
+      </div>
       <div class="bandeau__textes">
-        <span class="bandeau__titre">Retrouvez chaque article, en un coup d'œil.</span>
-        <span class="bandeau__sous-titre">Dressing, vinyles, comics : tout est indexé.</span>
+        <span class="bandeau__titre">{{ t('connexion.accroche') }}</span>
+        <span class="bandeau__sous-titre">{{ t('connexion.sousTitre') }}</span>
       </div>
     </div>
 
     <form class="formulaire" @submit.prevent="seConnecter">
-      <h1 class="formulaire__titre">Connexion</h1>
+      <h1 class="formulaire__titre">{{ t('connexion.titre') }}</h1>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <label class="champ">
-        <span class="champ__libelle">E-mail</span>
-        <input v-model="email" class="saisie" type="email" autocomplete="email" placeholder="vous@exemple.fr" required />
+        <span class="champ__libelle">{{ t('connexion.email') }}</span>
+        <input v-model="email" class="saisie" type="email" autocomplete="email" :placeholder="t('connexion.exempleEmail')" required />
       </label>
 
       <label class="champ">
-        <span class="champ__libelle">Mot de passe</span>
+        <span class="champ__libelle">{{ t('connexion.motDePasse') }}</span>
         <span class="saisie saisie--groupe saisie--mot-de-passe">
           <input v-model="motDePasse" :type="typeMotDePasse" autocomplete="current-password" placeholder="••••••••" required />
           <button type="button" class="bascule" :aria-label="libelleBascule" @click="afficherMotDePasse = !afficherMotDePasse">
@@ -65,27 +71,27 @@ const libelleBascule = computed(() =>
         </span>
       </label>
 
-      <a href="#" class="oubli">Mot de passe oublié ?</a>
+      <a href="#" class="oubli">{{ t('connexion.oubli') }}</a>
 
       <button type="submit" class="bouton-principal" :disabled="envoiEnCours">
-        {{ envoiEnCours ? 'Connexion…' : 'Se connecter' }}
+        {{ t(envoiEnCours ? 'connexion.enCours' : 'connexion.seConnecter') }}
       </button>
 
       <div class="separateur">
         <span class="separateur__trait"></span>
-        ou
+        {{ t('connexion.ou') }}
         <span class="separateur__trait"></span>
       </div>
 
       <a href="#" class="bouton-secondaire">
-        Découvrir sans compte
+        {{ t('connexion.decouvrir') }}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
       </a>
     </form>
 
     <p class="pied">
-      Pas encore de compte ?
-      <RouterLink to="/inscription" class="pied__lien">S'inscrire gratuitement</RouterLink>
+      {{ t('connexion.pasDeCompte') }}
+      <RouterLink to="/inscription" class="pied__lien">{{ t('connexion.inscription') }}</RouterLink>
     </p>
   </div>
 </template>
@@ -101,6 +107,12 @@ const libelleBascule = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.bandeau__haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
 .bandeau__logo {

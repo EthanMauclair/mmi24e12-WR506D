@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
@@ -7,8 +8,8 @@ import { useSessionStore } from '@/stores/session'
 import { logementMemorise, memoriserLogementActif } from '@/utils/logementActif'
 
 const FONDS_PIECES = ['rose', 'sable', 'ardoise', 'lavande'].map((teinte) => `var(--couleur-pastel-${teinte})`)
-const LIBELLES_ROLES = { PROPRIETAIRE: 'Propriétaire', COPROPRIETAIRE: 'Co-propriétaire', MINEUR: 'Membre' }
 
+const { t } = useI18n()
 const session = useSessionStore()
 const router = useRouter()
 
@@ -35,13 +36,9 @@ const estMineur = computed(() => session.utilisateur?.estMineur ?? false)
 
 const libelleRole = computed(() => {
   const nb = logement.value.nbCoproprietaires
-  const coproprietaires = nb === 0 ? '' : ` · ${nb} co-propriétaire${nb > 1 ? 's' : ''}`
-  return LIBELLES_ROLES[logement.value.role] + coproprietaires
+  const coproprietaires = nb === 0 ? '' : ` · ${t('dressing.coproprietaires', nb)}`
+  return t(`dressing.roles.${logement.value.role}`) + coproprietaires
 })
-
-function pluriel(nombre, mot) {
-  return nombre > 1 ? `${mot}s` : mot
-}
 
 async function chargerLogement(id) {
   logement.value = await api(`/logements/${id}`)
@@ -139,32 +136,32 @@ onMounted(charger)
 <template>
   <div class="ecran">
     <main class="contenu">
-      <p v-if="chargement" class="etat">Chargement de votre dressing…</p>
+      <p v-if="chargement" class="etat">{{ t('dressing.chargement') }}</p>
 
       <p v-else-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <section v-else-if="creationLogement" class="nouveau-logement">
-        <h1 class="nouveau-logement__titre">{{ logements.length ? 'Nouveau logement' : 'Bienvenue !' }}</h1>
+        <h1 class="nouveau-logement__titre">{{ t(logements.length ? 'dressing.nouveauLogement' : 'dressing.bienvenue') }}</h1>
         <p class="nouveau-logement__texte">
-          Créez votre logement (ou dressing) pour y ranger vos pièces, vos stockages et vos articles.
+          {{ t('dressing.creezLogement') }}
         </p>
         <form class="nouveau-logement__formulaire" @submit.prevent="creerLogement">
           <label class="champ">
-            <span class="champ__libelle">Nom du logement</span>
-            <input v-model="nomLogement" class="saisie saisie--ligne" :class="{ 'saisie--invalide': erreurLogement }" type="text" placeholder="Appartement Lyon" required />
+            <span class="champ__libelle">{{ t('dressing.nomLogement') }}</span>
+            <input v-model="nomLogement" class="saisie saisie--ligne" :class="{ 'saisie--invalide': erreurLogement }" type="text" :placeholder="t('dressing.exempleLogement')" required />
             <span v-if="erreurLogement" class="champ__erreur">{{ erreurLogement }}</span>
           </label>
-          <button type="submit" class="bouton-principal">Créer mon logement</button>
-          <button v-if="logements.length" type="button" class="lien-bouton" @click="creationLogement = false">Annuler</button>
+          <button type="submit" class="bouton-principal">{{ t('dressing.creerLogement') }}</button>
+          <button v-if="logements.length" type="button" class="lien-bouton" @click="creationLogement = false">{{ t('commun.annuler') }}</button>
         </form>
       </section>
 
       <section v-else-if="!logement" class="nouveau-logement">
-        <h1 class="nouveau-logement__titre">Bienvenue !</h1>
+        <h1 class="nouveau-logement__titre">{{ t('dressing.bienvenue') }}</h1>
         <p class="nouveau-logement__texte">
-          Votre compte est rattaché à un compte majeur. Il doit vous ajouter à son logement pour que vous puissiez y ranger vos articles.
+          {{ t('dressing.mineurSansLogement') }}
         </p>
-        <button type="button" class="lien-bouton" @click="seDeconnecter">Se déconnecter</button>
+        <button type="button" class="lien-bouton" @click="seDeconnecter">{{ t('dressing.seDeconnecter') }}</button>
       </section>
 
       <template v-else>
@@ -187,30 +184,30 @@ onMounted(charger)
               >
                 {{ element.nom }}
               </button>
-              <button v-if="!estMineur" type="button" class="menu__element menu__element--action" @click="ouvrirCreationLogement">+ Créer un logement</button>
-              <button type="button" class="menu__element menu__element--action" @click="seDeconnecter">Se déconnecter</button>
+              <button v-if="!estMineur" type="button" class="menu__element menu__element--action" @click="ouvrirCreationLogement">{{ t('dressing.ajouterLogement') }}</button>
+              <button type="button" class="menu__element menu__element--action" @click="seDeconnecter">{{ t('dressing.seDeconnecter') }}</button>
             </div>
           </div>
-          <button type="button" class="bouton-icone notifications" aria-label="Notifications">
+          <button type="button" class="bouton-icone notifications" :aria-label="t('dressing.notifications')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
           </button>
         </header>
 
         <label class="recherche">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-          <span class="visuellement-cache">Rechercher</span>
-          <input v-model="recherche" type="search" placeholder="Où est rangé… ? Article, marque, couleur" />
+          <span class="visuellement-cache">{{ t('dressing.rechercher') }}</span>
+          <input v-model="recherche" type="search" :placeholder="t('dressing.recherche')" />
         </label>
 
         <section v-if="enRecherche" class="pieces" aria-live="polite">
-          <h2 class="pieces__titre">Résultats</h2>
-          <p v-if="rechercheEnCours" class="etat">Recherche…</p>
-          <p v-else-if="resultats.length === 0" class="etat">Aucun article ne correspond à « {{ recherche.trim() }} ».</p>
+          <h2 class="pieces__titre">{{ t('dressing.resultats') }}</h2>
+          <p v-if="rechercheEnCours" class="etat">{{ t('dressing.rechercheEnCours') }}</p>
+          <p v-else-if="resultats.length === 0" class="etat">{{ t('dressing.aucunResultat', { texte: recherche.trim() }) }}</p>
           <div v-else class="pieces__liste">
             <RouterLink v-for="article in resultats" :key="article.id" :to="`/articles/${article.id}`" class="piece">
               <span class="piece__textes">
                 <span class="piece__nom">{{ article.titre }}</span>
-                <span class="piece__stockages">{{ article.emplacement ?? 'À ranger' }} · {{ article.infos }}</span>
+                <span class="piece__stockages">{{ article.emplacement ?? t('commun.aRanger') }} · {{ article.infos }}</span>
               </span>
               <svg class="piece__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
             </RouterLink>
@@ -221,15 +218,15 @@ onMounted(charger)
           <div class="chiffres">
             <div class="chiffre">
               <span class="chiffre__valeur">{{ logement.nbArticles }}</span>
-              <span class="chiffre__libelle">{{ pluriel(logement.nbArticles, 'article') }}</span>
+              <span class="chiffre__libelle">{{ t('dressing.articles', logement.nbArticles) }}</span>
             </div>
             <div class="chiffre">
               <span class="chiffre__valeur">{{ logement.nbPieces }}</span>
-              <span class="chiffre__libelle">{{ pluriel(logement.nbPieces, 'pièce') }}</span>
+              <span class="chiffre__libelle">{{ t('dressing.pieces', logement.nbPieces) }}</span>
             </div>
             <a href="#" class="chiffre">
               <span class="chiffre__valeur chiffre__valeur--accent">{{ logement.nbPretes }}</span>
-              <span class="chiffre__libelle">{{ pluriel(logement.nbPretes, 'prêté') }}</span>
+              <span class="chiffre__libelle">{{ t('dressing.pretes', logement.nbPretes) }}</span>
             </a>
           </div>
 
@@ -238,28 +235,28 @@ onMounted(charger)
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><path d="M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2" /></svg>
             </span>
             <span class="tenue-du-jour__textes">
-              <span class="tenue-du-jour__meteo">Selon la météo du jour</span>
-              <span class="tenue-du-jour__titre">Générer ma tenue du jour</span>
+              <span class="tenue-du-jour__meteo">{{ t('dressing.selonMeteo') }}</span>
+              <span class="tenue-du-jour__titre">{{ t('dressing.genererTenue') }}</span>
             </span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
           </a>
 
           <section class="pieces">
             <div class="pieces__entete">
-              <h2 class="pieces__titre">Pièces</h2>
-              <button v-if="logement.peutGerer && !ajoutPiece" type="button" class="pieces__ajout" @click="ajoutPiece = true">+ Ajouter une pièce</button>
+              <h2 class="pieces__titre">{{ t('dressing.titrePieces') }}</h2>
+              <button v-if="logement.peutGerer && !ajoutPiece" type="button" class="pieces__ajout" @click="ajoutPiece = true">{{ t('dressing.ajouterPiece') }}</button>
             </div>
 
             <form v-if="ajoutPiece" class="ajout" @submit.prevent="creerPiece">
               <div class="ajout__ligne">
-                <input v-model="nomPiece" class="saisie saisie--ligne" :class="{ 'saisie--invalide': erreurPiece }" type="text" placeholder="Nom de la pièce" aria-label="Nom de la pièce" required />
-                <button type="submit" class="ajout__valider">Ajouter</button>
+                <input v-model="nomPiece" class="saisie saisie--ligne" :class="{ 'saisie--invalide': erreurPiece }" type="text" :placeholder="t('dressing.nomPiece')" :aria-label="t('dressing.nomPiece')" required />
+                <button type="submit" class="ajout__valider">{{ t('commun.ajouter') }}</button>
               </div>
               <span v-if="erreurPiece" class="champ__erreur">{{ erreurPiece }}</span>
-              <button type="button" class="lien-bouton" @click="ajoutPiece = false">Annuler</button>
+              <button type="button" class="lien-bouton" @click="ajoutPiece = false">{{ t('commun.annuler') }}</button>
             </form>
 
-            <p v-if="logement.pieces.length === 0" class="etat">Aucune pièce pour le moment.</p>
+            <p v-if="logement.pieces.length === 0" class="etat">{{ t('dressing.aucunePiece') }}</p>
             <div v-else class="pieces__liste">
               <RouterLink v-for="(piece, index) in logement.pieces" :key="piece.id" :to="`/pieces/${piece.id}`" class="piece">
                 <span class="piece__icone" :style="{ background: FONDS_PIECES[index % FONDS_PIECES.length] }">
@@ -267,7 +264,7 @@ onMounted(charger)
                 </span>
                 <span class="piece__textes">
                   <span class="piece__nom">{{ piece.nom }}</span>
-                  <span class="piece__stockages">{{ piece.stockages.length ? piece.stockages.join(' · ') : 'Aucun stockage' }}</span>
+                  <span class="piece__stockages">{{ piece.stockages.length ? piece.stockages.join(' · ') : t('dressing.aucunStockage') }}</span>
                 </span>
                 <span class="piece__nombre">{{ piece.nbArticles }}</span>
                 <svg class="piece__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>

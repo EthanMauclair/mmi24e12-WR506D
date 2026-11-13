@@ -78,7 +78,7 @@ final class AuthController extends ApiController
     public function connexion(#[CurrentUser] ?Utilisateur $utilisateur): JsonResponse
     {
         if (null === $utilisateur) {
-            return $this->json(['message' => 'E-mail ou mot de passe manquant.'], Response::HTTP_UNAUTHORIZED);
+            return $this->json(['message' => $this->traduire('E-mail ou mot de passe manquant.')], Response::HTTP_UNAUTHORIZED);
         }
 
         return $this->json($this->presentateur->utilisateur($utilisateur));

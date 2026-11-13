@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import { api } from '@/services/api'
@@ -15,6 +16,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['nombre'])
 
+const { t } = useI18n()
 const route = useRoute()
 const session = useSessionStore()
 
@@ -67,9 +69,9 @@ onMounted(async () => {
 <template>
   <section class="commentaires" aria-labelledby="titre-commentaires">
     <h2 id="titre-commentaires" class="commentaires__titre">
-      Commentaires<template v-if="commentaires.length"> · {{ commentaires.length }}</template>
+      {{ t('commentaires.titre') }}<template v-if="commentaires.length"> · {{ commentaires.length }}</template>
     </h2>
-    <p v-if="chargement" class="commentaires__vide">Chargement…</p>
+    <p v-if="chargement" class="commentaires__vide">{{ t('commun.chargement') }}</p>
     <ul v-else-if="commentaires.length" class="commentaires__liste">
       <li v-for="commentaire in commentaires" :key="commentaire.id" class="commentaire">
         <RouterLink :to="{ name: 'membre', params: { pseudo: commentaire.auteur.pseudo } }" :aria-label="commentaire.auteur.pseudo">
@@ -86,14 +88,14 @@ onMounted(async () => {
           v-if="commentaire.peutSupprimer"
           type="button"
           class="commentaire__supprimer"
-          :aria-label="`Supprimer le commentaire de ${commentaire.auteur.pseudo}`"
+          :aria-label="t('commentaires.supprimer', { pseudo: commentaire.auteur.pseudo })"
           @click="supprimer(commentaire)"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
         </button>
       </li>
     </ul>
-    <p v-else class="commentaires__vide">Aucun commentaire pour le moment.</p>
+    <p v-else class="commentaires__vide">{{ t('commentaires.aucun') }}</p>
 
     <form v-if="peutCommenter" class="nouveau-commentaire" @submit.prevent="publier">
       <textarea
@@ -101,16 +103,18 @@ onMounted(async () => {
         class="saisie nouveau-commentaire__saisie"
         rows="1"
         maxlength="1000"
-        placeholder="Ajouter un commentaire…"
-        aria-label="Votre commentaire"
+        :placeholder="t('commentaires.ajouter')"
+        :aria-label="t('commentaires.votre')"
       ></textarea>
-      <button type="submit" class="nouveau-commentaire__envoyer" :disabled="envoi || !nouveau.trim()">Publier</button>
+      <button type="submit" class="nouveau-commentaire__envoyer" :disabled="envoi || !nouveau.trim()">{{ t('commun.publier') }}</button>
     </form>
     <p v-else-if="!session.utilisateur" class="commentaires__aide">
-      <RouterLink :to="{ name: 'connexion', query: { redirection: route.fullPath } }">Connectez-vous</RouterLink>
-      pour suivre {{ auteur }}.
+      <i18n-t keypath="commentaires.connectezVous" scope="global">
+        <template #lien><RouterLink :to="{ name: 'connexion', query: { redirection: route.fullPath } }">{{ t('commentaires.seConnecter') }}</RouterLink></template>
+        <template #pseudo>{{ auteur }}</template>
+      </i18n-t>
     </p>
-    <p v-else class="commentaires__aide">Seuls les amis de {{ auteur }} peuvent commenter.</p>
+    <p v-else class="commentaires__aide">{{ t('commentaires.reserveAmis', { pseudo: auteur }) }}</p>
     <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
   </section>
 </template>

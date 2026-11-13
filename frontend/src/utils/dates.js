@@ -1,4 +1,13 @@
-const FORMAT_JOUR = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+import { i18n, localeIntl } from '@/i18n'
+
+const t = (...parametres) => i18n.global.t(...parametres)
+
+/**
+ * Date dans la langue courante (« 12 nov. », « 12 Nov », « 12/11 »…), avec les options d'Intl.DateTimeFormat.
+ */
+export function formatDate(date, options = { day: 'numeric', month: 'short' }) {
+  return new Intl.DateTimeFormat(localeIntl(), options).format(date)
+}
 
 /**
  * Date du jour au format AAAA-MM-JJ (valeur d'un champ date), dans le fuseau de l'utilisateur.
@@ -13,7 +22,7 @@ export function aujourdhui() {
  */
 export function jourCourt(dateIso) {
   const [annee, mois, jour] = dateIso.split('-').map(Number)
-  return FORMAT_JOUR.format(new Date(annee, mois - 1, jour))
+  return formatDate(new Date(annee, mois - 1, jour))
 }
 
 /**
@@ -21,18 +30,18 @@ export function jourCourt(dateIso) {
  */
 export function echeance(joursRestants) {
   if (joursRestants === null) {
-    return 'Sans date'
+    return t('dates.sansDate')
   }
   if (joursRestants < 0) {
-    return 'En retard'
+    return t('dates.enRetard')
   }
   if (joursRestants === 0) {
-    return "Aujourd'hui"
+    return t('dates.aujourdhui')
   }
   if (joursRestants === 1) {
-    return 'Demain'
+    return t('dates.demain')
   }
-  return joursRestants < 21 ? `Dans ${joursRestants} j` : `Dans ${Math.round(joursRestants / 7)} sem.`
+  return joursRestants < 21 ? t('dates.dansJours', { n: joursRestants }) : t('dates.dansSemaines', { n: Math.round(joursRestants / 7) })
 }
 
 /**
@@ -45,16 +54,16 @@ export function ilYA(dateIso) {
   const date = new Date(dateIso)
   const minutes = Math.floor((Date.now() - date.getTime()) / 60000)
   if (minutes < 1) {
-    return "à l'instant"
+    return t('dates.instant')
   }
   if (minutes < 60) {
-    return `il y a ${minutes} min`
+    return t('dates.minutes', { n: minutes })
   }
   if (minutes < 24 * 60) {
-    return `il y a ${Math.floor(minutes / 60)} h`
+    return t('dates.heures', { n: Math.floor(minutes / 60) })
   }
   if (minutes < 48 * 60) {
-    return 'hier'
+    return t('dates.hier')
   }
-  return FORMAT_JOUR.format(date)
+  return formatDate(date)
 }

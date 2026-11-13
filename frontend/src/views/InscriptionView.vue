@@ -1,15 +1,15 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
+import SelecteurLangue from '@/components/SelecteurLangue.vue'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const session = useSessionStore()
 const router = useRouter()
 
-const optionsVisibilite = [
-  { id: 'public', label: 'Public', desc: 'Tout le monde voit vos tenues' },
-  { id: 'prive', label: 'Privé', desc: 'Vous acceptez chaque abonné' },
-]
+const optionsVisibilite = ['public', 'prive']
 
 const pseudo = ref('')
 const email = ref('')
@@ -62,33 +62,36 @@ async function creerCompte() {
 <template>
   <div class="ecran">
     <div class="bandeau">
-      <h1 class="bandeau__titre">Créer un compte</h1>
-      <span class="bandeau__texte">Indexez votre dressing et partagez vos tenues.</span>
+      <div class="bandeau__haut">
+        <h1 class="bandeau__titre">{{ t('inscription.titre') }}</h1>
+        <SelecteurLangue />
+      </div>
+      <span class="bandeau__texte">{{ t('inscription.sousTitre') }}</span>
     </div>
 
     <form id="formulaire-inscription" class="formulaire" novalidate @submit.prevent="creerCompte">
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <label class="champ">
-        <span class="champ__libelle">Nom d'utilisateur</span>
-        <input v-model="pseudo" class="saisie" :class="{ 'saisie--invalide': erreurs.pseudo }" type="text" autocomplete="username" placeholder="Nom d'utilisateur" />
+        <span class="champ__libelle">{{ t('inscription.pseudo') }}</span>
+        <input v-model="pseudo" class="saisie" :class="{ 'saisie--invalide': erreurs.pseudo }" type="text" autocomplete="username" :placeholder="t('inscription.pseudo')" />
         <span v-if="erreurs.pseudo" class="champ__erreur">{{ erreurs.pseudo }}</span>
       </label>
 
       <label class="champ">
-        <span class="champ__libelle">E-mail</span>
-        <input v-model="email" class="saisie" :class="{ 'saisie--invalide': erreurs.email }" type="email" autocomplete="email" placeholder="E-mail" />
+        <span class="champ__libelle">{{ t('connexion.email') }}</span>
+        <input v-model="email" class="saisie" :class="{ 'saisie--invalide': erreurs.email }" type="email" autocomplete="email" :placeholder="t('connexion.email')" />
         <span v-if="erreurs.email" class="champ__erreur">{{ erreurs.email }}</span>
       </label>
 
       <div class="deux-colonnes">
         <label class="champ">
-          <span class="champ__libelle">Mot de passe</span>
-          <input v-model="motDePasse" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.motDePasse }" type="password" autocomplete="new-password" placeholder="8 caractères min." />
+          <span class="champ__libelle">{{ t('connexion.motDePasse') }}</span>
+          <input v-model="motDePasse" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.motDePasse }" type="password" autocomplete="new-password" :placeholder="t('inscription.motDePasseMin')" />
           <span v-if="erreurs.motDePasse" class="champ__erreur">{{ erreurs.motDePasse }}</span>
         </label>
         <label class="champ">
-          <span class="champ__libelle">Date de naissance</span>
+          <span class="champ__libelle">{{ t('inscription.dateNaissance') }}</span>
           <input v-model="dateNaissance" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.dateNaissance }" type="date" :max="aujourdhui" autocomplete="bday" />
           <span v-if="erreurs.dateNaissance" class="champ__erreur">{{ erreurs.dateNaissance }}</span>
         </label>
@@ -96,47 +99,50 @@ async function creerCompte() {
 
       <p class="info">
         <svg class="info__icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
-        Moins de 18 ans ? Votre compte sera rattaché à un compte majeur, qui vous ajoutera à son logement.
+        {{ t('inscription.mineur') }}
       </p>
 
       <label v-if="estMineur" class="champ">
-        <span class="champ__libelle">E-mail du compte majeur</span>
-        <input v-model="emailTuteur" class="saisie" :class="{ 'saisie--invalide': erreurs.emailTuteur }" type="email" placeholder="E-mail du parent ou tuteur" />
+        <span class="champ__libelle">{{ t('inscription.emailTuteur') }}</span>
+        <input v-model="emailTuteur" class="saisie" :class="{ 'saisie--invalide': erreurs.emailTuteur }" type="email" :placeholder="t('inscription.emailTuteurExemple')" />
         <span v-if="erreurs.emailTuteur" class="champ__erreur">{{ erreurs.emailTuteur }}</span>
       </label>
 
       <fieldset class="visibilite">
-        <legend class="visibilite__legende">Visibilité du profil</legend>
+        <legend class="visibilite__legende">{{ t('inscription.visibilite') }}</legend>
         <div class="deux-colonnes">
           <button
             v-for="option in optionsVisibilite"
-            :key="option.id"
+            :key="option"
             type="button"
             class="option"
-            :class="{ 'option--active': option.id === visibilite }"
-            :aria-pressed="option.id === visibilite"
-            @click="visibilite = option.id"
+            :class="{ 'option--active': option === visibilite }"
+            :aria-pressed="option === visibilite"
+            @click="visibilite = option"
           >
-            <span class="option__titre">{{ option.label }}</span>
-            <span class="option__description">{{ option.desc }}</span>
+            <span class="option__titre">{{ t(`inscription.${option}`) }}</span>
+            <span class="option__description">{{ t(`inscription.${option}Description`) }}</span>
           </button>
         </div>
       </fieldset>
 
       <label class="conditions">
         <input v-model="conditionsAcceptees" type="checkbox" class="conditions__case" />
-        <span>J'accepte les <a href="#" class="conditions__lien">conditions d'utilisation</a> et la <a href="#" class="conditions__lien">politique de confidentialité</a>.</span>
+        <i18n-t keypath="inscription.conditions" tag="span" scope="global">
+          <template #cgu><a href="#" class="conditions__lien">{{ t('inscription.cgu') }}</a></template>
+          <template #confidentialite><a href="#" class="conditions__lien">{{ t('inscription.confidentialite') }}</a></template>
+        </i18n-t>
       </label>
       <span v-if="erreurs.conditionsAcceptees" class="champ__erreur">{{ erreurs.conditionsAcceptees }}</span>
     </form>
 
     <div class="pied">
       <button type="submit" form="formulaire-inscription" class="bouton-principal" :disabled="envoiEnCours">
-        {{ envoiEnCours ? 'Création du compte…' : 'Créer mon compte' }}
+        {{ t(envoiEnCours ? 'inscription.enCours' : 'inscription.creer') }}
       </button>
       <p class="pied__texte">
-        Déjà inscrit ?
-        <RouterLink to="/connexion" class="pied__lien">Se connecter</RouterLink>
+        {{ t('inscription.dejaInscrit') }}
+        <RouterLink to="/connexion" class="pied__lien">{{ t('connexion.seConnecter') }}</RouterLink>
       </p>
     </div>
   </div>
@@ -152,6 +158,13 @@ async function creerCompte() {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.bandeau__haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .bandeau__titre {

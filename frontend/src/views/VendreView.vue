@@ -1,9 +1,11 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import { fondVignette } from '@/utils/couleurs'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -23,7 +25,7 @@ async function vendre() {
     router.replace({ name: 'annonce', params: { id: annonce.id } })
   } catch (e) {
     erreurs.value = e.violations
-    erreur.value = e.violations.general ?? (Object.keys(e.violations).length ? 'Vérifiez les champs signalés.' : e.message)
+    erreur.value = e.violations.general ?? (Object.keys(e.violations).length ? t('commun.verifierChamps') : e.message)
   } finally {
     envoi.value = false
   }
@@ -46,13 +48,13 @@ onMounted(async () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <RouterLink :to="{ name: 'article', params: { id: route.params.id } }" class="bouton-icone" aria-label="Retour à l'article">
+        <RouterLink :to="{ name: 'article', params: { id: route.params.id } }" class="bouton-icone" :aria-label="t('preter.retourArticle')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
-        <h1 class="entete__titre">Mettre en vente</h1>
+        <h1 class="entete__titre">{{ t('article.mettreEnVente') }}</h1>
       </header>
 
-      <p v-if="!article && !erreur" class="etat">Chargement…</p>
+      <p v-if="!article && !erreur" class="etat">{{ t('commun.chargement') }}</p>
       <p v-else-if="!article" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <form v-else class="formulaire" novalidate @submit.prevent="vendre">
@@ -69,25 +71,24 @@ onMounted(async () => {
         <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
         <label class="champ">
-          <span class="champ__libelle">Prix</span>
+          <span class="champ__libelle">{{ t('vendre.prix') }}</span>
           <span class="saisie saisie--groupe prix" :class="{ 'saisie--invalide': erreurs.prix }">
-            <input v-model.trim="prix" type="text" inputmode="decimal" placeholder="Ex. 18" required />
+            <input v-model.trim="prix" type="text" inputmode="decimal" :placeholder="t('vendre.exemplePrix')" required />
             <span aria-hidden="true">€</span>
           </span>
           <span v-if="erreurs.prix" class="champ__erreur">{{ erreurs.prix }}</span>
         </label>
 
         <label class="champ">
-          <span class="champ__libelle">Description</span>
-          <textarea v-model="description" class="saisie description" rows="4" maxlength="2000" placeholder="Ex. Porté deux fois, aucun défaut. Remise en main propre à Lyon."></textarea>
+          <span class="champ__libelle">{{ t('vendre.description') }}</span>
+          <textarea v-model="description" class="saisie description" rows="4" maxlength="2000" :placeholder="t('vendre.exempleDescription')"></textarea>
         </label>
 
         <p class="info">
-          L'annonce apparaît sur le marché pour tous les membres, sans l'emplacement de l'article.
-          Le paiement et la remise s'organisent directement avec l'acheteur.
+          {{ t('vendre.info') }}
         </p>
 
-        <button type="submit" class="bouton-principal" :disabled="envoi || !prix">Publier l'annonce</button>
+        <button type="submit" class="bouton-principal" :disabled="envoi || !prix">{{ t('vendre.publier') }}</button>
       </form>
     </main>
   </div>

@@ -8,7 +8,6 @@ use App\Entity\LikeTenue;
 use App\Entity\Logement;
 use App\Entity\Tenue;
 use App\Entity\Utilisateur;
-use App\Enum\ZoneTenue;
 use App\Repository\ArticleRepository;
 use App\Repository\CommentaireRepository;
 use App\Repository\EtiquetteRepository;
@@ -20,6 +19,7 @@ use App\Security\Voter\TenueVoter;
 use App\Service\Meteo\Meteo;
 use App\Service\Meteo\ServiceMeteo;
 use App\Service\Tenue\GenerateurTenue;
+use App\Service\Traduction\Referentiels;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -40,6 +40,7 @@ final class TenueController extends ApiController
         private readonly Presentateur $presentateur,
         private readonly LikeTenueRepository $likes,
         private readonly CommentaireRepository $commentaires,
+        private readonly Referentiels $referentiels,
     ) {
     }
 
@@ -88,7 +89,6 @@ final class TenueController extends ApiController
             'meteo' => null === $meteo ? null : $this->presenterMeteo($meteo),
             'tenue' => array_map(static fn (array $ligne) => [
                 'zone' => $ligne['zone']->value,
-                'libelleZone' => ZoneTenue::COUCHE_EXTERIEURE === $ligne['zone'] ? 'Veste' : $ligne['zone']->label(),
                 'pluie' => $ligne['pluie'],
                 'article' => null === $ligne['article'] ? null : $resumes[$ligne['article']->getId()],
             ], $proposition),
@@ -264,14 +264,20 @@ final class TenueController extends ApiController
         return [
             'ville' => $meteo->ville,
             'temperature' => $meteo->temperature,
-            'libelle' => $meteo->libelle,
+            'libelle' => $this->referentiels->nom($meteo->libelle),
             'pluie' => $meteo->pluie,
-            'conseil' => match (true) {
+            // Icône à afficher : le libellé est traduit, le front ne peut pas s'en servir
+            'icone' => match (true) {
+                $meteo->pluie => 'pluie',
+                \in_array($meteo->libelle, ['Ensoleillé', 'Peu nuageux'], true) => 'soleil',
+                default => 'nuage',
+            },
+            'conseil' => $this->referentiels->nom(match (true) {
                 $meteo->pluie => 'On privilégie capuche et imperméable',
                 $meteo->estFroid() => 'On privilégie les pièces chaudes',
                 $meteo->estChaud() => 'On privilégie les pièces légères',
                 default => 'Une veste légère suffit',
-            },
+            }),
         ];
     }
 }
