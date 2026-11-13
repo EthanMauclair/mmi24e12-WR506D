@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import ChoixEmplacement from '@/components/ChoixEmplacement.vue'
 import { api } from '@/services/api'
@@ -7,24 +8,26 @@ import { useAjoutArticleStore } from '@/stores/ajoutArticle'
 import { useReferentielsStore } from '@/stores/referentiels'
 import { idLogementActif } from '@/utils/logementActif'
 
+// Libellés : clés de traduction
 const LIGNES = {
   VINYLE: [
-    { cle: 'artiste', libelle: 'Artiste', type: 'texte' },
-    { cle: 'titre', libelle: 'Album', type: 'texte' },
-    { cle: 'label', libelle: 'Label', type: 'texte' },
-    { cle: 'anneeSortie', libelle: 'Année', type: 'nombre' },
-    { cle: 'format', libelle: 'Format', type: 'format' },
-    { cle: 'nbDisques', libelle: 'Disques', type: 'nombre' },
+    { cle: 'artiste', libelle: 'ajout.champs.artiste', type: 'texte' },
+    { cle: 'titre', libelle: 'scanCode.album', type: 'texte' },
+    { cle: 'label', libelle: 'ajout.champs.label', type: 'texte' },
+    { cle: 'anneeSortie', libelle: 'ajout.champs.anneeSortie', type: 'nombre' },
+    { cle: 'format', libelle: 'ajout.champs.format', type: 'format' },
+    { cle: 'nbDisques', libelle: 'scanCode.disques', type: 'nombre' },
   ],
   LIVRE: [
-    { cle: 'titre', libelle: 'Titre', type: 'texte' },
-    { cle: 'auteur', libelle: 'Auteur', type: 'texte' },
-    { cle: 'editeur', libelle: 'Éditeur', type: 'texte' },
-    { cle: 'nbPages', libelle: 'Pages', type: 'nombre' },
-    { cle: 'anneeParution', libelle: 'Année', type: 'nombre' },
+    { cle: 'titre', libelle: 'scanCode.titre', type: 'texte' },
+    { cle: 'auteur', libelle: 'ajout.champs.auteur', type: 'texte' },
+    { cle: 'editeur', libelle: 'ajout.champs.editeur', type: 'texte' },
+    { cle: 'nbPages', libelle: 'ajout.champs.nbPages', type: 'nombre' },
+    { cle: 'anneeParution', libelle: 'ajout.champs.anneeSortie', type: 'nombre' },
   ],
 }
 
+const { t } = useI18n()
 const router = useRouter()
 const ajout = useAjoutArticleStore()
 const referentiels = useReferentielsStore()
@@ -97,14 +100,14 @@ async function enregistrer(scannerLeSuivant) {
     const article = await api('/articles', { methode: 'POST', corps })
     ajout.reinitialiser()
     if (scannerLeSuivant) {
-      ajout.confirmation = `« ${article.titre} » est ajouté à votre dressing.`
+      ajout.confirmation = t('scanCode.ajoute', { titre: article.titre })
       router.replace({ name: 'scan' })
     } else {
       router.replace({ name: 'article', params: { id: article.id } })
     }
   } catch (e) {
     erreurs.value = e.violations
-    erreur.value = Object.keys(e.violations).length ? 'Vérifiez les informations signalées.' : e.message
+    erreur.value = Object.keys(e.violations).length ? t('commun.verifierChamps') : e.message
   } finally {
     envoiEnCours.value = false
   }
@@ -134,10 +137,10 @@ onMounted(async () => {
 <template>
   <div v-if="fiche" class="ecran">
     <header class="entete">
-      <RouterLink :to="{ name: 'scan' }" class="bouton-icone" aria-label="Scanner à nouveau">
+      <RouterLink :to="{ name: 'scan' }" class="bouton-icone" :aria-label="t('scanCode.scannerANouveau')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
       </RouterLink>
-      <h1 class="entete__titre">{{ estVinyle ? 'Vinyle trouvé' : 'Livre trouvé' }}</h1>
+      <h1 class="entete__titre">{{ t(estVinyle ? 'scanCode.vinyleTrouve' : 'scanCode.livreTrouve') }}</h1>
     </header>
 
     <form id="formulaire-code-barres" class="contenu" novalidate @submit.prevent="enregistrer(false)">
@@ -157,7 +160,7 @@ onMounted(async () => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6v12M8 6v12M12 6v12M16 6v12M20 6v12" /></svg>
             {{ estVinyle ? 'EAN' : 'ISBN' }} {{ fiche.code }}
           </span>
-          <span class="resume__titre">{{ valeurs.titre || 'Sans titre' }}</span>
+          <span class="resume__titre">{{ valeurs.titre || t('scanCode.sansTitre') }}</span>
           <span v-if="sousTitre" class="resume__sous-titre">{{ sousTitre }}</span>
         </div>
       </div>
@@ -166,7 +169,7 @@ onMounted(async () => {
 
       <dl class="fiche">
         <div v-for="ligne in lignes" :key="ligne.cle" class="fiche__ligne" :class="{ 'fiche__ligne--invalide': erreurs[ligne.cle] }">
-          <dt class="fiche__libelle"><label :for="`champ-${ligne.cle}`">{{ ligne.libelle }}</label></dt>
+          <dt class="fiche__libelle"><label :for="`champ-${ligne.cle}`">{{ t(ligne.libelle) }}</label></dt>
           <dd class="fiche__valeur">
             <select v-if="ligne.type === 'format'" :id="`champ-${ligne.cle}`" v-model="valeurs[ligne.cle]" class="fiche__saisie">
               <option :value="null">—</option>
@@ -186,10 +189,10 @@ onMounted(async () => {
           <span v-if="erreurs[ligne.cle]" class="champ__erreur fiche__erreur">{{ erreurs[ligne.cle] }}</span>
         </div>
         <div class="fiche__ligne" :class="{ 'fiche__ligne--invalide': erreurs.categorieId }">
-          <dt class="fiche__libelle"><label for="champ-categorie">Catégorie</label></dt>
+          <dt class="fiche__libelle"><label for="champ-categorie">{{ t('article.categorie') }}</label></dt>
           <dd class="fiche__valeur">
             <select id="champ-categorie" v-model="valeurs.categorieId" class="fiche__saisie">
-              <option :value="null" disabled>Choisir</option>
+              <option :value="null" disabled>{{ t('scanCode.choisir') }}</option>
               <optgroup v-for="groupe in groupesCategories" :key="groupe.racine" :label="groupe.racine">
                 <option v-for="categorie in groupe.elements" :key="categorie.id" :value="categorie.id">{{ categorie.libelle }}</option>
               </optgroup>
@@ -199,7 +202,7 @@ onMounted(async () => {
           <span v-if="erreurs.categorieId" class="champ__erreur fiche__erreur">{{ erreurs.categorieId }}</span>
         </div>
         <div class="fiche__ligne">
-          <dt class="fiche__libelle"><label for="champ-etat">État</label></dt>
+          <dt class="fiche__libelle"><label for="champ-etat">{{ t('scanCode.etat') }}</label></dt>
           <dd class="fiche__valeur">
             <select id="champ-etat" v-model="valeurs.etat" class="fiche__saisie">
               <option :value="null">—</option>
@@ -210,13 +213,13 @@ onMounted(async () => {
         </div>
       </dl>
 
-      <ChoixEmplacement v-model="stockageId" libelle="Où le ranger ?" accentue :stockages="stockages" :erreur="erreurs.stockageId" />
+      <ChoixEmplacement v-model="stockageId" :libelle="t('scanCode.ouRanger')" accentue :stockages="stockages" :erreur="erreurs.stockageId" />
     </form>
 
     <div class="pied">
-      <button type="button" class="pied__suivant" :disabled="envoiEnCours || chargement" @click="enregistrer(true)">Scanner le suivant</button>
+      <button type="button" class="pied__suivant" :disabled="envoiEnCours || chargement" @click="enregistrer(true)">{{ t('scanCode.suivant') }}</button>
       <button type="submit" form="formulaire-code-barres" class="pied__enregistrer" :disabled="envoiEnCours || chargement">
-        {{ envoiEnCours ? 'Enregistrement…' : 'Enregistrer' }}
+        {{ t(envoiEnCours ? 'ajout.enregistrement' : 'commun.enregistrer') }}
       </button>
     </div>
   </div>

@@ -1,16 +1,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import BlocCommentaires from '@/components/BlocCommentaires.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
-import { echeance, jourCourt } from '@/utils/dates'
+import { echeance, formatDate, jourCourt } from '@/utils/dates'
 import { formatPrix } from '@/utils/prix'
 
-const FORMAT_DATE_SCAN = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
-
+const { t } = useI18n()
 const route = useRoute()
 const session = useSessionStore()
 
@@ -31,7 +31,7 @@ const retour = computed(() => {
 const ajouteParUnAutre = computed(() => article.value.proprietaire.id !== session.utilisateur?.id)
 const chemin = computed(() => {
   const emplacement = article.value.emplacement
-  return emplacement ? `${emplacement.piece.nom} › ${emplacement.stockage.nom}` : 'À ranger'
+  return emplacement ? `${emplacement.piece.nom} › ${emplacement.stockage.nom}` : t('commun.aRanger')
 })
 
 async function charger(id) {
@@ -74,10 +74,10 @@ watch(() => route.params.id, charger, { immediate: true })
 
 <template>
   <div class="ecran">
-    <p v-if="chargement && !article" class="etat">Chargement de l'article…</p>
+    <p v-if="chargement && !article" class="etat">{{ t('article.chargement') }}</p>
     <div v-else-if="erreur" class="contenu-erreur">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
-      <RouterLink to="/dressing">Retour au dressing</RouterLink>
+      <RouterLink to="/dressing">{{ t('piece.retour') }}</RouterLink>
     </div>
 
     <template v-else-if="article">
@@ -88,20 +88,20 @@ watch(() => route.params.id, charger, { immediate: true })
       >
         <img v-if="article.photos.length" :src="article.photos[indexPhoto]" alt="" class="photo__image" />
         <svg v-else width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-        <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche" aria-label="Retour">
+        <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche" :aria-label="t('commun.retour')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
         <RouterLink
           v-if="article.peutModifier"
           :to="{ name: 'article-modifier', params: { id: article.id } }"
           class="photo__bouton photo__bouton--droite"
-          aria-label="Modifier l'article"
+          :aria-label="t('article.modifier')"
         >
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
         </RouterLink>
         <span v-if="article.dateScan" class="photo__source">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-          Photo du scan · {{ FORMAT_DATE_SCAN.format(new Date(article.dateScan)) }}
+          {{ t('article.photoScan', { date: formatDate(new Date(article.dateScan)) }) }}
         </span>
         <span v-if="article.photos.length > 1" class="photo__indicateurs">
           <button
@@ -110,7 +110,7 @@ watch(() => route.params.id, charger, { immediate: true })
             type="button"
             class="indicateur"
             :class="{ 'indicateur--actif': index === indexPhoto }"
-            :aria-label="`Photo ${index + 1}`"
+            :aria-label="t('article.photo', { n: index + 1 })"
             @click="indexPhoto = index"
           ></button>
         </span>
@@ -122,13 +122,13 @@ watch(() => route.params.id, charger, { immediate: true })
             <h1 class="titre__nom">{{ article.titre }}</h1>
             <span class="titre__infos">{{ article.infos }}</span>
           </div>
-          <span class="statut" :class="{ 'statut--indisponible': article.statut !== 'DISPONIBLE' }">{{ article.libelleStatut }}</span>
+          <span class="statut" :class="{ 'statut--indisponible': article.statut !== 'DISPONIBLE' }">{{ t(`article.statuts.${article.statut}`) }}</span>
         </div>
 
         <RouterLink v-if="ajouteParUnAutre" :to="{ name: 'membre', params: { pseudo: article.proprietaire.pseudo } }" class="auteur">
           <AvatarMembre :membre="article.proprietaire" :taille="32" />
           <span class="auteur__textes">
-            <span class="auteur__libelle">Ajouté par</span>
+            <span class="auteur__libelle">{{ t('article.ajoutePar') }}</span>
             <span class="auteur__pseudo">{{ article.proprietaire.pseudo }}</span>
           </span>
         </RouterLink>
@@ -139,26 +139,26 @@ watch(() => route.params.id, charger, { immediate: true })
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
           </span>
           <span class="emplacement__textes">
-            <span class="emplacement__libelle">Rangé dans</span>
+            <span class="emplacement__libelle">{{ t('article.rangeDans') }}</span>
             <span class="emplacement__chemin">{{ chemin }}</span>
           </span>
         </div>
 
         <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="vente">
           <span class="vente__textes">
-            <span class="vente__statut">{{ article.annonce.statut === 'RESERVEE' ? 'Réservé sur le marché' : 'En vente sur le marché' }}</span>
+            <span class="vente__statut">{{ t(article.annonce.statut === 'RESERVEE' ? 'article.reserve' : 'article.enVente') }}</span>
             <span class="vente__prix">{{ formatPrix(article.annonce.prix) }}</span>
           </span>
-          <span class="vente__voir">Voir l'annonce</span>
+          <span class="vente__voir">{{ t('article.voirAnnonce') }}</span>
         </RouterLink>
 
         <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="pret" :class="{ 'pret--retard': article.pretEnCours.joursRestants < 0 }">
           <span class="pret__textes">
             <span class="pret__qui">
-              Prêté à {{ article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }}
+              {{ t('article.preteA', { nom: article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }) }}
             </span>
             <span class="pret__dates">
-              Depuis le {{ jourCourt(article.pretEnCours.datePret) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · retour prévu le {{ jourCourt(article.pretEnCours.dateRetourPrevue) }}</template>
+              {{ t('article.depuis', { date: jourCourt(article.pretEnCours.datePret) }) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · {{ t('article.retourPrevu', { date: jourCourt(article.pretEnCours.dateRetourPrevue) }) }}</template>
             </span>
           </span>
           <span class="pret__echeance">{{ echeance(article.pretEnCours.joursRestants) }}</span>
@@ -167,11 +167,11 @@ watch(() => route.params.id, charger, { immediate: true })
 
         <dl class="caracteristiques">
           <div class="caracteristique">
-            <dt class="caracteristique__libelle">Catégorie</dt>
+            <dt class="caracteristique__libelle">{{ t('article.categorie') }}</dt>
             <dd class="caracteristique__valeur">{{ article.categorie }}</dd>
           </div>
           <div v-if="article.couleur" class="caracteristique">
-            <dt class="caracteristique__libelle">Couleur</dt>
+            <dt class="caracteristique__libelle">{{ t('article.couleur') }}</dt>
             <dd class="caracteristique__valeur caracteristique__valeur--couleur">
               <span class="pastille-couleur" :style="{ background: article.couleur.codeHex }"></span>{{ article.couleur.nom }}
             </dd>
@@ -179,19 +179,19 @@ watch(() => route.params.id, charger, { immediate: true })
         </dl>
 
         <div v-if="article.voitEmplacement" class="etiquettes">
-          <span class="etiquettes__titre">Étiquettes</span>
+          <span class="etiquettes__titre">{{ t('article.etiquettes') }}</span>
           <div class="etiquettes__liste">
             <span v-for="etiquette in article.etiquettes" :key="etiquette.id" class="etiquette">{{ etiquette.nom }}</span>
-            <span v-if="!article.etiquettes.length && !article.peutModifier" class="etiquettes__vide">Aucune étiquette</span>
-            <button v-if="article.peutModifier" type="button" class="etiquette-ajout">+ Ajouter</button>
+            <span v-if="!article.etiquettes.length && !article.peutModifier" class="etiquettes__vide">{{ t('article.aucuneEtiquette') }}</span>
+            <button v-if="article.peutModifier" type="button" class="etiquette-ajout">{{ t('article.ajouterEtiquette') }}</button>
           </div>
         </div>
 
         <label v-if="article.peutChangerConfidentialite" class="personnel">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="personnel__icone"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
           <span class="personnel__textes">
-            <span class="personnel__titre">Article personnel</span>
-            <span class="personnel__aide">Visible uniquement par vous</span>
+            <span class="personnel__titre">{{ t('article.personnel') }}</span>
+            <span class="personnel__aide">{{ t('article.personnelAide') }}</span>
           </span>
           <input :checked="article.estPersonnel" type="checkbox" class="visuellement-cache" @change="changerConfidentialite($event.target.checked)" />
           <span class="interrupteur" :class="{ 'interrupteur--actif': article.estPersonnel }" aria-hidden="true">
@@ -212,15 +212,15 @@ watch(() => route.params.id, charger, { immediate: true })
       <div v-if="article.peutModifier" class="actions">
         <button v-if="article.pretEnCours" type="button" class="action action--secondaire" @click="marquerRendu">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-          Marquer rendu
+          {{ t('article.marquerRendu') }}
         </button>
         <RouterLink v-else-if="article.statut === 'DISPONIBLE'" :to="{ name: 'article-preter', params: { id: article.id } }" class="action action--secondaire">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
-          Prêter
+          {{ t('article.preter') }}
         </RouterLink>
         <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="action action--principale">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-          Voir l'annonce
+          {{ t('article.voirAnnonce') }}
         </RouterLink>
         <!-- Seul celui qui a ajouté l'article le vend ; un article personnel ou prêté ne peut pas être mis en vente -->
         <RouterLink
@@ -229,7 +229,7 @@ watch(() => route.params.id, charger, { immediate: true })
           class="action action--principale"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-          Mettre en vente
+          {{ t('article.mettreEnVente') }}
         </RouterLink>
       </div>
     </template>

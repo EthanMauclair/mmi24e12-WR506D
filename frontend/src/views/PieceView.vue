@@ -1,22 +1,15 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 
 // Mêmes valeurs que l'énumération TypeStockage du backend
-const TYPES_STOCKAGE = [
-  { valeur: 'ARMOIRE', libelle: 'Armoire' },
-  { valeur: 'PENDERIE', libelle: 'Penderie' },
-  { valeur: 'COMMODE', libelle: 'Commode' },
-  { valeur: 'ETAGERE', libelle: 'Étagère' },
-  { valeur: 'PLACARD', libelle: 'Placard' },
-  { valeur: 'BIBLIOTHEQUE', libelle: 'Bibliothèque' },
-  { valeur: 'BOITE', libelle: 'Boîte' },
-  { valeur: 'AUTRE', libelle: 'Autre' },
-]
+const TYPES_STOCKAGE = ['ARMOIRE', 'PENDERIE', 'COMMODE', 'ETAGERE', 'PLACARD', 'BIBLIOTHEQUE', 'BOITE', 'AUTRE']
 
+const { t } = useI18n()
 const route = useRoute()
 
 const piece = ref(null)
@@ -34,7 +27,7 @@ const articlesAffiches = computed(() => piece.value?.articles.filter((a) => a.st
 
 function detailStockage(stockage) {
   const nb = stockage.nbArticles
-  return `${stockage.libelleType} · ${nb} article${nb > 1 ? 's' : ''}`
+  return `${t(`piece.types.${stockage.type}`)} · ${t('piece.articles', nb)}`
 }
 
 async function charger(id) {
@@ -74,23 +67,23 @@ watch(() => route.params.id, charger, { immediate: true })
 <template>
   <div class="ecran">
     <main class="contenu">
-      <p v-if="chargement && !piece" class="etat">Chargement de la pièce…</p>
+      <p v-if="chargement && !piece" class="etat">{{ t('piece.chargement') }}</p>
       <p v-else-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <template v-else-if="piece">
         <header class="entete">
-          <RouterLink to="/dressing" class="bouton-icone" aria-label="Retour au dressing">
+          <RouterLink to="/dressing" class="bouton-icone" :aria-label="t('piece.retour')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
           </RouterLink>
           <div class="entete__titres">
-            <nav class="fil-ariane" aria-label="Fil d'Ariane">{{ piece.logement.nom }} › {{ piece.nom }}</nav>
+            <nav class="fil-ariane" :aria-label="t('piece.filAriane')">{{ piece.logement.nom }} › {{ piece.nom }}</nav>
             <h1 class="entete__titre">{{ piece.nom }}</h1>
           </div>
           <button
             v-if="piece.peutGerer"
             type="button"
             class="bouton-icone"
-            aria-label="Ajouter un stockage"
+            :aria-label="t('piece.ajouterStockage')"
             :aria-expanded="ajoutStockage"
             @click="ajoutStockage = !ajoutStockage"
           >
@@ -99,27 +92,27 @@ watch(() => route.params.id, charger, { immediate: true })
         </header>
 
         <form v-if="ajoutStockage" class="ajout" @submit.prevent="creerStockage">
-          <span class="ajout__titre">Nouveau stockage</span>
+          <span class="ajout__titre">{{ t('piece.nouveauStockage') }}</span>
           <p v-if="erreursStockage.general" class="message-erreur" role="alert">{{ erreursStockage.general }}</p>
           <div class="ajout__ligne">
-            <input v-model="nomStockage" class="saisie ajout__nom" :class="{ 'saisie--invalide': erreursStockage.nom }" type="text" placeholder="Nom (ex. Armoire)" aria-label="Nom du stockage" required />
-            <select v-model="typeStockage" class="saisie ajout__type" aria-label="Type de stockage">
-              <option v-for="type in TYPES_STOCKAGE" :key="type.valeur" :value="type.valeur">{{ type.libelle }}</option>
+            <input v-model="nomStockage" class="saisie ajout__nom" :class="{ 'saisie--invalide': erreursStockage.nom }" type="text" :placeholder="t('piece.exempleNom')" :aria-label="t('piece.nomStockage')" required />
+            <select v-model="typeStockage" class="saisie ajout__type" :aria-label="t('piece.typeStockage')">
+              <option v-for="type in TYPES_STOCKAGE" :key="type" :value="type">{{ t(`piece.types.${type}`) }}</option>
             </select>
           </div>
           <span v-if="erreursStockage.nom" class="champ__erreur">{{ erreursStockage.nom }}</span>
           <div class="ajout__actions">
-            <button type="button" class="ajout__annuler" @click="ajoutStockage = false">Annuler</button>
-            <button type="submit" class="ajout__valider">Ajouter</button>
+            <button type="button" class="ajout__annuler" @click="ajoutStockage = false">{{ t('commun.annuler') }}</button>
+            <button type="submit" class="ajout__valider">{{ t('commun.ajouter') }}</button>
           </div>
         </form>
 
         <p v-if="piece.stockages.length === 0" class="etat">
-          Aucun stockage dans cette pièce.<template v-if="piece.peutGerer"> Ajoutez-en un avec le bouton ⋯ en haut à droite.</template>
+          {{ t('piece.aucunStockage') }}<template v-if="piece.peutGerer"> {{ t('piece.ajoutezStockage') }}</template>
         </p>
 
         <template v-else>
-          <div class="onglets" role="tablist" aria-label="Stockages de la pièce">
+          <div class="onglets" role="tablist" :aria-label="t('piece.stockages')">
             <button
               v-for="stockage in piece.stockages"
               :key="stockage.id"
@@ -141,7 +134,7 @@ watch(() => route.params.id, charger, { immediate: true })
             </div>
             <button type="button" class="filtrer">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
-              Filtrer
+              {{ t('piece.filtrer') }}
             </button>
           </div>
 
@@ -155,7 +148,7 @@ watch(() => route.params.id, charger, { immediate: true })
                 <img v-if="article.photo" :src="article.photo" alt="" class="article__photo" />
                 <svg v-else width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
                 <span class="article__emplacement">{{ article.categorie }}</span>
-                <span v-if="article.statut === 'PRETE'" class="article__prete">Prêté</span>
+                <span v-if="article.statut === 'PRETE'" class="article__prete">{{ t('piece.prete') }}</span>
               </span>
               <span class="article__textes">
                 <span class="article__nom">{{ article.titre }}</span>
@@ -163,7 +156,7 @@ watch(() => route.params.id, charger, { immediate: true })
               </span>
             </RouterLink>
           </div>
-          <p v-else class="vide">Aucun article dans ce stockage pour le moment.</p>
+          <p v-else class="vide">{{ t('piece.aucunArticle') }}</p>
         </template>
       </template>
     </main>

@@ -1,5 +1,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import { lireCodeBarres } from '@/services/codeBarres'
@@ -9,19 +10,17 @@ import { idLogementActif } from '@/utils/logementActif'
 
 const INTERVALLE_LECTURE_MS = 300
 
+const { t } = useI18n()
 const router = useRouter()
 const ajout = useAjoutArticleStore()
 
-const modes = [
-  { id: 'vetement', libelle: 'Vêtement · IA' },
-  { id: 'code-barres', libelle: 'Code-barres' },
-]
+const modes = ['vetement', 'code-barres']
 const mode = ref('vetement')
 
 const video = ref(null)
 const champFichier = ref(null)
 const cameraDisponible = ref(false)
-const messageCamera = ref('Activation de la caméra…')
+const messageCamera = ref(t('scan.activation'))
 const flashDisponible = ref(false)
 const flashActif = ref(false)
 const traitement = ref('')
@@ -38,7 +37,7 @@ let lectureEnCours = false
 async function demarrerCamera() {
   // getUserMedia n'existe que sur une page sécurisée (https ou localhost)
   if (!navigator.mediaDevices?.getUserMedia) {
-    messageCamera.value = 'Caméra indisponible sur cette page : importez une photo.'
+    messageCamera.value = t('scan.cameraIndisponible')
     return
   }
   try {
@@ -53,7 +52,7 @@ async function demarrerCamera() {
     flashDisponible.value = Boolean(piste.getCapabilities?.().torch)
     surveillerCodeBarres()
   } catch {
-    messageCamera.value = "Accès à la caméra refusé ou impossible : importez une photo, ou autorisez la caméra dans le navigateur."
+    messageCamera.value = t('scan.cameraRefusee')
   }
 }
 
@@ -124,7 +123,7 @@ async function ouvrirFiche(image) {
     ajout.lancerScanVetement(await reduireEnJpeg(image))
     router.push({ name: 'article-nouveau', query: { origine: 'vetement' } })
   } catch {
-    erreur.value = 'Impossible de lire cette image : essayez avec une autre photo.'
+    erreur.value = t('scan.imageIllisible')
   }
 }
 
@@ -145,7 +144,7 @@ async function declencher() {
   if (code) {
     await rechercherCode(code)
   } else if (cameraDisponible.value) {
-    erreur.value = 'Aucun code-barres lisible : rapprochez-vous et évitez les reflets.'
+    erreur.value = t('scan.codeIllisible')
   } else {
     champFichier.value.click()
   }
@@ -165,7 +164,7 @@ async function importer(evenement) {
   if (code) {
     await rechercherCode(code)
   } else {
-    erreur.value = 'Aucun code-barres trouvé sur cette image.'
+    erreur.value = t('scan.codeIntrouvable')
   }
 }
 
@@ -187,16 +186,16 @@ onBeforeUnmount(arreterCamera)
     <video ref="video" class="flux" :class="{ 'flux--visible': cameraDisponible }" playsinline muted></video>
 
     <header class="entete">
-      <RouterLink to="/dressing" class="bouton-voile" aria-label="Fermer le scan">
+      <RouterLink to="/dressing" class="bouton-voile" :aria-label="t('scan.fermer')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </RouterLink>
-      <span class="entete__titre">Ajouter un article</span>
+      <span class="entete__titre">{{ t('scan.titre') }}</span>
       <button
         v-if="flashDisponible"
         type="button"
         class="bouton-voile"
         :class="{ 'bouton-voile--actif': flashActif }"
-        :aria-label="flashActif ? 'Éteindre le flash' : 'Activer le flash'"
+        :aria-label="t(flashActif ? 'scan.eteindreFlash' : 'scan.activerFlash')"
         :aria-pressed="flashActif"
         @click="basculerFlash"
       >
@@ -229,43 +228,43 @@ onBeforeUnmount(arreterCamera)
 
       <p v-if="erreur" class="erreur" role="alert">{{ erreur }}</p>
       <p v-else-if="mode === 'vetement'" class="consigne">
-        Posez le vêtement à plat, bien éclairé. L'IA reconnaît la catégorie, la couleur et la marque si l'étiquette est visible.
+        {{ t('scan.consigneVetement') }}
       </p>
       <p v-else class="consigne">
-        Visez le code-barres d'un livre, d'un vinyle ou d'un comics. Les informations se remplissent toutes seules.
+        {{ t('scan.consigneCode') }}
       </p>
     </div>
 
     <div class="commandes">
-      <div class="modes" role="tablist" aria-label="Type de scan">
+      <div class="modes" role="tablist" :aria-label="t('scan.typeScan')">
         <button
           v-for="element in modes"
-          :key="element.id"
+          :key="element"
           type="button"
           role="tab"
           class="modes__bouton"
-          :class="{ 'modes__bouton--actif': element.id === mode }"
-          :aria-selected="element.id === mode"
-          @click="mode = element.id"
+          :class="{ 'modes__bouton--actif': element === mode }"
+          :aria-selected="element === mode"
+          @click="mode = element"
         >
-          {{ element.libelle }}
+          {{ t(`scan.modes.${element}`) }}
         </button>
       </div>
 
       <div class="actions">
-        <button type="button" class="bouton-voile bouton-voile--grand" aria-label="Importer depuis la galerie" @click="champFichier.click()">
+        <button type="button" class="bouton-voile bouton-voile--grand" :aria-label="t('scan.importer')" @click="champFichier.click()">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
         </button>
         <button
           type="button"
           class="declencheur"
-          :aria-label="mode === 'vetement' ? 'Prendre la photo' : 'Lire le code-barres'"
+          :aria-label="t(mode === 'vetement' ? 'scan.prendrePhoto' : 'scan.lireCode')"
           :disabled="Boolean(traitement)"
           @click="declencher"
         >
           <span class="declencheur__centre"></span>
         </button>
-        <RouterLink :to="{ name: 'article-nouveau', query: { origine: 'manuel' } }" class="bouton-voile bouton-voile--grand" aria-label="Saisir manuellement">
+        <RouterLink :to="{ name: 'article-nouveau', query: { origine: 'manuel' } }" class="bouton-voile bouton-voile--grand" :aria-label="t('scan.saisieManuelle')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
         </RouterLink>
       </div>
