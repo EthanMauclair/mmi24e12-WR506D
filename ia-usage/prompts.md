@@ -522,3 +522,22 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - API : langue lue dans `Accept-Language`, messages d'erreur, messages de validation et données de référence traduits (`backend/translations/`), le français servant de clé ; libellés d'énumérations inutilisés retirés au profit des codes
 - Scan : l'IA propose le titre de l'article dans la langue de l'utilisateur
 - Les textes saisis par les membres ne sont pas traduits
+
+---
+
+## 2026-11-13 — Back office et « Mon espace »
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/back-office`
+
+**Prompt :**
+
+> Mets en place un "back office" pour les utilisateurs et le "super admin" : - pour que votre commanditaire/propriétaire du site, puisse administrer son application totalement et avoir des KPI pertinentes. - pour que l'utilisateur puisse disposer d'information sur son espace
+
+**Résultat retenu :**
+
+- Rôles : super admin (propriétaire du site, `ROLE_SUPER_ADMIN`) qui hérite de l'administrateur du cahier des charges (`ROLE_ADMIN`) ; commande `app:admin:nommer` et compte de démonstration `admin@exemple.fr`
+- Back office `/admin` : tableau de bord d'indicateurs (membres, inventaires, part des ajouts par scan, marché, prêts, réseau social, courbes sur 30 jours), gestion des membres (blocage qui ferme aussi la session en cours, rôle, suppression après affichage de son impact), référentiels (catégories, couleurs, marques) et modération (commentaires, annonces, tenues publiques)
+- « Mon espace » pour chaque membre : chiffres de son inventaire, de ses prêts, de ses ventes et de son activité sociale, ajouts par mois sur un an
+- Graphiques en SVG sans bibliothèque, une seule couleur de données vérifiée pour le contraste, valeurs au survol et au clavier, tableau des données
+- Tout en français, anglais et portugais ; dernière connexion enregistrée pour mesurer les membres actifs

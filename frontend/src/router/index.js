@@ -116,6 +116,42 @@ const router = createRouter({
       props: { liste: 'amis' },
     },
     {
+      path: '/profil/espace',
+      name: 'profil-espace',
+      component: () => import('../views/EspaceView.vue'),
+    },
+    {
+      // Back office : l'administrateur gère les référentiels et la modération,
+      // le super admin (propriétaire du site) voit aussi les indicateurs et gère les membres
+      path: '/admin',
+      component: () => import('../views/admin/AdminView.vue'),
+      meta: { admin: true },
+      children: [
+        {
+          path: '',
+          name: 'admin',
+          component: () => import('../views/admin/TableauBordView.vue'),
+          meta: { superAdmin: true },
+        },
+        {
+          path: 'membres',
+          name: 'admin-membres',
+          component: () => import('../views/admin/MembresAdminView.vue'),
+          meta: { superAdmin: true },
+        },
+        {
+          path: 'referentiels',
+          name: 'admin-referentiels',
+          component: () => import('../views/admin/ReferentielsAdminView.vue'),
+        },
+        {
+          path: 'moderation',
+          name: 'admin-moderation',
+          component: () => import('../views/admin/ModerationView.vue'),
+        },
+      ],
+    },
+    {
       path: '/membres',
       name: 'membres',
       component: () => import('../views/RechercheMembresView.vue'),
@@ -156,7 +192,7 @@ const router = createRouter({
 
 // Les écrans publics (connexion, inscription) renvoient vers le dressing si l'on est déjà connecté ;
 // les écrans ouverts (profils, articles d'un profil) s'affichent avec ou sans compte ;
-// les autres demandent d'être connecté.
+// les autres demandent d'être connecté, et le back office un rôle d'administration.
 router.beforeEach(async (cible) => {
   const session = useSessionStore()
   await session.verifier()
@@ -171,6 +207,14 @@ router.beforeEach(async (cible) => {
 
   if (!session.utilisateur) {
     return { name: 'connexion', query: { redirection: cible.fullPath } }
+  }
+
+  if (cible.meta.admin && !session.utilisateur.estAdmin) {
+    return { name: 'dressing' }
+  }
+
+  if (cible.meta.superAdmin && !session.utilisateur.estSuperAdmin) {
+    return { name: 'admin-referentiels' }
   }
 
   return true

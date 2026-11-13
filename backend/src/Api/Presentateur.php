@@ -40,6 +40,9 @@ final class Presentateur
             'email' => $utilisateur->getEmail(),
             'estPrive' => $utilisateur->isEstPrive(),
             'estMineur' => $utilisateur->estMineur(),
+            // Accès au back office : référentiels et modération (admin), membres et indicateurs (super admin)
+            'estAdmin' => $utilisateur->estAdmin(),
+            'estSuperAdmin' => $utilisateur->estSuperAdmin(),
         ];
     }
 

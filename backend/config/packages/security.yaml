@@ -18,6 +18,8 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            # Un membre bloqué par le super admin ne peut plus se connecter
+            user_checker: App\Security\VerificateurCompte
             # Session par cookie : le front est servi sur la même origine que l'API (proxy Vite)
             entry_point: App\Security\PointEntreeApi
             access_denied_handler: App\Security\AccesRefuseHandler
@@ -31,8 +33,14 @@ security:
             logout:
                 path: api_deconnexion
 
+    # Le super admin (propriétaire du site) a tous les droits de l'administrateur
+    role_hierarchy:
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN]
+
     # Note: Only the *first* matching rule is applied
     access_control:
+        # Back office : référentiels et modération pour l'administrateur ; membres et indicateurs pour le super admin
+        - { path: ^/api/admin/, roles: ROLE_ADMIN }
         - { path: ^/api/(health|connexion|inscription)$, roles: PUBLIC_ACCESS }
         # Réseau social : un visiteur sans compte consulte les profils publics et leurs articles
         # (les voters ProfilVoter et ArticleVoter décident ensuite au cas par cas)
