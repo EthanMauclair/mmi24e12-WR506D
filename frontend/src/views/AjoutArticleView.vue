@@ -303,7 +303,7 @@ onMounted(async () => {
         <label class="carte carte--pleine" :class="{ 'carte--ia': estRempliParIa('titre'), 'carte--invalide': erreurs.titre }">
           <span class="carte__libelle">
             {{ t('ajout.nom') }}
-            <svg v-if="estRempliParIa('titre')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Pré-rempli par l'IA" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            <svg v-if="estRempliParIa('titre')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
           </span>
           <input v-model.trim="valeurs.titre" class="carte__saisie" type="text" :placeholder="t('ajout.exempleNom')" required />
           <span v-if="erreurs.titre" class="champ__erreur">{{ erreurs.titre }}</span>
@@ -312,7 +312,7 @@ onMounted(async () => {
         <label class="carte carte--pleine" :class="{ 'carte--ia': estRempliParIa('categorieId'), 'carte--invalide': erreurs.categorieId }">
           <span class="carte__libelle">
             {{ t('article.categorie') }}
-            <svg v-if="estRempliParIa('categorieId')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Pré-rempli par l'IA" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            <svg v-if="estRempliParIa('categorieId')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
           </span>
           <select v-model="valeurs.categorieId" class="carte__saisie">
             <option :value="null" disabled>{{ t('ajout.choisirCategorie') }}</option>
@@ -326,7 +326,7 @@ onMounted(async () => {
         <label v-for="champ in champsDetail" :key="champ.cle" class="carte" :class="{ 'carte--ia': estRempliParIa(champ.cle), 'carte--invalide': erreurs[champ.cle] }">
           <span class="carte__libelle">
             {{ t(`ajout.champs.${champ.cle}`) }}
-            <svg v-if="estRempliParIa(champ.cle)" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" aria-label="Pré-rempli par l'IA" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
+            <svg v-if="estRempliParIa(champ.cle)" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
           </span>
           <select v-if="champ.type === 'couleur'" v-model="valeurs[champ.cle]" class="carte__saisie">
             <option :value="null">—</option>

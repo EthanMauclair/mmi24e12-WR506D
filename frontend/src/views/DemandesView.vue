@@ -1,10 +1,12 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import LigneMembre from '@/components/LigneMembre.vue'
 import { api } from '@/services/api'
 
+const { t } = useI18n()
 const demandes = ref([])
 const chargement = ref(true)
 const erreur = ref('')
@@ -34,21 +36,21 @@ onMounted(async () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <RouterLink :to="{ name: 'profil' }" class="bouton-icone" aria-label="Retour au profil">
+        <RouterLink :to="{ name: 'profil' }" class="bouton-icone" :aria-label="t('demandes.retourProfil')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
-        <h1 class="entete__titre">Demandes d'abonnement</h1>
+        <h1 class="entete__titre">{{ t('demandes.titre') }}</h1>
       </header>
 
-      <p class="aide">Votre profil est privé : acceptez une demande pour que ce membre voie vos articles.</p>
+      <p class="aide">{{ t('demandes.aide') }}</p>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-if="chargement" class="etat">Chargement…</p>
-      <p v-else-if="demandes.length === 0" class="etat">Aucune demande en attente.</p>
+      <p v-if="chargement" class="etat">{{ t('commun.chargement') }}</p>
+      <p v-else-if="demandes.length === 0" class="etat">{{ t('demandes.aucune') }}</p>
       <ul v-else class="liste">
         <LigneMembre v-for="demande in demandes" :key="demande.id" :membre="demande.membre">
-          <button type="button" class="reponse reponse--accepter" @click="repondre(demande, true)">Accepter</button>
-          <button type="button" class="reponse" :aria-label="`Refuser la demande de ${demande.membre.pseudo}`" @click="repondre(demande, false)">Refuser</button>
+          <button type="button" class="reponse reponse--accepter" @click="repondre(demande, true)">{{ t('demandes.accepter') }}</button>
+          <button type="button" class="reponse" :aria-label="t('demandes.refuserDe', { pseudo: demande.membre.pseudo })" @click="repondre(demande, false)">{{ t('demandes.refuser') }}</button>
         </LigneMembre>
       </ul>
     </main>

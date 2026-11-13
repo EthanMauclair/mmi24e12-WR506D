@@ -1,10 +1,12 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import LigneMembre from '@/components/LigneMembre.vue'
 import { api } from '@/services/api'
 
+const { t } = useI18n()
 const router = useRouter()
 
 const recherche = ref('')
@@ -47,20 +49,20 @@ watch(recherche, () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <button type="button" class="bouton-icone" aria-label="Retour" @click="router.back()">
+        <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <h1 class="entete__titre">Membres</h1>
+        <h1 class="entete__titre">{{ t('profil.membres') }}</h1>
       </header>
 
       <label class="saisie saisie--groupe champ-recherche">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        <input v-model="recherche" type="search" placeholder="Pseudo, prénom ou nom" aria-label="Rechercher un membre" autofocus />
+        <input v-model="recherche" type="search" :placeholder="t('membres.exemple')" :aria-label="t('profil.rechercherMembre')" autofocus />
       </label>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-else-if="!assezLong" class="etat">Tapez au moins 2 lettres pour trouver un membre.</p>
-      <p v-else-if="!chargement && membres.length === 0" class="etat">Aucun membre ne correspond à « {{ recherche.trim() }} ».</p>
+      <p v-else-if="!assezLong" class="etat">{{ t('membres.deuxLettres') }}</p>
+      <p v-else-if="!chargement && membres.length === 0" class="etat">{{ t('membres.aucun', { texte: recherche.trim() }) }}</p>
       <ul v-else class="liste">
         <LigneMembre v-for="membre in membres" :key="membre.id" :membre="membre" />
       </ul>

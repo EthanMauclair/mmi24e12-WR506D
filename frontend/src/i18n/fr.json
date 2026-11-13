@@ -52,7 +52,8 @@
     "enregistrement": "Enregistrement…",
     "envoiPhoto": "Envoi de la photo…",
     "enregistrerModifications": "Enregistrer les modifications",
-    "enregistrerDressing": "Enregistrer dans le dressing"
+    "enregistrerDressing": "Enregistrer dans le dressing",
+    "preRempli": "Pré-rempli par l'IA"
   },
   "article": {
     "chargement": "Chargement de l'article…",
@@ -83,6 +84,16 @@
     "marquerRendu": "Marquer rendu",
     "preter": "Prêter",
     "mettreEnVente": "Mettre en vente"
+  },
+  "commentaires": {
+    "titre": "Commentaires",
+    "aucun": "Aucun commentaire pour le moment.",
+    "supprimer": "Supprimer le commentaire de {pseudo}",
+    "ajouter": "Ajouter un commentaire…",
+    "votre": "Votre commentaire",
+    "connectezVous": "{lien} pour suivre {pseudo}.",
+    "seConnecter": "Connectez-vous",
+    "reserveAmis": "Seuls les amis de {pseudo} peuvent commenter."
   },
   "commun": {
     "retour": "Retour",
@@ -126,6 +137,15 @@
     "minutes": "il y a {n} min",
     "heures": "il y a {n} h",
     "hier": "hier"
+  },
+  "demandes": {
+    "titre": "Demandes d'abonnement",
+    "retourProfil": "Retour au profil",
+    "aide": "Votre profil est privé : acceptez une demande pour que ce membre voie vos articles.",
+    "aucune": "Aucune demande en attente.",
+    "accepter": "Accepter",
+    "refuser": "Refuser",
+    "refuserDe": "Refuser la demande de {pseudo}"
   },
   "dressing": {
     "chargement": "Chargement de votre dressing…",
@@ -196,6 +216,32 @@
   "langue": {
     "choisir": "Langue de l'application"
   },
+  "membres": {
+    "exemple": "Pseudo, prénom ou nom",
+    "deuxLettres": "Tapez au moins 2 lettres pour trouver un membre.",
+    "aucun": "Aucun membre ne correspond à « {texte} ».",
+    "titres": {
+      "abonnes": "Abonnés",
+      "abonnements": "Abonnements",
+      "amis": "Amis"
+    },
+    "aideAmis": "Comme les « amis proches », vos amis sont choisis parmi vos abonnés. Eux seuls peuvent commenter vos articles. Personne d'autre ne voit qui sont vos amis.",
+    "aucunAbonnement": "Aucun abonnement pour le moment.",
+    "aucunAbonne": "Aucun abonné pour le moment.",
+    "ami": "Ami",
+    "choisirAmi": "Choisir {pseudo} comme ami",
+    "retirerAmi": "Retirer {pseudo} de vos amis",
+    "retirerAbonne": "Retirer {pseudo} de vos abonnés",
+    "confirmerRetrait": "Retirer {pseudo} de vos abonnés ? Il ne verra plus votre contenu si votre profil est privé."
+  },
+  "modifierProfil": {
+    "prenom": "Prénom",
+    "nom": "Nom",
+    "bio": "Bio",
+    "exempleBio": "Ex. Chineuse lyonnaise, fan de vinyles",
+    "aidePrive": "Seuls les abonnés que vous acceptez voient vos articles",
+    "devientPublic": "En passant votre profil en public, la demande en attente sera acceptée. | En passant votre profil en public, les {n} demandes en attente seront acceptées."
+  },
   "navigation": {
     "principale": "Navigation principale",
     "dressing": "Dressing",
@@ -230,6 +276,36 @@
     "filtrer": "Filtrer",
     "prete": "Prêté",
     "aucunArticle": "Aucun article dans ce stockage pour le moment."
+  },
+  "profil": {
+    "chargement": "Chargement du profil…",
+    "inexistant": "Ce membre n'existe pas.",
+    "rechercherMembre": "Rechercher un membre",
+    "rechercherMembres": "Rechercher des membres",
+    "membres": "Membres",
+    "parametres": "Paramètres du profil",
+    "abonnes": "abonné | abonnés",
+    "abonnements": "abonnement | abonnements",
+    "demandes": "{n} demande d'abonnement | {n} demandes d'abonnement",
+    "modifier": "Modifier le profil",
+    "amis": "Amis · {n}",
+    "abonne": "Abonné",
+    "demandeEnvoyee": "Demande envoyée",
+    "abonnerEnRetour": "S'abonner en retour",
+    "demanderSuivre": "Demander à suivre",
+    "abonner": "S'abonner",
+    "confirmerDesabonnement": "Ne plus suivre {pseudo} ? Son profil est privé : il faudra refaire une demande pour revoir ses articles.",
+    "estAmi": "Vous faites partie de ses amis : vous pouvez commenter ses articles.",
+    "contenu": "Contenu du profil",
+    "ongletArticles": "Articles",
+    "ongletTenues": "Tenues",
+    "ongletPrets": "Prêts",
+    "prive": "Ce profil est privé",
+    "abonnezVous": "Abonnez-vous pour voir ses articles et ses tenues.",
+    "chargementTenues": "Chargement des tenues…",
+    "aucuneTenue": "Aucune tenue partagée pour le moment.",
+    "genererTenue": "Générer une tenue",
+    "aucunArticle": "Aucun article pour le moment."
   },
   "scan": {
     "titre": "Ajouter un article",

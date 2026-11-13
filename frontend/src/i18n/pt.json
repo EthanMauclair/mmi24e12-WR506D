@@ -52,7 +52,8 @@
     "enregistrement": "A guardar…",
     "envoiPhoto": "A enviar a foto…",
     "enregistrerModifications": "Guardar as alterações",
-    "enregistrerDressing": "Guardar no roupeiro"
+    "enregistrerDressing": "Guardar no roupeiro",
+    "preRempli": "Pré-preenchido pela IA"
   },
   "article": {
     "chargement": "A carregar o artigo…",
@@ -83,6 +84,16 @@
     "marquerRendu": "Marcar como devolvido",
     "preter": "Emprestar",
     "mettreEnVente": "Pôr à venda"
+  },
+  "commentaires": {
+    "titre": "Comentários",
+    "aucun": "Ainda não há comentários.",
+    "supprimer": "Eliminar o comentário de {pseudo}",
+    "ajouter": "Adicionar um comentário…",
+    "votre": "O seu comentário",
+    "connectezVous": "{lien} para seguir {pseudo}.",
+    "seConnecter": "Inicie sessão",
+    "reserveAmis": "Só os amigos de {pseudo} podem comentar."
   },
   "commun": {
     "retour": "Voltar",
@@ -126,6 +137,15 @@
     "minutes": "há {n} min",
     "heures": "há {n} h",
     "hier": "ontem"
+  },
+  "demandes": {
+    "titre": "Pedidos para seguir",
+    "retourProfil": "Voltar ao perfil",
+    "aide": "O seu perfil é privado: aceite um pedido para que este membro veja os seus artigos.",
+    "aucune": "Nenhum pedido pendente.",
+    "accepter": "Aceitar",
+    "refuser": "Recusar",
+    "refuserDe": "Recusar o pedido de {pseudo}"
   },
   "dressing": {
     "chargement": "A carregar o seu roupeiro…",
@@ -196,6 +216,32 @@
   "langue": {
     "choisir": "Idioma da aplicação"
   },
+  "membres": {
+    "exemple": "Nome de utilizador, nome próprio ou apelido",
+    "deuxLettres": "Escreva pelo menos 2 letras para encontrar um membro.",
+    "aucun": "Nenhum membro corresponde a «{texte}».",
+    "titres": {
+      "abonnes": "Seguidores",
+      "abonnements": "A seguir",
+      "amis": "Amigos"
+    },
+    "aideAmis": "Tal como os «amigos próximos», os seus amigos são escolhidos entre os seus seguidores. Só eles podem comentar os seus artigos. Mais ninguém vê quem são os seus amigos.",
+    "aucunAbonnement": "Ainda não segue ninguém.",
+    "aucunAbonne": "Ainda não tem seguidores.",
+    "ami": "Amigo",
+    "choisirAmi": "Escolher {pseudo} como amigo",
+    "retirerAmi": "Retirar {pseudo} dos seus amigos",
+    "retirerAbonne": "Retirar {pseudo} dos seus seguidores",
+    "confirmerRetrait": "Retirar {pseudo} dos seus seguidores? Deixará de ver o seu conteúdo se o seu perfil for privado."
+  },
+  "modifierProfil": {
+    "prenom": "Nome próprio",
+    "nom": "Apelido",
+    "bio": "Biografia",
+    "exempleBio": "Ex. Caçadora de achados em Lyon, fã de vinis",
+    "aidePrive": "Só os seguidores que aceitar veem os seus artigos",
+    "devientPublic": "Ao tornar o seu perfil público, o pedido pendente será aceite. | Ao tornar o seu perfil público, os {n} pedidos pendentes serão aceites."
+  },
   "navigation": {
     "principale": "Navegação principal",
     "dressing": "Roupeiro",
@@ -230,6 +276,36 @@
     "filtrer": "Filtrar",
     "prete": "Emprestado",
     "aucunArticle": "Ainda não há artigos nesta arrumação."
+  },
+  "profil": {
+    "chargement": "A carregar o perfil…",
+    "inexistant": "Este membro não existe.",
+    "rechercherMembre": "Procurar um membro",
+    "rechercherMembres": "Procurar membros",
+    "membres": "Membros",
+    "parametres": "Definições do perfil",
+    "abonnes": "seguidor | seguidores",
+    "abonnements": "a seguir | a seguir",
+    "demandes": "{n} pedido para seguir | {n} pedidos para seguir",
+    "modifier": "Editar o perfil",
+    "amis": "Amigos · {n}",
+    "abonne": "A seguir",
+    "demandeEnvoyee": "Pedido enviado",
+    "abonnerEnRetour": "Seguir também",
+    "demanderSuivre": "Pedir para seguir",
+    "abonner": "Seguir",
+    "confirmerDesabonnement": "Deixar de seguir {pseudo}? O perfil é privado: terá de fazer um novo pedido para voltar a ver os artigos.",
+    "estAmi": "Faz parte dos amigos deste membro: pode comentar os artigos dele.",
+    "contenu": "Conteúdo do perfil",
+    "ongletArticles": "Artigos",
+    "ongletTenues": "Conjuntos",
+    "ongletPrets": "Empréstimos",
+    "prive": "Este perfil é privado",
+    "abonnezVous": "Siga este membro para ver os artigos e os conjuntos.",
+    "chargementTenues": "A carregar os conjuntos…",
+    "aucuneTenue": "Ainda não há conjuntos partilhados.",
+    "genererTenue": "Gerar um conjunto",
+    "aucunArticle": "Ainda não há artigos."
   },
   "scan": {
     "titre": "Adicionar um artigo",

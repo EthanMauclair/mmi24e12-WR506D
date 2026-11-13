@@ -1,9 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
+import SelecteurLangue from '@/components/SelecteurLangue.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 
@@ -26,7 +29,7 @@ async function enregistrer() {
     router.push({ name: 'profil' })
   } catch (e) {
     erreurs.value = e.violations
-    erreur.value = Object.keys(e.violations).length ? 'Vérifiez les champs signalés.' : e.message
+    erreur.value = Object.keys(e.violations).length ? t('commun.verifierChamps') : e.message
   } finally {
     envoiEnCours.value = false
   }
@@ -61,46 +64,46 @@ onMounted(async () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <RouterLink :to="{ name: 'profil' }" class="bouton-icone" aria-label="Retour au profil">
+        <RouterLink :to="{ name: 'profil' }" class="bouton-icone" :aria-label="t('demandes.retourProfil')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
-        <h1 class="entete__titre">Modifier le profil</h1>
+        <h1 class="entete__titre">{{ t('profil.modifier') }}</h1>
       </header>
 
-      <p v-if="chargement" class="etat">Chargement…</p>
+      <p v-if="chargement" class="etat">{{ t('commun.chargement') }}</p>
       <form v-else class="formulaire" novalidate @submit.prevent="enregistrer">
         <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
         <label class="champ">
-          <span class="champ__libelle">Nom d'utilisateur</span>
+          <span class="champ__libelle">{{ t('inscription.pseudo') }}</span>
           <input v-model.trim="valeurs.pseudo" class="saisie" :class="{ 'saisie--invalide': erreurs.pseudo }" type="text" autocomplete="username" required />
           <span v-if="erreurs.pseudo" class="champ__erreur">{{ erreurs.pseudo }}</span>
         </label>
 
         <div class="ligne">
           <label class="champ">
-            <span class="champ__libelle">Prénom</span>
+            <span class="champ__libelle">{{ t('modifierProfil.prenom') }}</span>
             <input v-model.trim="valeurs.prenom" class="saisie" :class="{ 'saisie--invalide': erreurs.prenom }" type="text" autocomplete="given-name" />
             <span v-if="erreurs.prenom" class="champ__erreur">{{ erreurs.prenom }}</span>
           </label>
           <label class="champ">
-            <span class="champ__libelle">Nom</span>
+            <span class="champ__libelle">{{ t('modifierProfil.nom') }}</span>
             <input v-model.trim="valeurs.nom" class="saisie" :class="{ 'saisie--invalide': erreurs.nom }" type="text" autocomplete="family-name" />
             <span v-if="erreurs.nom" class="champ__erreur">{{ erreurs.nom }}</span>
           </label>
         </div>
 
         <label class="champ">
-          <span class="champ__libelle">Bio</span>
-          <textarea v-model="valeurs.bio" class="saisie saisie--zone" :class="{ 'saisie--invalide': erreurs.bio }" rows="3" maxlength="500" placeholder="Ex. Chineuse lyonnaise, fan de vinyles"></textarea>
+          <span class="champ__libelle">{{ t('modifierProfil.bio') }}</span>
+          <textarea v-model="valeurs.bio" class="saisie saisie--zone" :class="{ 'saisie--invalide': erreurs.bio }" rows="3" maxlength="500" :placeholder="t('modifierProfil.exempleBio')"></textarea>
           <span v-if="erreurs.bio" class="champ__erreur">{{ erreurs.bio }}</span>
         </label>
 
         <label class="prive">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="prive__icone"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
           <span class="prive__textes">
-            <span class="prive__titre">Profil privé</span>
-            <span class="prive__aide">Seuls les abonnés que vous acceptez voient vos articles</span>
+            <span class="prive__titre">{{ t('commun.profilPrive') }}</span>
+            <span class="prive__aide">{{ t('modifierProfil.aidePrive') }}</span>
           </span>
           <input v-model="valeurs.estPrive" type="checkbox" class="visuellement-cache" />
           <span class="interrupteur" :class="{ 'interrupteur--actif': valeurs.estPrive }" aria-hidden="true">
@@ -108,11 +111,16 @@ onMounted(async () => {
           </span>
         </label>
         <p v-if="devientPublic" class="info">
-          En passant votre profil en public, {{ demandesEnAttente > 1 ? `les ${demandesEnAttente} demandes en attente seront acceptées` : 'la demande en attente sera acceptée' }}.
+          {{ t('modifierProfil.devientPublic', demandesEnAttente) }}
         </p>
 
-        <button type="submit" class="bouton-principal" :disabled="envoiEnCours">Enregistrer</button>
-        <button type="button" class="deconnexion" @click="seDeconnecter">Se déconnecter</button>
+        <div class="champ">
+          <span class="champ__libelle">{{ t('langue.choisir') }}</span>
+          <SelecteurLangue recharger />
+        </div>
+
+        <button type="submit" class="bouton-principal" :disabled="envoiEnCours">{{ t('commun.enregistrer') }}</button>
+        <button type="button" class="deconnexion" @click="seDeconnecter">{{ t('dressing.seDeconnecter') }}</button>
       </form>
     </main>
   </div>

@@ -52,7 +52,8 @@
     "enregistrement": "Saving…",
     "envoiPhoto": "Uploading the photo…",
     "enregistrerModifications": "Save changes",
-    "enregistrerDressing": "Save to my wardrobe"
+    "enregistrerDressing": "Save to my wardrobe",
+    "preRempli": "Pre-filled by AI"
   },
   "article": {
     "chargement": "Loading the item…",
@@ -83,6 +84,16 @@
     "marquerRendu": "Mark as returned",
     "preter": "Lend",
     "mettreEnVente": "Sell"
+  },
+  "commentaires": {
+    "titre": "Comments",
+    "aucun": "No comments yet.",
+    "supprimer": "Delete {pseudo}'s comment",
+    "ajouter": "Add a comment…",
+    "votre": "Your comment",
+    "connectezVous": "{lien} to follow {pseudo}.",
+    "seConnecter": "Log in",
+    "reserveAmis": "Only {pseudo}'s friends can comment."
   },
   "commun": {
     "retour": "Back",
@@ -126,6 +137,15 @@
     "minutes": "{n} min ago",
     "heures": "{n} h ago",
     "hier": "yesterday"
+  },
+  "demandes": {
+    "titre": "Follow requests",
+    "retourProfil": "Back to the profile",
+    "aide": "Your profile is private: accept a request so this member can see your items.",
+    "aucune": "No pending requests.",
+    "accepter": "Accept",
+    "refuser": "Decline",
+    "refuserDe": "Decline {pseudo}'s request"
   },
   "dressing": {
     "chargement": "Loading your wardrobe…",
@@ -196,6 +216,32 @@
   "langue": {
     "choisir": "App language"
   },
+  "membres": {
+    "exemple": "Username, first or last name",
+    "deuxLettres": "Type at least 2 letters to find a member.",
+    "aucun": "No member matches “{texte}”.",
+    "titres": {
+      "abonnes": "Followers",
+      "abonnements": "Following",
+      "amis": "Friends"
+    },
+    "aideAmis": "Like “close friends”, your friends are chosen from your followers. Only they can comment on your items. Nobody else can see who your friends are.",
+    "aucunAbonnement": "Not following anyone yet.",
+    "aucunAbonne": "No followers yet.",
+    "ami": "Friend",
+    "choisirAmi": "Add {pseudo} as a friend",
+    "retirerAmi": "Remove {pseudo} from your friends",
+    "retirerAbonne": "Remove {pseudo} from your followers",
+    "confirmerRetrait": "Remove {pseudo} from your followers? They won't see your content any more if your profile is private."
+  },
+  "modifierProfil": {
+    "prenom": "First name",
+    "nom": "Last name",
+    "bio": "Bio",
+    "exempleBio": "E.g. Lyon thrifter, vinyl lover",
+    "aidePrive": "Only the followers you accept can see your items",
+    "devientPublic": "If you make your profile public, the pending request will be accepted. | If you make your profile public, the {n} pending requests will be accepted."
+  },
   "navigation": {
     "principale": "Main navigation",
     "dressing": "Wardrobe",
@@ -230,6 +276,36 @@
     "filtrer": "Filter",
     "prete": "On loan",
     "aucunArticle": "No items in this storage yet."
+  },
+  "profil": {
+    "chargement": "Loading the profile…",
+    "inexistant": "This member doesn't exist.",
+    "rechercherMembre": "Find a member",
+    "rechercherMembres": "Find members",
+    "membres": "Members",
+    "parametres": "Profile settings",
+    "abonnes": "follower | followers",
+    "abonnements": "following | following",
+    "demandes": "{n} follow request | {n} follow requests",
+    "modifier": "Edit profile",
+    "amis": "Friends · {n}",
+    "abonne": "Following",
+    "demandeEnvoyee": "Request sent",
+    "abonnerEnRetour": "Follow back",
+    "demanderSuivre": "Request to follow",
+    "abonner": "Follow",
+    "confirmerDesabonnement": "Unfollow {pseudo}? Their profile is private: you'll have to send a new request to see their items again.",
+    "estAmi": "You're one of their friends: you can comment on their items.",
+    "contenu": "Profile content",
+    "ongletArticles": "Items",
+    "ongletTenues": "Outfits",
+    "ongletPrets": "Loans",
+    "prive": "This profile is private",
+    "abonnezVous": "Follow them to see their items and outfits.",
+    "chargementTenues": "Loading outfits…",
+    "aucuneTenue": "No outfits shared yet.",
+    "genererTenue": "Generate an outfit",
+    "aucunArticle": "No items yet."
   },
   "scan": {
     "titre": "Add an item",
