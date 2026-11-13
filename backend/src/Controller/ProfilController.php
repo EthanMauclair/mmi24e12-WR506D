@@ -12,6 +12,7 @@ use App\Repository\PretRepository;
 use App\Repository\UtilisateurRepository;
 use App\Security\Voter\ProfilVoter;
 use App\Service\Social\Relations;
+use App\Service\Statistiques\StatistiquesMembre;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -48,6 +49,15 @@ final class ProfilController extends ApiController
         }
 
         return $this->json(array_map($this->presentateur->membre(...), $utilisateurs->rechercher($texte)));
+    }
+
+    /**
+     * Statistiques de « Mon espace » : articles, prêts, ventes et activité sociale du membre connecté.
+     */
+    #[Route('/moi/statistiques', name: 'api_moi_statistiques', methods: ['GET'])]
+    public function statistiques(#[CurrentUser] Utilisateur $utilisateur, StatistiquesMembre $statistiques): JsonResponse
+    {
+        return $this->json($statistiques->calculer($utilisateur));
     }
 
     #[Route('/profils/{pseudo}', name: 'api_profil', requirements: ['pseudo' => self::PSEUDO], methods: ['GET'])]
