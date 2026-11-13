@@ -91,6 +91,8 @@ final class ScanController extends ApiController
                 $image,
                 $categories->findFeuilles([FamilleCategorie::VETEMENT, FamilleCategorie::ACCESSOIRE]),
                 $couleurs->findBy([], ['id' => 'ASC']),
+                // Le titre proposé est écrit dans la langue de l'utilisateur
+                $request->getLocale(),
             );
             if (null === $resultat) {
                 $ia['message'] = $this->traduire('L\'IA n\'a pas pu analyser la photo pour le moment : remplissez les champs vous-même.');

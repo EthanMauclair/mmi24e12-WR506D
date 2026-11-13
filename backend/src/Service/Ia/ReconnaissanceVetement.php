@@ -20,6 +20,9 @@ final class ReconnaissanceVetement
 {
     private const URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+    /** Langue du titre proposé, selon la langue de l'utilisateur */
+    private const LANGUES = ['fr' => 'français', 'en' => 'anglais (britannique)', 'pt' => 'portugais du Portugal'];
+
     private const INSTRUCTIONS_SYSTEME = <<<'TXT'
         Tu es l'assistant d'inventaire d'une application de garde-robe. Tu reçois la photo d'UN vêtement ou d'UN accessoire et tu renvoies sa fiche sous la forme d'un unique objet JSON.
 
@@ -28,7 +31,7 @@ final class ReconnaissanceVetement
         2. "categorieId" : l'identifiant (nombre entier) de la catégorie la plus précise de la liste CATÉGORIES fournie. N'utilise jamais un identifiant absent de la liste. Si rien n'indique un vêtement pour hommes, choisis la catégorie « Femmes ». Si l'article ne correspond à aucune catégorie, mets null.
         3. "couleur" : la couleur dominante de l'article, écrite exactement comme l'un des noms de la liste COULEURS. Mets « Multicolore » si aucune couleur ne domine.
         4. "marque" : uniquement si un nom de marque est réellement lisible sur l'article (étiquette, logo, inscription). Recopie-le tel qu'il est écrit. Ne déduis jamais une marque à partir du style : en cas de doute, mets null.
-        5. "titre" : un nom court et descriptif en français, de 2 à 5 mots, sans la marque ni la couleur (exemples : « Pull col roulé », « Veste en jean », « Baskets montantes »).
+        5. "titre" : un nom court et descriptif dans la LANGUE DU TITRE indiquée, de 2 à 5 mots, sans la marque ni la couleur (exemples en français : « Pull col roulé », « Veste en jean », « Baskets montantes »).
         6. "confiance" : un nombre entre 0 et 1 qui indique ta certitude sur la catégorie.
 
         Réponds uniquement avec l'objet JSON, sans texte avant ni après, sans bloc de code, au format exact :
@@ -67,22 +70,24 @@ final class ReconnaissanceVetement
      * @param string          $imageBase64 data URL JPEG (data:image/jpeg;base64,…)
      * @param list<Categorie> $categories  catégories proposables (feuilles de l'arborescence)
      * @param list<Couleur>   $couleurs
+     * @param string          $langue      langue de l'utilisateur (fr, en, pt) : celle du titre proposé
      *
      * @return array{categorie: ?Categorie, couleur: ?Couleur, marque: ?string, titre: ?string}|null
      *                                                                                                null si le modèle n'a pas pu répondre
      */
-    public function reconnaitre(string $imageBase64, array $categories, array $couleurs): ?array
+    public function reconnaitre(string $imageBase64, array $categories, array $couleurs, string $langue = 'fr'): ?array
     {
         if (!$this->estDisponible()) {
             return null;
         }
+        $demande = $this->demande($categories, $couleurs, $langue);
 
         // Les modèles gratuits sont partagés par tous les utilisateurs d'OpenRouter : ils répondent
         // tantôt en 2 s, tantôt jamais. Plutôt que d'attendre un modèle saturé, on en interroge un second.
         $debut = microtime(true);
         $modeleSecours = trim($this->modeleSecours);
         $secoursDisponible = '' !== $modeleSecours && $modeleSecours !== trim($this->modele);
-        $essais = [$this->interroger(trim($this->modele), $imageBase64, $categories, $couleurs, self::BUDGET_SECONDES)];
+        $essais = [$this->interroger(trim($this->modele), $imageBase64, $demande, self::BUDGET_SECONDES)];
 
         while ([] !== $essais || $secoursDisponible) {
             $ecoule = microtime(true) - $debut;
@@ -91,7 +96,7 @@ final class ReconnaissanceVetement
             }
             // Secours lancé si le modèle principal tarde, ou tout de suite s'il a déjà échoué
             if ($secoursDisponible && ([] === $essais || $ecoule >= self::DELAI_AVANT_SECOURS)) {
-                $essais[] = $this->interroger($modeleSecours, $imageBase64, $categories, $couleurs, self::BUDGET_SECONDES - $ecoule);
+                $essais[] = $this->interroger($modeleSecours, $imageBase64, $demande, self::BUDGET_SECONDES - $ecoule);
                 $secoursDisponible = false;
             }
             $limite = $secoursDisponible ? self::DELAI_AVANT_SECOURS : self::BUDGET_SECONDES;
@@ -142,11 +147,8 @@ final class ReconnaissanceVetement
 
     /**
      * Lance un appel à OpenRouter, sans attendre sa réponse.
-     *
-     * @param list<Categorie> $categories
-     * @param list<Couleur>   $couleurs
      */
-    private function interroger(string $modele, string $imageBase64, array $categories, array $couleurs, float $dureeMax): ResponseInterface
+    private function interroger(string $modele, string $imageBase64, string $demande, float $dureeMax): ResponseInterface
     {
         return $this->client->request('POST', self::URL, [
             'auth_bearer' => $this->cleApi,
@@ -164,7 +166,7 @@ final class ReconnaissanceVetement
                 'messages' => [
                     ['role' => 'system', 'content' => self::INSTRUCTIONS_SYSTEME],
                     ['role' => 'user', 'content' => [
-                        ['type' => 'text', 'text' => $this->demande($categories, $couleurs)],
+                        ['type' => 'text', 'text' => $demande],
                         ['type' => 'image_url', 'image_url' => ['url' => $imageBase64]],
                     ]],
                 ],
@@ -208,7 +210,7 @@ final class ReconnaissanceVetement
      * @param list<Categorie> $categories
      * @param list<Couleur>   $couleurs
      */
-    private function demande(array $categories, array $couleurs): string
+    private function demande(array $categories, array $couleurs, string $langue): string
     {
         $lignesCategories = array_map(
             static fn (Categorie $c) => $c->getId().' | '.$c->getChemin(),
@@ -219,7 +221,8 @@ final class ReconnaissanceVetement
         return "Voici la photo d'un article que l'utilisateur veut ranger dans son dressing. "
             ."Identifie sa catégorie, sa couleur dominante, sa marque si elle est lisible, et donne-lui un titre, en respectant strictement les règles.\n\n"
             ."CATÉGORIES (identifiant | chemin) :\n".implode("\n", $lignesCategories)."\n\n"
-            .'COULEURS : '.implode(', ', $nomsCouleurs);
+            .'COULEURS : '.implode(', ', $nomsCouleurs)."\n\n"
+            .'LANGUE DU TITRE : '.(self::LANGUES[$langue] ?? self::LANGUES['fr']);
     }
 
     /**
