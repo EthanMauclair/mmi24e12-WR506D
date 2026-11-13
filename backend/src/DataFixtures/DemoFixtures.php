@@ -72,6 +72,9 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
         $sam = $this->utilisateur('sam.invite', 'sam@exemple.fr', '1990-11-30');
         $camille = $this->utilisateur('camille.vintage', 'camille@exemple.fr', '1995-03-07');
 
+        // Propriétaire du site : accès au back office complet (indicateurs, membres, référentiels, modération)
+        $this->utilisateur('penderie.admin', 'admin@exemple.fr', '1988-05-12')->setRoles(['ROLE_SUPER_ADMIN']);
+
         // Profils du réseau social : celui de Léa est privé, comme sur la maquette
         $lea->setPrenom('Léa')->setNom('Martin')->setEstPrive(true)
             ->setBio('Chineuse lyonnaise : vêtements, vinyles et comics de seconde main.');
