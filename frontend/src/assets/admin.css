@@ -1,0 +1,272 @@
+/* Back office : écran large (jusqu'à 1120 px), contrairement au reste de l'application pensé pour le mobile */
+
+.admin-pile {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-titre {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.admin-sous-titre {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.admin-section-titre {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.admin-carte {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.admin-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.admin-colonnes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+}
+
+.admin-etat {
+  margin: 24px 0;
+  text-align: center;
+  color: var(--couleur-texte-secondaire);
+}
+
+.admin-message {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.admin-message--erreur {
+  background: var(--couleur-erreur-fond);
+  color: var(--couleur-erreur);
+}
+
+.admin-message--succes {
+  background: var(--couleur-succes-fond);
+  color: var(--couleur-succes);
+}
+
+.admin-message--info {
+  background: var(--couleur-info-fond);
+  color: var(--couleur-libelle);
+}
+
+/* Tableaux : défilement horizontal dans leur cadre sur petit écran, jamais sur la page */
+.admin-defilement {
+  /* position : retient aussi les textes masqués (.visuellement-cache, en absolu) dans le cadre */
+  position: relative;
+  overflow-x: auto;
+  margin: 0 -18px;
+  padding: 0 18px;
+}
+
+.admin-tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-tableau th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--couleur-texte-secondaire);
+  border-bottom: 1px solid var(--couleur-bordure);
+  white-space: nowrap;
+}
+
+.admin-tableau td {
+  padding: 10px;
+  border-bottom: 1px solid var(--couleur-separateur);
+  vertical-align: middle;
+}
+
+.admin-tableau tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-tableau .nombre {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-tableau .actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin-secondaire {
+  font-size: 12px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.admin-bouton {
+  height: 36px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-bouton:hover {
+  border-color: var(--couleur-bordure-pointillee);
+  color: var(--couleur-texte);
+}
+
+.admin-bouton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-bouton--principal {
+  border-color: var(--couleur-primaire);
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+.admin-bouton--principal:hover {
+  background: var(--couleur-primaire-fonce);
+  color: var(--couleur-sur-primaire);
+}
+
+.admin-bouton--danger {
+  color: var(--couleur-erreur);
+}
+
+.admin-bouton--danger:hover {
+  border-color: var(--couleur-erreur);
+  color: var(--couleur-erreur);
+}
+
+.admin-bouton + .admin-bouton {
+  margin-left: 6px;
+}
+
+.admin-saisie {
+  height: 36px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--couleur-texte);
+  min-width: 0;
+}
+
+.admin-saisie:focus-visible {
+  outline: none;
+  border-color: var(--couleur-primaire);
+}
+
+.admin-formulaire {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.admin-champ {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--couleur-libelle);
+}
+
+.admin-champ .admin-saisie {
+  max-width: 100%;
+}
+
+.admin-segments {
+  display: inline-flex;
+  align-self: flex-start;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--couleur-separateur);
+}
+
+.admin-segment {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-texte-secondaire);
+  cursor: pointer;
+}
+
+.admin-segment--actif {
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  box-shadow: var(--ombre-segment);
+}
+
+.admin-pastille {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--couleur-separateur);
+  color: var(--couleur-libelle);
+  white-space: nowrap;
+}
+
+.admin-pastille--alerte {
+  background: var(--couleur-erreur-fond);
+  color: var(--couleur-erreur);
+}
+
+.admin-pastille--accent {
+  background: var(--couleur-primaire-pale);
+  color: var(--couleur-primaire);
+}

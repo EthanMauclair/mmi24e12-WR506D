@@ -193,6 +193,17 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
             {{ t('profil.rechercherMembres') }}
           </RouterLink>
+
+          <div class="raccourcis">
+            <RouterLink :to="{ name: 'profil-espace' }" class="raccourci">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+              {{ t('profil.monEspace') }}
+            </RouterLink>
+            <RouterLink v-if="session.utilisateur?.estAdmin" :to="{ name: 'admin' }" class="raccourci">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></svg>
+              {{ t('profil.backOffice') }}
+            </RouterLink>
+          </div>
         </template>
 
         <template v-else>
@@ -449,6 +460,26 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
   color: var(--couleur-texte-secondaire);
   font-size: 14px;
   font-weight: 600;
+}
+
+.raccourcis {
+  display: flex;
+  gap: 10px;
+}
+
+.raccourci {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .ami {
