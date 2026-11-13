@@ -78,6 +78,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    /** Bloqué par le super admin : ne peut plus se connecter, sa session en cours est fermée */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $estBloque = false;
+
+    /** Mise à jour à chaque connexion : sert aux indicateurs « membres actifs » du back office */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $derniereConnexionAt = null;
+
     /**
      * @var Collection<int, Logement>
      */
@@ -280,6 +288,40 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->estPrive = $estPrive;
 
         return $this;
+    }
+
+    public function isEstBloque(): bool
+    {
+        return $this->estBloque;
+    }
+
+    public function setEstBloque(bool $estBloque): static
+    {
+        $this->estBloque = $estBloque;
+
+        return $this;
+    }
+
+    public function getDerniereConnexionAt(): ?\DateTimeImmutable
+    {
+        return $this->derniereConnexionAt;
+    }
+
+    public function setDerniereConnexionAt(?\DateTimeImmutable $derniereConnexionAt): static
+    {
+        $this->derniereConnexionAt = $derniereConnexionAt;
+
+        return $this;
+    }
+
+    public function estAdmin(): bool
+    {
+        return \in_array('ROLE_ADMIN', $this->roles, true) || $this->estSuperAdmin();
+    }
+
+    public function estSuperAdmin(): bool
+    {
+        return \in_array('ROLE_SUPER_ADMIN', $this->roles, true);
     }
 
     public function getTuteur(): ?Utilisateur
