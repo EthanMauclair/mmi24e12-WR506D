@@ -494,3 +494,31 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - Règles : un article personnel ou prêté ne se vend pas ; une seule annonce active par article ; vendu, l'article quitte le dressing ; retiré, il redevient disponible ; une conversation n'est visible que par ses deux participants ; le marché ne montre jamais l'emplacement
 - Écrans : « Marché » et « Conversation » d'après les maquettes, page d'une annonce (contact ou gestion par le vendeur), liste des messages, formulaire « Mettre en vente », prix et annonce sur la fiche article ; la conversation se met à jour toutes les 5 secondes
 - Données de démonstration : trois annonces dont une réservée, et la conversation de la maquette
+
+---
+
+## 2026-11-13 — Traduction en trois langues (I18N)
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/i18n`
+
+**Prompt :**
+
+> Top, maintenant je dois traduire mon site en 3 langue différentes, c'est la fonctionnalité I18N, la langue principale reste le français, en deuxième langue je veux de l'anglais, en troisième langue je veux du portuguais.
+
+**Réponses aux questions posées :**
+
+- Portugais du Portugal (pt-PT)
+- Traduire aussi les données de référence (catégories, couleurs, états, statuts), pas seulement l'interface
+- Langue choisie automatiquement d'après le navigateur, puis avec un sélecteur mémorisé
+
+**Prompt de suivi :**
+
+> Tu as fini ?
+
+**Résultat retenu :**
+
+- Front : vue-i18n, 427 textes par langue (`frontend/src/i18n/{fr,en,pt}.json`), pluriels selon chaque langue, dates et prix au format de la langue, sélecteur FR / EN / PT sur la connexion, l'inscription et les paramètres du profil
+- API : langue lue dans `Accept-Language`, messages d'erreur, messages de validation et données de référence traduits (`backend/translations/`), le français servant de clé ; libellés d'énumérations inutilisés retirés au profit des codes
+- Scan : l'IA propose le titre de l'article dans la langue de l'utilisateur
+- Les textes saisis par les membres ne sont pas traduits

@@ -141,6 +141,12 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
   - l'acheteur écrit au vendeur depuis l'annonce : une conversation privée par acheteur et par annonce, mise à jour toutes les 5 secondes, avec un badge des messages non lus sur le marché ;
   - le vendeur change le prix, réserve l'annonce ou la remet en ligne, la marque vendue (à un membre qui lui a écrit, ou à quelqu'un hors de l'application) ou la retire. Vendu, l'article quitte le dressing ; retiré, il redevient disponible ;
   - aucun paiement : acheteur et vendeur s'arrangent entre eux.
+- **Trois langues : français (langue principale), anglais et portugais du Portugal** :
+  - au premier passage, l'application suit la langue du navigateur (français par défaut) ; un sélecteur FR / EN / PT sur la connexion, l'inscription et les paramètres du profil permet de la changer, et le choix est mémorisé ;
+  - l'interface est traduite avec [vue-i18n](https://vue-i18n.intlify.dev/) (`frontend/src/i18n/{fr,en,pt}.json`), dates et prix compris (« 12 nov. », « 12 Nov », « 12/11 » ; « 18 € », « €18 ») ;
+  - l'API répond dans la langue envoyée par le front dans l'en-tête `Accept-Language` : messages d'erreur, catégories, couleurs, états, formats et météo (`backend/translations/`, le texte français servant de clé) ;
+  - au scan, l'IA propose le titre de l'article dans la langue de l'utilisateur ;
+  - les textes saisis par les membres (titres, notes, noms de pièces, étiquettes, commentaires) restent tels qu'ils ont été écrits. La recherche porte sur les noms français des catégories et des couleurs.
 
 ### Qui voit quoi dans le réseau social
 
@@ -229,6 +235,8 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
 Les routes de consultation du réseau social (`GET` sur les profils, les membres, un article ou une tenue et leurs commentaires) sont ouvertes aux visiteurs sans compte ; l'API ne renvoie que ce qu'ils ont le droit de voir.
 
 Les erreurs sont renvoyées en JSON : `{"message": "..."}`, avec un objet `violations` (`{"champ": "message"}`) pour les erreurs de validation (422).
+
+L'API répond en français, en anglais ou en portugais selon l'en-tête `Accept-Language` de la requête (`fr` par défaut, `en`, `pt`) ; la réponse indique la langue utilisée dans `Content-Language`. Les codes (statut d'un article, type de stockage, zone d'une tenue…) ne changent jamais : les clients les traduisent eux-mêmes. Dans `/api/referentiels`, chaque catégorie a un champ `reference` (son chemin en français), identique dans toutes les langues.
 
 ## Commandes utiles
 
