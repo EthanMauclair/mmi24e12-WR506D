@@ -64,6 +64,18 @@
     {
       "key": "conversationId",
       "value": ""
+    },
+    {
+      "key": "emailAdmin",
+      "value": "admin@exemple.fr"
+    },
+    {
+      "key": "membreId",
+      "value": ""
+    },
+    {
+      "key": "couleurAdminId",
+      "value": ""
     }
   ],
   "item": [
@@ -2401,6 +2413,539 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Modifiée, ou pas vendeur (403), ou terminée (422)', () => pm.expect(pm.response.code).to.be.oneOf([200, 403, 422]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mon espace",
+      "description": "Statistiques du membre connecté (« Authentification › Connexion »).",
+      "item": [
+        {
+          "name": "Mes statistiques",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/moi/statistiques",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "moi",
+                "statistiques"
+              ]
+            },
+            "description": "Articles par famille, statut, mode d'ajout et logement ; ajouts des 12 derniers mois ; couleurs et marques les plus présentes ; prêts, ventes et activité sociale."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statistiques (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Toutes les rubriques', () => pm.expect(pm.response.json()).to.have.all.keys('articles', 'ajoutsParMois', 'couleurs', 'marques', 'prets', 'ventes', 'social'));",
+                  "pm.test('12 mois', () => pm.expect(pm.response.json().ajoutsParMois).to.have.lengthOf(12));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Back office refusé à un membre",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/indicateurs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "indicateurs"
+              ]
+            },
+            "description": "Un simple membre reçoit 403."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Interdit (403)', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Back office",
+      "description": "Se connecte avec le compte super admin de démonstration (admin@exemple.fr), puis parcourt les indicateurs, les membres, les référentiels et la modération.",
+      "item": [
+        {
+          "name": "Connexion super admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/connexion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "connexion"
+              ]
+            },
+            "description": "Remplace la session du membre par celle du super admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"motDePasse\": \"{{motDePasse}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Connecté (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Super admin', () => pm.expect(pm.response.json().estSuperAdmin).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Indicateurs du site",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/indicateurs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "indicateurs"
+              ]
+            },
+            "description": "KPI : membres, inventaires, place de marché, prêts, réseau social, courbes sur 30 jours."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Indicateurs (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Toutes les rubriques', () => pm.expect(pm.response.json()).to.have.all.keys('membres', 'contenu', 'prets', 'marche', 'social', 'series', 'tops'));",
+                  "pm.test('30 jours', () => pm.expect(pm.response.json().series.inscriptions).to.have.lengthOf(30));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechercher des membres",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/membres?q=tom&page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "membres"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "tom"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Par pseudo, e-mail ou nom ; 20 par page."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Membres (200)', () => pm.response.to.have.status(200));",
+                  "const tom = pm.response.json().membres[0];",
+                  "pm.test('Tom trouvé', () => pm.expect(tom.pseudo).to.eql('tom.martin'));",
+                  "pm.collectionVariables.set('membreId', tom.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fiche d'un membre",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/membres/{{membreId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "membres",
+                "{{membreId}}"
+              ]
+            },
+            "description": "Avec ce que supprimer son compte effacerait (impact)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fiche (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Impact', () => pm.expect(pm.response.json().impact).to.have.all.keys('logements', 'articles', 'articlesAutres', 'tenues', 'commentaires'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bloquer un membre",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/membres/{{membreId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "membres",
+                "{{membreId}}"
+              ]
+            },
+            "description": "Le membre ne peut plus se connecter et sa session est fermée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estBloque\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Bloqué', () => pm.expect(pm.response.json().estBloque).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Débloquer un membre",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/membres/{{membreId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "membres",
+                "{{membreId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estBloque\": false\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Débloqué', () => pm.expect(pm.response.json().estBloque).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rôle inconnu refusé",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/membres/{{membreId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "membres",
+                "{{membreId}}"
+              ]
+            },
+            "description": "Rôles possibles : MEMBRE, ADMIN, SUPER_ADMIN.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ROI\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalide (422)', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Référentiels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/referentiels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "referentiels"
+              ]
+            },
+            "description": "Catégories, couleurs et marques avec leur nombre d'articles."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Référentiels (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Trois listes', () => pm.expect(pm.response.json()).to.have.all.keys('categories', 'couleurs', 'marques'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ajouter une couleur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/couleurs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "couleurs"
+              ]
+            },
+            "description": "Nom unique et code hexadécimal.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Couleur Postman\",\n  \"codeHex\": \"#123456\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Ajoutée (201)', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('couleurAdminId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer la couleur",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/couleurs/{{couleurAdminId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "couleurs",
+                "{{couleurAdminId}}"
+              ]
+            },
+            "description": "Refusé (422) si des articles la portent."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Supprimée (204)', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contenus à modérer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/moderation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "moderation"
+              ]
+            },
+            "description": "Commentaires, annonces en ligne et tenues publiques récents."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Modération (200)', () => pm.response.to.have.status(200));",
+                  "pm.test('Trois listes', () => pm.expect(pm.response.json()).to.have.all.keys('commentaires', 'annonces', 'tenues'));"
                 ]
               }
             }
