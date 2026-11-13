@@ -80,6 +80,13 @@
   --couleur-photo-voile: rgba(30, 20, 22, 0.55);
   --couleur-photo-indicateur: rgba(255, 255, 255, 0.5);
 
+  /* Graphiques des statistiques : une seule série, bordeaux de la marque éclairci
+     (contraste ≥ 3:1 sur la surface, vérifié avec le validateur de palette) */
+  --couleur-donnee: #a83a5c;
+  --couleur-donnee-survol: #7d2a3f;
+  --couleur-grille: #f1e9eb;
+  --couleur-piste: #f5eef0;
+
   --ombre-bouton-scan: 0 8px 20px rgba(110, 26, 51, 0.32);
   --ombre-curseur: 0 1px 3px rgba(0, 0, 0, 0.2);
   --ombre-menu: 0 12px 32px rgba(30, 20, 22, 0.16);
