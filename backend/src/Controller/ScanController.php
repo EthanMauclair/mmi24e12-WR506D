@@ -11,6 +11,7 @@ use App\Service\CodeBarres\RechercheCodeBarres;
 use App\Service\Ia\ReconnaissanceVetement;
 use App\Service\Photo\PhotoInvalideException;
 use App\Service\Photo\TraitementPhoto;
+use App\Service\Traduction\Referentiels;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -56,6 +57,7 @@ final class ScanController extends ApiController
         CategorieRepository $categories,
         CouleurRepository $couleurs,
         RateLimiterFactoryInterface $scanIaLimiter,
+        Referentiels $referentiels,
     ): JsonResponse {
         // L'analyse peut durer : on libère tout de suite la session, sinon PHP la garde verrouillée
         // et bloque les autres requêtes de l'utilisateur (chargement de la fiche) jusqu'à la réponse de l'IA
@@ -81,9 +83,9 @@ final class ScanController extends ApiController
         $suggestions = null;
 
         if (!$ia['disponible']) {
-            $ia['message'] = 'La reconnaissance automatique n\'est pas configurée : remplissez les champs vous-même.';
+            $ia['message'] = $this->traduire('La reconnaissance automatique n\'est pas configurée : remplissez les champs vous-même.');
         } elseif (!$scanIaLimiter->create('utilisateur-'.$utilisateur->getId())->consume()->isAccepted()) {
-            $ia['message'] = 'Vous avez atteint la limite de scans par IA pour cette heure : remplissez les champs vous-même.';
+            $ia['message'] = $this->traduire('Vous avez atteint la limite de scans par IA pour cette heure : remplissez les champs vous-même.');
         } else {
             $resultat = $reconnaissance->reconnaitre(
                 $image,
@@ -91,17 +93,17 @@ final class ScanController extends ApiController
                 $couleurs->findBy([], ['id' => 'ASC']),
             );
             if (null === $resultat) {
-                $ia['message'] = 'L\'IA n\'a pas pu analyser la photo pour le moment : remplissez les champs vous-même.';
+                $ia['message'] = $this->traduire('L\'IA n\'a pas pu analyser la photo pour le moment : remplissez les champs vous-même.');
             } else {
                 $ia['reussie'] = true;
                 $suggestions = [
                     'categorie' => null === $resultat['categorie'] ? null : [
                         'id' => $resultat['categorie']->getId(),
-                        'chemin' => $resultat['categorie']->getChemin(),
+                        'chemin' => $referentiels->chemin($resultat['categorie']),
                     ],
                     'couleur' => null === $resultat['couleur'] ? null : [
                         'id' => $resultat['couleur']->getId(),
-                        'nom' => $resultat['couleur']->getNom(),
+                        'nom' => $referentiels->nom($resultat['couleur']->getNom()),
                     ],
                     'marque' => $resultat['marque'],
                     'titre' => $resultat['titre'],
@@ -116,22 +118,22 @@ final class ScanController extends ApiController
      * Recherche un livre (ISBN) ou un vinyle (EAN) d'après son code-barres.
      */
     #[Route('/code-barres/{code}', name: 'api_scan_code_barres', requirements: ['code' => '[0-9Xx -]{8,20}'], methods: ['GET'])]
-    public function codeBarres(string $code, RechercheCodeBarres $recherche, CategorieRepository $categories): JsonResponse
+    public function codeBarres(string $code, RechercheCodeBarres $recherche, CategorieRepository $categories, Referentiels $referentiels): JsonResponse
     {
         try {
             $fiche = $recherche->rechercher($code);
         } catch (BaseInjoignableException $e) {
-            return $this->json(['message' => $e->getMessage()], Response::HTTP_SERVICE_UNAVAILABLE);
+            return $this->json(['message' => $this->traduire($e->getMessage())], Response::HTTP_SERVICE_UNAVAILABLE);
         }
         if (null === $fiche) {
             return $this->json(
-                ['message' => 'Aucun livre ni vinyle trouvé pour ce code-barres. Vous pouvez saisir l\'article vous-même.', 'code' => RechercheCodeBarres::normaliser($code)],
+                ['message' => $this->traduire('Aucun livre ni vinyle trouvé pour ce code-barres. Vous pouvez saisir l\'article vous-même.'), 'code' => RechercheCodeBarres::normaliser($code)],
                 Response::HTTP_NOT_FOUND,
             );
         }
 
         $categorie = $categories->findParChemin($fiche['categorie']);
-        $fiche['categorie'] = null === $categorie ? null : ['id' => $categorie->getId(), 'chemin' => $categorie->getChemin()];
+        $fiche['categorie'] = null === $categorie ? null : ['id' => $categorie->getId(), 'chemin' => $referentiels->chemin($categorie)];
 
         return $this->json($fiche);
     }

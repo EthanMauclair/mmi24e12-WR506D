@@ -15,6 +15,7 @@ use App\Entity\Pret;
 use App\Entity\Tenue;
 use App\Entity\Utilisateur;
 use App\Enum\RoleLogement;
+use App\Service\Traduction\Referentiels;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -22,8 +23,10 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class Presentateur
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly Referentiels $referentiels,
+    ) {
     }
 
     /**
@@ -255,7 +258,7 @@ final class Presentateur
                 'id' => $article->getId(),
                 'titre' => $article->getTitre(),
                 'infos' => $this->infos($article, $details, false),
-                'categorie' => $article->getCategorie()->getNom(),
+                'categorie' => $this->referentiels->nom($article->getCategorie()->getNom()),
                 'statut' => $article->getStatut()->value,
                 'estPersonnel' => $article->isEstPersonnel(),
                 'couleur' => $vetement?->getCouleurPrincipale()?->getCodeHex(),
@@ -291,9 +294,8 @@ final class Presentateur
             'infos' => $this->infos($article, $details, true),
             'description' => $article->getDescription(),
             'statut' => $article->getStatut()->value,
-            'libelleStatut' => $article->getStatut()->label(),
-            'categorie' => $article->getCategorie()->getNom(),
-            'couleur' => null === $couleur ? null : ['nom' => $couleur->getNom(), 'codeHex' => $couleur->getCodeHex()],
+            'categorie' => $this->referentiels->nom($article->getCategorie()->getNom()),
+            'couleur' => null === $couleur ? null : ['nom' => $this->referentiels->nom($couleur->getNom()), 'codeHex' => $couleur->getCodeHex()],
             'photos' => array_map(static fn ($photo) => $photo->getChemin(), $photos),
             'dateScan' => $photoScan?->getCreatedAt()->format(\DATE_ATOM),
             'voitEmplacement' => $voitEmplacement,
@@ -383,8 +385,8 @@ final class Presentateur
 
         if ($vetement = $details[DetailVetement::class][$id] ?? null) {
             $morceaux = $complet
-                ? [$vetement->getMarque()?->getNom(), $vetement->getMatiere(), $vetement->getTaille() ? 'Taille '.$vetement->getTaille() : null]
-                : [$vetement->getMarque()?->getNom(), $vetement->getCouleurPrincipale()?->getNom(), $vetement->getTaille()];
+                ? [$vetement->getMarque()?->getNom(), $vetement->getMatiere(), $vetement->getTaille() ? $this->referentiels->libelle('Taille %taille%', ['%taille%' => $vetement->getTaille()]) : null]
+                : [$vetement->getMarque()?->getNom(), $this->referentiels->nom($vetement->getCouleurPrincipale()?->getNom()), $vetement->getTaille()];
         } elseif ($livre = $details[DetailLivre::class][$id] ?? null) {
             $morceaux = [$livre->getAuteur(), $livre->getEditeur(), $complet ? $livre->getAnneeParution() : null];
         } elseif ($vinyle = $details[DetailVinyle::class][$id] ?? null) {
@@ -393,7 +395,7 @@ final class Presentateur
 
         $morceaux = array_filter($morceaux, static fn ($morceau) => null !== $morceau && '' !== $morceau);
 
-        return [] === $morceaux ? $article->getCategorie()->getNom() : implode(' · ', $morceaux);
+        return [] === $morceaux ? $this->referentiels->nom($article->getCategorie()->getNom()) : implode(' · ', $morceaux);
     }
 
     /**

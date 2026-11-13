@@ -8,12 +8,28 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Outils communs aux contrôleurs de l'API JSON.
  */
 abstract class ApiController extends AbstractController
 {
+    public static function getSubscribedServices(): array
+    {
+        return parent::getSubscribedServices() + ['translator' => TranslatorInterface::class];
+    }
+
+    /**
+     * Message de l'API dans la langue de la requête (en-tête Accept-Language). Le texte français sert de clé.
+     *
+     * @param array<string, string|int> $parametres
+     */
+    protected function traduire(string $message, array $parametres = []): string
+    {
+        return $this->container->get('translator')->trans($message, $parametres);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -53,7 +69,8 @@ abstract class ApiController extends AbstractController
     protected function reponseInvalide(array $messages): JsonResponse
     {
         return $this->json(
-            ['message' => 'Certaines informations sont invalides.', 'violations' => $messages],
+            // Les violations du validateur sont déjà traduites ; les messages écrits dans les contrôleurs le sont ici
+            ['message' => $this->traduire('Certaines informations sont invalides.'), 'violations' => array_map($this->traduire(...), $messages)],
             Response::HTTP_UNPROCESSABLE_ENTITY,
         );
     }

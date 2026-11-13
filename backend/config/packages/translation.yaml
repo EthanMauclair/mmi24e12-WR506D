@@ -1,5 +1,11 @@
 framework:
+    # Le français est la langue principale : ses textes servent de clés dans translations/*.en.yaml et *.pt.yaml
     default_locale: fr
+    enabled_locales: [fr, en, pt]
+    # Le front envoie la langue choisie dans l'en-tête Accept-Language de chaque requête
+    set_locale_from_accept_language: true
+    set_content_language_from_locale: true
     translator:
         default_path: '%kernel.project_dir%/translations'
+        fallbacks: [fr]
         providers:

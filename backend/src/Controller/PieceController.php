@@ -45,8 +45,8 @@ final class PieceController extends ApiController
             'stockages' => array_map(static fn (Stockage $stockage) => [
                 'id' => $stockage->getId(),
                 'nom' => $stockage->getNom(),
+                // Le libellé du type est traduit par le front (piece.types.<TYPE>)
                 'type' => $stockage->getType()->value,
-                'libelleType' => $stockage->getType()->label(),
                 'nbArticles' => $nombresParStockage[$stockage->getId()] ?? 0,
             ], $piece->getStockages()->getValues()),
             'articles' => $presentateur->articlesResumes($articlesVisibles),
@@ -82,7 +82,6 @@ final class PieceController extends ApiController
             'id' => $stockage->getId(),
             'nom' => $stockage->getNom(),
             'type' => $type->value,
-            'libelleType' => $type->label(),
             'nbArticles' => 0,
         ], Response::HTTP_CREATED);
     }

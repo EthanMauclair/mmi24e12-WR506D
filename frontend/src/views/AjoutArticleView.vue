@@ -239,7 +239,7 @@ onMounted(async () => {
     if (codeInconnu && valeurs.categorieId === null) {
       const estIsbn = /^(97[89]\d{10}|\d{9}[\dX])$/.test(codeInconnu)
       const chemin = estIsbn ? 'Livres › Romans › Romans' : 'Musique › Vinyles › Albums (33 tours)'
-      valeurs.categorieId = referentiels.categories.find((c) => c.chemin === chemin)?.id ?? null
+      valeurs.categorieId = referentiels.categories.find((c) => c.reference === chemin)?.id ?? null
     }
   } catch (e) {
     erreur.value = e.message
