@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import App from './App.vue'
+import { i18n } from './i18n'
 import router from './router'
 import { definirSurNonConnecte } from './services/api'
 import { useSessionStore } from './stores/session'
@@ -11,6 +12,7 @@ import { useSessionStore } from './stores/session'
 const app = createApp(App)
 
 app.use(createPinia())
+app.use(i18n)
 app.use(router)
 
 // Session expirée : retour à l'écran de connexion, puis à la page demandée

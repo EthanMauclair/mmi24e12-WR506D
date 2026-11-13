@@ -1,0 +1,84 @@
+{
+  "commun": {
+    "retour": "Back",
+    "chargement": "Loading…",
+    "enregistrer": "Save",
+    "annuler": "Cancel",
+    "ajouter": "Add",
+    "creer": "Create",
+    "supprimer": "Delete",
+    "publier": "Post",
+    "voir": "View",
+    "verifierChamps": "Please check the highlighted fields.",
+    "aRanger": "To be put away",
+    "profilPrive": "Private profile"
+  },
+  "connexion": {
+    "accroche": "Find every item at a glance.",
+    "sousTitre": "Clothes, vinyl, comics: everything is indexed.",
+    "titre": "Log in",
+    "email": "Email",
+    "exempleEmail": "you{'@'}example.com",
+    "motDePasse": "Password",
+    "afficher": "Show password",
+    "masquer": "Hide password",
+    "oubli": "Forgot your password?",
+    "seConnecter": "Log in",
+    "enCours": "Logging in…",
+    "ou": "or",
+    "decouvrir": "Explore without an account",
+    "pasDeCompte": "No account yet?",
+    "inscription": "Sign up for free"
+  },
+  "dates": {
+    "sansDate": "No date",
+    "enRetard": "Overdue",
+    "aujourdhui": "Today",
+    "demain": "Tomorrow",
+    "dansJours": "In {n} d",
+    "dansSemaines": "In {n} wk",
+    "instant": "just now",
+    "minutes": "{n} min ago",
+    "heures": "{n} h ago",
+    "hier": "yesterday"
+  },
+  "erreurs": {
+    "nonConnecte": "You need to be logged in.",
+    "interdit": "You don't have access to this resource.",
+    "introuvable": "Item not found.",
+    "reseau": "Unable to reach the server. Check your connection.",
+    "inconnue": "Something went wrong. Please try again later."
+  },
+  "inscription": {
+    "titre": "Create an account",
+    "sousTitre": "Index your wardrobe and share your outfits.",
+    "pseudo": "Username",
+    "motDePasseMin": "At least 8 characters",
+    "dateNaissance": "Date of birth",
+    "mineur": "Under 18? Your account will be linked to an adult account, which will add you to their home.",
+    "emailTuteur": "Adult account email",
+    "emailTuteurExemple": "Parent or guardian email",
+    "visibilite": "Profile visibility",
+    "public": "Public",
+    "publicDescription": "Everyone sees your outfits",
+    "prive": "Private",
+    "priveDescription": "You approve each follower",
+    "conditions": "I accept the {cgu} and the {confidentialite}.",
+    "cgu": "terms of use",
+    "confidentialite": "privacy policy",
+    "creer": "Create my account",
+    "enCours": "Creating your account…",
+    "dejaInscrit": "Already have an account?"
+  },
+  "langue": {
+    "choisir": "App language"
+  },
+  "navigation": {
+    "principale": "Main navigation",
+    "dressing": "Wardrobe",
+    "tenues": "Outfits",
+    "scanner": "Scan an item",
+    "marche": "Market",
+    "profil": "Profile"
+  }
+}

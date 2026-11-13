@@ -1,0 +1,84 @@
+{
+  "commun": {
+    "retour": "Retour",
+    "chargement": "Chargement…",
+    "enregistrer": "Enregistrer",
+    "annuler": "Annuler",
+    "ajouter": "Ajouter",
+    "creer": "Créer",
+    "supprimer": "Supprimer",
+    "publier": "Publier",
+    "voir": "Voir",
+    "verifierChamps": "Vérifiez les champs signalés.",
+    "aRanger": "À ranger",
+    "profilPrive": "Profil privé"
+  },
+  "connexion": {
+    "accroche": "Retrouvez chaque article, en un coup d'œil.",
+    "sousTitre": "Dressing, vinyles, comics : tout est indexé.",
+    "titre": "Connexion",
+    "email": "E-mail",
+    "exempleEmail": "vous{'@'}exemple.fr",
+    "motDePasse": "Mot de passe",
+    "afficher": "Afficher le mot de passe",
+    "masquer": "Masquer le mot de passe",
+    "oubli": "Mot de passe oublié ?",
+    "seConnecter": "Se connecter",
+    "enCours": "Connexion…",
+    "ou": "ou",
+    "decouvrir": "Découvrir sans compte",
+    "pasDeCompte": "Pas encore de compte ?",
+    "inscription": "S'inscrire gratuitement"
+  },
+  "dates": {
+    "sansDate": "Sans date",
+    "enRetard": "En retard",
+    "aujourdhui": "Aujourd'hui",
+    "demain": "Demain",
+    "dansJours": "Dans {n} j",
+    "dansSemaines": "Dans {n} sem.",
+    "instant": "à l'instant",
+    "minutes": "il y a {n} min",
+    "heures": "il y a {n} h",
+    "hier": "hier"
+  },
+  "erreurs": {
+    "nonConnecte": "Vous devez être connecté.",
+    "interdit": "Vous n'avez pas accès à cette ressource.",
+    "introuvable": "Élément introuvable.",
+    "reseau": "Impossible de joindre le serveur. Vérifiez votre connexion.",
+    "inconnue": "Une erreur est survenue. Réessayez plus tard."
+  },
+  "inscription": {
+    "titre": "Créer un compte",
+    "sousTitre": "Indexez votre dressing et partagez vos tenues.",
+    "pseudo": "Nom d'utilisateur",
+    "motDePasseMin": "8 caractères min.",
+    "dateNaissance": "Date de naissance",
+    "mineur": "Moins de 18 ans ? Votre compte sera rattaché à un compte majeur, qui vous ajoutera à son logement.",
+    "emailTuteur": "E-mail du compte majeur",
+    "emailTuteurExemple": "E-mail du parent ou tuteur",
+    "visibilite": "Visibilité du profil",
+    "public": "Public",
+    "publicDescription": "Tout le monde voit vos tenues",
+    "prive": "Privé",
+    "priveDescription": "Vous acceptez chaque abonné",
+    "conditions": "J'accepte les {cgu} et la {confidentialite}.",
+    "cgu": "conditions d'utilisation",
+    "confidentialite": "politique de confidentialité",
+    "creer": "Créer mon compte",
+    "enCours": "Création du compte…",
+    "dejaInscrit": "Déjà inscrit ?"
+  },
+  "langue": {
+    "choisir": "Langue de l'application"
+  },
+  "navigation": {
+    "principale": "Navigation principale",
+    "dressing": "Dressing",
+    "tenues": "Tenues",
+    "scanner": "Scanner un article",
+    "marche": "Marché",
+    "profil": "Profil"
+  }
+}

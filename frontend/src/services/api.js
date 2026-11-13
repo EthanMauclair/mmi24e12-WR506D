@@ -1,11 +1,9 @@
 // Client de l'API Symfony. En développement, Vite relaie /api vers le backend :
 // le cookie de session est donc envoyé sur la même origine.
 
-const MESSAGES_PAR_STATUT = {
-  401: 'Vous devez être connecté.',
-  403: "Vous n'avez pas accès à cette ressource.",
-  404: 'Élément introuvable.',
-}
+import { i18n, langueCourante } from '@/i18n'
+
+const MESSAGES_PAR_STATUT = { 401: 'erreurs.nonConnecte', 403: 'erreurs.interdit', 404: 'erreurs.introuvable' }
 
 export class ErreurApi extends Error {
   constructor(statut, message, violations = {}) {
@@ -30,7 +28,8 @@ export function definirSurNonConnecte(rappel) {
  * @param {FormData} [options.formulaire] envoyé en multipart (fichiers), le navigateur fixe le Content-Type
  */
 export async function api(chemin, { methode = 'GET', corps, formulaire } = {}) {
-  const options = { method: methode, credentials: 'same-origin', headers: { Accept: 'application/json' } }
+  // L'API répond dans la langue de l'interface (messages d'erreur, catégories, couleurs…)
+  const options = { method: methode, credentials: 'same-origin', headers: { Accept: 'application/json', 'Accept-Language': langueCourante() } }
   if (corps !== undefined) {
     options.headers['Content-Type'] = 'application/json'
     options.body = JSON.stringify(corps)
@@ -42,7 +41,7 @@ export async function api(chemin, { methode = 'GET', corps, formulaire } = {}) {
   try {
     reponse = await fetch(`/api${chemin}`, options)
   } catch {
-    throw new ErreurApi(0, 'Impossible de joindre le serveur. Vérifiez votre connexion.')
+    throw new ErreurApi(0, i18n.global.t('erreurs.reseau'))
   }
 
   if (reponse.status === 204) {
@@ -56,7 +55,7 @@ export async function api(chemin, { methode = 'GET', corps, formulaire } = {}) {
     }
     throw new ErreurApi(
       reponse.status,
-      donnees?.message ?? MESSAGES_PAR_STATUT[reponse.status] ?? 'Une erreur est survenue. Réessayez plus tard.',
+      donnees?.message ?? i18n.global.t(MESSAGES_PAR_STATUT[reponse.status] ?? 'erreurs.inconnue'),
       donnees?.violations ?? {},
     )
   }

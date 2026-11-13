@@ -1,0 +1,84 @@
+{
+  "commun": {
+    "retour": "Voltar",
+    "chargement": "A carregar…",
+    "enregistrer": "Guardar",
+    "annuler": "Cancelar",
+    "ajouter": "Adicionar",
+    "creer": "Criar",
+    "supprimer": "Eliminar",
+    "publier": "Publicar",
+    "voir": "Ver",
+    "verifierChamps": "Verifique os campos assinalados.",
+    "aRanger": "Por arrumar",
+    "profilPrive": "Perfil privado"
+  },
+  "connexion": {
+    "accroche": "Encontre cada artigo num relance.",
+    "sousTitre": "Roupa, vinis, banda desenhada: está tudo catalogado.",
+    "titre": "Iniciar sessão",
+    "email": "E-mail",
+    "exempleEmail": "voce{'@'}exemplo.pt",
+    "motDePasse": "Palavra-passe",
+    "afficher": "Mostrar a palavra-passe",
+    "masquer": "Ocultar a palavra-passe",
+    "oubli": "Esqueceu-se da palavra-passe?",
+    "seConnecter": "Iniciar sessão",
+    "enCours": "A iniciar sessão…",
+    "ou": "ou",
+    "decouvrir": "Explorar sem conta",
+    "pasDeCompte": "Ainda não tem conta?",
+    "inscription": "Registe-se gratuitamente"
+  },
+  "dates": {
+    "sansDate": "Sem data",
+    "enRetard": "Em atraso",
+    "aujourdhui": "Hoje",
+    "demain": "Amanhã",
+    "dansJours": "Daqui a {n} d",
+    "dansSemaines": "Daqui a {n} sem.",
+    "instant": "agora mesmo",
+    "minutes": "há {n} min",
+    "heures": "há {n} h",
+    "hier": "ontem"
+  },
+  "erreurs": {
+    "nonConnecte": "Tem de iniciar sessão.",
+    "interdit": "Não tem acesso a este recurso.",
+    "introuvable": "Elemento não encontrado.",
+    "reseau": "Não foi possível contactar o servidor. Verifique a sua ligação.",
+    "inconnue": "Ocorreu um erro. Tente novamente mais tarde."
+  },
+  "inscription": {
+    "titre": "Criar uma conta",
+    "sousTitre": "Catalogue o seu roupeiro e partilhe os seus conjuntos.",
+    "pseudo": "Nome de utilizador",
+    "motDePasseMin": "Mín. 8 caracteres",
+    "dateNaissance": "Data de nascimento",
+    "mineur": "Tem menos de 18 anos? A sua conta será associada a uma conta de um adulto, que o adicionará à casa dele.",
+    "emailTuteur": "E-mail da conta do adulto",
+    "emailTuteurExemple": "E-mail do pai, mãe ou tutor",
+    "visibilite": "Visibilidade do perfil",
+    "public": "Público",
+    "publicDescription": "Todos veem os seus conjuntos",
+    "prive": "Privado",
+    "priveDescription": "Aprova cada seguidor",
+    "conditions": "Aceito os {cgu} e a {confidentialite}.",
+    "cgu": "termos de utilização",
+    "confidentialite": "política de privacidade",
+    "creer": "Criar a minha conta",
+    "enCours": "A criar a conta…",
+    "dejaInscrit": "Já tem conta?"
+  },
+  "langue": {
+    "choisir": "Idioma da aplicação"
+  },
+  "navigation": {
+    "principale": "Navegação principal",
+    "dressing": "Roupeiro",
+    "tenues": "Conjuntos",
+    "scanner": "Digitalizar um artigo",
+    "marche": "Mercado",
+    "profil": "Perfil"
+  }
+}
