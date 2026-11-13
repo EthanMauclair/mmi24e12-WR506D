@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import { fondVignette } from '@/utils/couleurs'
 import { echeance, jourCourt } from '@/utils/dates'
 
+const { t } = useI18n()
 const router = useRouter()
 
 const prets = ref({ enCours: [], rendus: [] })
@@ -15,7 +17,7 @@ const erreur = ref('')
 const affiches = computed(() => prets.value[onglet.value])
 
 function emprunteur(pret) {
-  return pret.emprunteur ? `Prêté à @${pret.emprunteur.pseudo}` : `Prêté à ${pret.emprunteurNom} · nom libre`
+  return pret.emprunteur ? t('article.preteA', { nom: `@${pret.emprunteur.pseudo}` }) : t('prets.preteANom', { nom: pret.emprunteurNom })
 }
 
 async function marquerRendu(pret) {
@@ -32,7 +34,7 @@ async function marquerRendu(pret) {
 }
 
 async function supprimer(pret) {
-  if (!window.confirm(`Supprimer ce prêt de « ${pret.article.titre} » ? À faire seulement s'il a été saisi par erreur.`)) {
+  if (!window.confirm(t('prets.confirmerSuppression', { titre: pret.article.titre }))) {
     return
   }
   erreur.value = ''
@@ -59,26 +61,26 @@ onMounted(async () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <button type="button" class="bouton-icone" aria-label="Retour" @click="router.back()">
+        <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <h1 class="entete__titre">Prêts</h1>
+        <h1 class="entete__titre">{{ t('profil.ongletPrets') }}</h1>
       </header>
 
-      <div role="tablist" aria-label="Statut des prêts" class="segments">
+      <div role="tablist" :aria-label="t('prets.statuts')" class="segments">
         <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'enCours' }" :aria-selected="onglet === 'enCours'" @click="onglet = 'enCours'">
-          En cours · {{ prets.enCours.length }}
+          {{ t('prets.enCours') }} · {{ prets.enCours.length }}
         </button>
         <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'rendus' }" :aria-selected="onglet === 'rendus'" @click="onglet = 'rendus'">
-          Rendus · {{ prets.rendus.length }}
+          {{ t('prets.rendus') }} · {{ prets.rendus.length }}
         </button>
       </div>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-if="chargement" class="etat">Chargement des prêts…</p>
+      <p v-if="chargement" class="etat">{{ t('prets.chargement') }}</p>
       <p v-else-if="affiches.length === 0" class="etat">
-        <template v-if="onglet === 'enCours'">Aucun prêt en cours. Pour prêter un article, ouvrez sa fiche et touchez « Prêter ».</template>
-        <template v-else>Aucun prêt rendu pour le moment.</template>
+        <template v-if="onglet === 'enCours'">{{ t('prets.aucunEnCours') }}</template>
+        <template v-else>{{ t('prets.aucunRendu') }}</template>
       </p>
 
       <article
@@ -96,28 +98,28 @@ onMounted(async () => {
             <span class="pret__qui">{{ emprunteur(pret) }}</span>
           </span>
           <span v-if="pret.enCours" class="statut" :class="{ 'statut--retard': pret.joursRestants < 0 }">{{ echeance(pret.joursRestants) }}</span>
-          <span v-else class="statut statut--rendu">Rendu</span>
+          <span v-else class="statut statut--rendu">{{ t('prets.rendu') }}</span>
         </div>
 
         <div class="dates">
           <span class="date">
-            <span class="date__libelle">Prêté le</span>
+            <span class="date__libelle">{{ t('prets.preteLe') }}</span>
             <span class="date__valeur">{{ jourCourt(pret.datePret) }}</span>
           </span>
           <span v-if="pret.enCours" class="date">
-            <span class="date__libelle">Retour prévu</span>
+            <span class="date__libelle">{{ t('prets.retourPrevu') }}</span>
             <span class="date__valeur">{{ pret.dateRetourPrevue ? jourCourt(pret.dateRetourPrevue) : '—' }}</span>
           </span>
           <span v-else class="date">
-            <span class="date__libelle">Rendu le</span>
+            <span class="date__libelle">{{ t('prets.renduLe') }}</span>
             <span class="date__valeur">{{ jourCourt(pret.dateRetourReelle) }}</span>
           </span>
         </div>
 
         <div class="pret__pied">
-          <span class="pret__note">{{ pret.note ?? 'Aucune note' }}</span>
-          <button v-if="pret.enCours" type="button" class="pret__rendu" @click="marquerRendu(pret)">Marquer rendu</button>
-          <button v-else type="button" class="pret__supprimer" :aria-label="`Supprimer le prêt de ${pret.article.titre}`" @click="supprimer(pret)">
+          <span class="pret__note">{{ pret.note ?? t('prets.aucuneNote') }}</span>
+          <button v-if="pret.enCours" type="button" class="pret__rendu" @click="marquerRendu(pret)">{{ t('article.marquerRendu') }}</button>
+          <button v-else type="button" class="pret__supprimer" :aria-label="t('prets.supprimer', { titre: pret.article.titre })" @click="supprimer(pret)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
           </button>
         </div>

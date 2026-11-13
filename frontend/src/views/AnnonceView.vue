@@ -1,13 +1,13 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import { api } from '@/services/api'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 import { formatPrix } from '@/utils/prix'
 
-const STATUTS = { EN_LIGNE: 'En ligne', RESERVEE: 'Réservée', VENDUE: 'Vendue', RETIREE: 'Retirée' }
-
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -16,7 +16,7 @@ const erreur = ref('')
 const erreurAction = ref('')
 const envoi = ref(false)
 
-const premierMessage = ref('Bonjour ! Est-ce toujours disponible ?')
+const premierMessage = ref(t('annonce.premierMessage'))
 const prix = ref('')
 const vente = ref(false)
 const acheteur = ref('')
@@ -72,10 +72,10 @@ watch(() => route.params.id, charger, { immediate: true })
 
 <template>
   <div class="ecran">
-    <p v-if="!annonce && !erreur" class="etat">Chargement de l'annonce…</p>
+    <p v-if="!annonce && !erreur" class="etat">{{ t('annonce.chargement') }}</p>
     <div v-else-if="!annonce" class="contenu">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
-      <RouterLink :to="{ name: 'marche' }">Retour au marché</RouterLink>
+      <RouterLink :to="{ name: 'marche' }">{{ t('annonce.retourMarche') }}</RouterLink>
     </div>
 
     <template v-else>
@@ -86,7 +86,7 @@ watch(() => route.params.id, charger, { immediate: true })
       >
         <img v-if="annonce.article.photo" :src="annonce.article.photo" alt="" class="photo__image" />
         <svg v-else width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-        <button type="button" class="photo__retour" aria-label="Retour" @click="router.back()">
+        <button type="button" class="photo__retour" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
       </div>
@@ -98,36 +98,36 @@ watch(() => route.params.id, charger, { immediate: true })
             <h1 class="titre__nom">{{ annonce.article.titre }}</h1>
             <span class="titre__infos">{{ annonce.article.infos }}</span>
           </div>
-          <span class="statut" :class="`statut--${annonce.statut.toLowerCase()}`">{{ STATUTS[annonce.statut] }}</span>
+          <span class="statut" :class="`statut--${annonce.statut.toLowerCase()}`">{{ t(`annonce.statuts.${annonce.statut}`) }}</span>
         </div>
 
         <RouterLink :to="{ name: 'membre', params: { pseudo: annonce.vendeur.pseudo } }" class="vendeur">
           <AvatarMembre :membre="annonce.vendeur" :taille="36" />
           <span class="vendeur__textes">
-            <span class="vendeur__libelle">Vendu par</span>
+            <span class="vendeur__libelle">{{ t('annonce.venduPar') }}</span>
             <span class="vendeur__pseudo">{{ annonce.vendeur.pseudo }}</span>
           </span>
         </RouterLink>
 
         <p v-if="annonce.description" class="description">{{ annonce.description }}</p>
-        <RouterLink :to="{ name: 'article', params: { id: annonce.article.id } }" class="lien">Voir la fiche de l'article</RouterLink>
+        <RouterLink :to="{ name: 'article', params: { id: annonce.article.id } }" class="lien">{{ t('annonce.voirFiche') }}</RouterLink>
 
-        <p class="info">L'application ne gère ni paiement, ni retour, ni litige : mettez-vous d'accord directement.</p>
+        <p class="info">{{ t('annonce.avertissement') }}</p>
         <p v-if="erreurAction" class="message-erreur" role="alert">{{ erreurAction }}</p>
 
         <!-- Acheteur : contacter le vendeur, ou reprendre la conversation -->
         <template v-if="!annonce.estVendeur">
           <RouterLink v-if="maConversation" :to="{ name: 'conversation', params: { id: maConversation.id } }" class="bouton-principal">
-            Voir la conversation<template v-if="maConversation.nonLus"> · {{ maConversation.nonLus }} non lu{{ maConversation.nonLus > 1 ? 's' : '' }}</template>
+            {{ t('annonce.voirConversation') }}<template v-if="maConversation.nonLus"> · {{ t('annonce.nonLus', maConversation.nonLus) }}</template>
           </RouterLink>
           <form v-else-if="estActive" class="contact" @submit.prevent="contacter">
             <label class="champ">
-              <span class="champ__libelle">Votre message à {{ annonce.vendeur.pseudo }}</span>
+              <span class="champ__libelle">{{ t('annonce.votreMessage', { pseudo: annonce.vendeur.pseudo }) }}</span>
               <textarea v-model="premierMessage" class="saisie contact__message" rows="3" maxlength="2000"></textarea>
             </label>
-            <button type="submit" class="bouton-principal" :disabled="envoi || !premierMessage.trim()">Contacter le vendeur</button>
+            <button type="submit" class="bouton-principal" :disabled="envoi || !premierMessage.trim()">{{ t('annonce.contacter') }}</button>
           </form>
-          <p v-else class="etat">Cette annonce n'est plus en ligne.</p>
+          <p v-else class="etat">{{ t('annonce.horsLigne') }}</p>
         </template>
 
         <!-- Vendeur : prix, statut et conversations reçues -->
@@ -135,33 +135,33 @@ watch(() => route.params.id, charger, { immediate: true })
           <template v-if="estActive">
             <form class="prix" @submit.prevent="modifier({ prix })">
               <label class="saisie saisie--groupe prix__saisie">
-                <input v-model="prix" type="text" inputmode="decimal" aria-label="Prix en euros" />
+                <input v-model="prix" type="text" inputmode="decimal" :aria-label="t('annonce.prixEuros')" />
                 <span aria-hidden="true">€</span>
               </label>
-              <button type="submit" class="action" :disabled="envoi">Changer le prix</button>
+              <button type="submit" class="action" :disabled="envoi">{{ t('annonce.changerPrix') }}</button>
             </form>
             <div class="actions">
-              <button v-if="annonce.statut === 'EN_LIGNE'" type="button" class="action" :disabled="envoi" @click="modifier({ statut: 'RESERVEE' })">Réserver</button>
-              <button v-else type="button" class="action" :disabled="envoi" @click="modifier({ statut: 'EN_LIGNE' })">Remettre en ligne</button>
-              <button type="button" class="action action--principale" :disabled="envoi" @click="vente = !vente">Marquer vendue</button>
+              <button v-if="annonce.statut === 'EN_LIGNE'" type="button" class="action" :disabled="envoi" @click="modifier({ statut: 'RESERVEE' })">{{ t('annonce.reserver') }}</button>
+              <button v-else type="button" class="action" :disabled="envoi" @click="modifier({ statut: 'EN_LIGNE' })">{{ t('annonce.remettreEnLigne') }}</button>
+              <button type="button" class="action action--principale" :disabled="envoi" @click="vente = !vente">{{ t('annonce.marquerVendue') }}</button>
             </div>
-            <form v-if="vente" class="vente" @submit.prevent="modifier({ statut: 'VENDUE', acheteur }, 'Marquer cette annonce comme vendue ? L\'article quittera votre dressing.')">
+            <form v-if="vente" class="vente" @submit.prevent="modifier({ statut: 'VENDUE', acheteur }, t('annonce.confirmerVente'))">
               <label class="champ">
-                <span class="champ__libelle">Vendu à</span>
+                <span class="champ__libelle">{{ t('annonce.venduA') }}</span>
                 <select v-model="acheteur" class="saisie vente__acheteur">
-                  <option value="">Quelqu'un hors de l'application</option>
+                  <option value="">{{ t('annonce.horsApplication') }}</option>
                   <option v-for="conversation in annonce.conversations" :key="conversation.id" :value="conversation.acheteur.pseudo">@{{ conversation.acheteur.pseudo }}</option>
                 </select>
               </label>
-              <button type="submit" class="bouton-principal" :disabled="envoi">Confirmer la vente</button>
+              <button type="submit" class="bouton-principal" :disabled="envoi">{{ t('annonce.confirmerLaVente') }}</button>
             </form>
-            <button type="button" class="retirer" :disabled="envoi" @click="modifier({ statut: 'RETIREE' }, 'Retirer cette annonce du marché ? L\'article redeviendra disponible.')">Retirer l'annonce</button>
+            <button type="button" class="retirer" :disabled="envoi" @click="modifier({ statut: 'RETIREE' }, t('annonce.confirmerRetrait'))">{{ t('annonce.retirer') }}</button>
           </template>
-          <p v-else-if="annonce.statut === 'VENDUE'" class="etat">Vendu<template v-if="annonce.acheteur"> à @{{ annonce.acheteur.pseudo }}</template>.</p>
+          <p v-else-if="annonce.statut === 'VENDUE'" class="etat">{{ annonce.acheteur ? t('annonce.venduAMembre', { pseudo: `@${annonce.acheteur.pseudo}` }) : t('annonce.vendu') }}</p>
 
           <section class="conversations">
-            <h2 class="conversations__titre">Messages reçus</h2>
-            <p v-if="annonce.conversations.length === 0" class="etat">Personne ne vous a encore écrit.</p>
+            <h2 class="conversations__titre">{{ t('annonce.messagesRecus') }}</h2>
+            <p v-if="annonce.conversations.length === 0" class="etat">{{ t('annonce.personne') }}</p>
             <RouterLink v-for="conversation in annonce.conversations" :key="conversation.id" :to="{ name: 'conversation', params: { id: conversation.id } }" class="conversation">
               <AvatarMembre :membre="conversation.acheteur" :taille="40" />
               <span class="conversation__textes">

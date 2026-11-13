@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import CarteTenue from '@/components/CarteTenue.vue'
@@ -8,6 +9,7 @@ import { fondVignette } from '@/utils/couleurs'
 import { idLogementActif } from '@/utils/logementActif'
 import { lirePosition } from '@/utils/position'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -47,12 +49,7 @@ const erreurPartage = ref('')
 
 const articlesProposes = computed(() => tenue.value.filter((ligne) => ligne.article).map((ligne) => ligne.article))
 const etiquetteChoisie = computed(() => etiquettes.value.find((etiquette) => etiquette.id === etiquetteId.value))
-const iconeMeteo = computed(() => {
-  if (meteo.value?.pluie) {
-    return 'pluie'
-  }
-  return meteo.value?.libelle === 'Ensoleillé' || meteo.value?.libelle === 'Peu nuageux' ? 'soleil' : 'nuage'
-})
+const iconeMeteo = computed(() => meteo.value?.icone ?? 'nuage')
 
 /**
  * @param {boolean} autreIdee évite les vêtements de la proposition affichée
@@ -114,7 +111,7 @@ async function creerEtiquette() {
 }
 
 function ouvrirPartage() {
-  titre.value = etiquetteChoisie.value ? `Tenue ${etiquetteChoisie.value.nom}` : 'Ma tenue du jour'
+  titre.value = etiquetteChoisie.value ? t('tenues.titreOccasion', { occasion: etiquetteChoisie.value.nom }) : t('tenues.titreDuJour')
   erreurPartage.value = ''
   partage.value = true
 }
@@ -202,27 +199,27 @@ onMounted(() => ouvrirOnglet(onglet.value))
 <template>
   <div class="ecran">
     <main class="contenu">
-      <div class="segments" role="tablist" aria-label="Tenues">
-        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="ouvrirOnglet('generer')">Générer</button>
-        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="ouvrirOnglet('fil')">Fil des tenues</button>
+      <div class="segments" role="tablist" :aria-label="t('navigation.tenues')">
+        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="ouvrirOnglet('generer')">{{ t('tenues.generer') }}</button>
+        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="ouvrirOnglet('fil')">{{ t('tenues.fil') }}</button>
       </div>
 
       <template v-if="onglet === 'fil'">
         <p v-if="erreurFil" class="message-erreur" role="alert">{{ erreurFil }}</p>
-        <p v-if="fil === null" class="etat">Chargement du fil…</p>
+        <p v-if="fil === null" class="etat">{{ t('tenues.chargementFil') }}</p>
         <div v-else-if="fil.length === 0" class="fil-vide">
-          <p class="etat">Votre fil est vide : abonnez-vous à des membres pour voir leurs tenues, ou partagez la vôtre.</p>
-          <RouterLink :to="{ name: 'membres' }" class="bouton-principal">Rechercher des membres</RouterLink>
+          <p class="etat">{{ t('tenues.filVide') }}</p>
+          <RouterLink :to="{ name: 'membres' }" class="bouton-principal">{{ t('profil.rechercherMembres') }}</RouterLink>
         </div>
         <template v-else>
           <CarteTenue v-for="tenueDuFil in fil" :key="tenueDuFil.id" :tenue="tenueDuFil" @supprimee="retirerDuFil" />
-          <button v-if="suiteFil" type="button" class="voir-plus" :disabled="chargementFil" @click="chargerFil(true)">Voir plus de tenues</button>
+          <button v-if="suiteFil" type="button" class="voir-plus" :disabled="chargementFil" @click="chargerFil(true)">{{ t('tenues.voirPlus') }}</button>
         </template>
       </template>
 
       <template v-else-if="logementId === null && !chargement">
-        <p class="etat">Créez d'abord votre logement pour générer une tenue avec vos vêtements.</p>
-        <RouterLink :to="{ name: 'dressing' }" class="bouton-principal">Aller au dressing</RouterLink>
+        <p class="etat">{{ t('tenues.sansLogement') }}</p>
+        <RouterLink :to="{ name: 'dressing' }" class="bouton-principal">{{ t('tenues.allerDressing') }}</RouterLink>
       </template>
 
       <template v-else>
@@ -234,24 +231,24 @@ onMounted(() => ouvrirOnglet(onglet.value))
           </span>
           <span class="meteo__textes">
             <template v-if="etatMeteo === 'ok'">
-              <span class="meteo__titre">{{ meteo.ville ?? 'Votre position' }} · {{ meteo.libelle }} · {{ meteo.temperature }} °C</span>
+              <span class="meteo__titre">{{ meteo.ville ?? t('tenues.votrePosition') }} · {{ meteo.libelle }} · {{ meteo.temperature }} °C</span>
               <span class="meteo__conseil">{{ meteo.conseil }}</span>
             </template>
             <template v-else-if="etatMeteo === 'recherche'">
-              <span class="meteo__titre">Météo en cours…</span>
-              <span class="meteo__conseil">Autorisez la localisation pour adapter la tenue au temps qu'il fait</span>
+              <span class="meteo__titre">{{ t('tenues.meteoEnCours') }}</span>
+              <span class="meteo__conseil">{{ t('tenues.autoriserLocalisation') }}</span>
             </template>
             <template v-else>
-              <span class="meteo__titre">Météo indisponible</span>
-              <span class="meteo__conseil">Tenue choisie selon la saison</span>
+              <span class="meteo__titre">{{ t('tenues.meteoIndisponible') }}</span>
+              <span class="meteo__conseil">{{ t('tenues.selonSaison') }}</span>
             </template>
           </span>
-          <span v-if="etatMeteo === 'ok'" class="meteo__direct">En direct</span>
-          <button v-else-if="etatMeteo === 'indisponible'" type="button" class="meteo__reessayer" @click="localiser">Réessayer</button>
+          <span v-if="etatMeteo === 'ok'" class="meteo__direct">{{ t('tenues.enDirect') }}</span>
+          <button v-else-if="etatMeteo === 'indisponible'" type="button" class="meteo__reessayer" @click="localiser">{{ t('tenues.reessayer') }}</button>
         </div>
 
         <div class="occasions">
-          <span class="occasions__titre">Pour quelle occasion ?</span>
+          <span class="occasions__titre">{{ t('tenues.occasion') }}</span>
           <div class="occasions__liste">
             <button
               v-for="etiquette in etiquettes"
@@ -268,24 +265,24 @@ onMounted(() => ouvrirOnglet(onglet.value))
               v-if="peutCreerEtiquette && !creationEtiquette"
               type="button"
               class="occasion-ajout"
-              aria-label="Créer une étiquette"
+              :aria-label="t('tenues.creerEtiquette')"
               @click="creationEtiquette = true"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
             </button>
           </div>
           <form v-if="creationEtiquette" class="nouvelle-etiquette" @submit.prevent="creerEtiquette">
-            <input v-model.trim="nomEtiquette" class="saisie nouvelle-etiquette__nom" :class="{ 'saisie--invalide': erreurEtiquette }" type="text" maxlength="30" placeholder="Ex. Vacances" aria-label="Nom de l'étiquette" autofocus />
-            <button type="button" class="nouvelle-etiquette__annuler" @click="creationEtiquette = false">Annuler</button>
-            <button type="submit" class="nouvelle-etiquette__valider" :disabled="!nomEtiquette">Créer</button>
+            <input v-model.trim="nomEtiquette" class="saisie nouvelle-etiquette__nom" :class="{ 'saisie--invalide': erreurEtiquette }" type="text" maxlength="30" :placeholder="t('tenues.exempleEtiquette')" :aria-label="t('tenues.nomEtiquette')" autofocus />
+            <button type="button" class="nouvelle-etiquette__annuler" @click="creationEtiquette = false">{{ t('commun.annuler') }}</button>
+            <button type="submit" class="nouvelle-etiquette__valider" :disabled="!nomEtiquette">{{ t('commun.creer') }}</button>
           </form>
           <span v-if="erreurEtiquette" class="champ__erreur">{{ erreurEtiquette }}</span>
         </div>
 
         <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-        <p v-else-if="chargement && tenue.length === 0" class="etat">On compose votre tenue…</p>
+        <p v-else-if="chargement && tenue.length === 0" class="etat">{{ t('tenues.composition') }}</p>
         <p v-else-if="tenue.length && articlesProposes.length === 0" class="etat">
-          Aucun vêtement disponible pour cette occasion. Scannez vos vêtements, ou choisissez une autre occasion.
+          {{ t('tenues.aucunVetement') }}
         </p>
         <div v-else class="tenue" :class="{ 'tenue--chargement': chargement }" aria-live="polite">
           <template v-for="ligne in tenue" :key="ligne.zone">
@@ -296,49 +293,49 @@ onMounted(() => ouvrirOnglet(onglet.value))
               :style="{ background: fondVignette(ligne.article.couleur) }"
             >
               <img v-if="ligne.article.photo" :src="ligne.article.photo" alt="" class="piece__photo" />
-              <span class="piece__zone">{{ ligne.libelleZone }}</span>
-              <span v-if="ligne.pluie" class="piece__pluie">Pluie</span>
+              <span class="piece__zone">{{ t(`tenues.zones.${ligne.zone}`) }}</span>
+              <span v-if="ligne.pluie" class="piece__pluie">{{ t('tenues.pluie') }}</span>
               <span class="piece__textes">
                 <span class="piece__nom">{{ ligne.article.titre }}</span>
-                <span class="piece__emplacement">{{ ligne.article.emplacement ?? 'À ranger' }}</span>
+                <span class="piece__emplacement">{{ ligne.article.emplacement ?? t('commun.aRanger') }}</span>
               </span>
             </RouterLink>
             <div v-else class="piece piece--vide">
-              <span class="piece__zone">{{ ligne.libelleZone }}</span>
-              <span class="piece__manque">Aucun vêtement disponible</span>
+              <span class="piece__zone">{{ t(`tenues.zones.${ligne.zone}`) }}</span>
+              <span class="piece__manque">{{ t('tenues.manque') }}</span>
             </div>
           </template>
         </div>
-        <p v-if="pasDAutreIdee" class="info">Pas d'autre idée avec vos vêtements disponibles : changez d'occasion ou scannez d'autres vêtements.</p>
+        <p v-if="pasDAutreIdee" class="info">{{ t('tenues.pasDAutreIdee') }}</p>
 
         <form v-if="partage" class="partage" @submit.prevent="publier">
           <label class="champ">
-            <span class="champ__libelle">Titre</span>
+            <span class="champ__libelle">{{ t('scanCode.titre') }}</span>
             <input v-model.trim="titre" class="saisie partage__saisie" type="text" maxlength="100" required />
           </label>
           <label class="champ">
-            <span class="champ__libelle">Légende</span>
-            <textarea v-model="description" class="saisie partage__zone" rows="2" maxlength="500" placeholder="Ex. Lundi pluvieux, trench et pull bordeaux"></textarea>
+            <span class="champ__libelle">{{ t('tenues.legende') }}</span>
+            <textarea v-model="description" class="saisie partage__zone" rows="2" maxlength="500" :placeholder="t('tenues.exempleLegende')"></textarea>
           </label>
           <label class="partage__privee">
             <input v-model="estPrivee" type="checkbox" />
-            Tenue privée : visible uniquement par moi
+            {{ t('tenues.privee') }}
           </label>
           <p v-if="erreurPartage" class="message-erreur" role="alert">{{ erreurPartage }}</p>
           <div class="actions">
-            <button type="button" class="action action--secondaire" @click="partage = false">Annuler</button>
-            <button type="submit" class="action action--principale" :disabled="envoi || !titre">Publier</button>
+            <button type="button" class="action action--secondaire" @click="partage = false">{{ t('commun.annuler') }}</button>
+            <button type="submit" class="action action--principale" :disabled="envoi || !titre">{{ t('commun.publier') }}</button>
           </div>
         </form>
 
         <div v-else class="actions">
           <button type="button" class="action action--secondaire" :disabled="chargement" @click="generer(true)">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
-            Autre idée
+            {{ t('tenues.autreIdee') }}
           </button>
           <button type="button" class="action action--principale" :disabled="chargement || articlesProposes.length === 0" @click="ouvrirPartage">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
-            Partager
+            {{ t('tenues.partager') }}
           </button>
         </div>
       </template>

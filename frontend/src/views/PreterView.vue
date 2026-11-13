@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import { api } from '@/services/api'
 import { fondVignette } from '@/utils/couleurs'
 import { aujourdhui } from '@/utils/dates'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -52,7 +54,7 @@ async function preter() {
   erreur.value = ''
   erreurs.value = {}
   if (type.value === 'membre' && !membreChoisi.value) {
-    erreurs.value = { emprunteur: 'Choisissez un membre dans la liste.' }
+    erreurs.value = { emprunteur: t('preter.choisirMembre') }
     return
   }
 
@@ -70,7 +72,7 @@ async function preter() {
     router.replace({ name: 'article', params: { id: article.value.id } })
   } catch (e) {
     erreurs.value = e.violations
-    erreur.value = e.violations.general ?? (Object.keys(e.violations).length ? 'Vérifiez les champs signalés.' : e.message)
+    erreur.value = e.violations.general ?? (Object.keys(e.violations).length ? t('commun.verifierChamps') : e.message)
   } finally {
     envoi.value = false
   }
@@ -92,13 +94,13 @@ onMounted(async () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <RouterLink :to="{ name: 'article', params: { id: route.params.id } }" class="bouton-icone" aria-label="Retour à l'article">
+        <RouterLink :to="{ name: 'article', params: { id: route.params.id } }" class="bouton-icone" :aria-label="t('preter.retourArticle')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
-        <h1 class="entete__titre">Prêter</h1>
+        <h1 class="entete__titre">{{ t('article.preter') }}</h1>
       </header>
 
-      <p v-if="!article && !erreur" class="etat">Chargement…</p>
+      <p v-if="!article && !erreur" class="etat">{{ t('commun.chargement') }}</p>
       <p v-else-if="!article" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <form v-else class="formulaire" novalidate @submit.prevent="preter">
@@ -115,22 +117,22 @@ onMounted(async () => {
         <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
         <div class="champ">
-          <span class="champ__libelle">À qui ?</span>
-          <div class="segments" role="radiogroup" aria-label="Type d'emprunteur">
-            <button type="button" role="radio" class="segment" :class="{ 'segment--actif': type === 'nom' }" :aria-checked="type === 'nom'" @click="type = 'nom'">Un nom</button>
-            <button type="button" role="radio" class="segment" :class="{ 'segment--actif': type === 'membre' }" :aria-checked="type === 'membre'" @click="type = 'membre'">Un membre</button>
+          <span class="champ__libelle">{{ t('preter.aQui') }}</span>
+          <div class="segments" role="radiogroup" :aria-label="t('preter.typeEmprunteur')">
+            <button type="button" role="radio" class="segment" :class="{ 'segment--actif': type === 'nom' }" :aria-checked="type === 'nom'" @click="type = 'nom'">{{ t('preter.unNom') }}</button>
+            <button type="button" role="radio" class="segment" :class="{ 'segment--actif': type === 'membre' }" :aria-checked="type === 'membre'" @click="type = 'membre'">{{ t('preter.unMembre') }}</button>
           </div>
         </div>
 
         <label v-if="type === 'nom'" class="champ">
-          <span class="visuellement-cache">Nom de l'emprunteur</span>
-          <input v-model.trim="valeurs.emprunteurNom" class="saisie" :class="{ 'saisie--invalide': erreurs.emprunteurNom }" type="text" maxlength="100" placeholder="Ex. Marc" />
+          <span class="visuellement-cache">{{ t('preter.nomEmprunteur') }}</span>
+          <input v-model.trim="valeurs.emprunteurNom" class="saisie" :class="{ 'saisie--invalide': erreurs.emprunteurNom }" type="text" maxlength="100" :placeholder="t('preter.exempleNom')" />
           <span v-if="erreurs.emprunteurNom" class="champ__erreur">{{ erreurs.emprunteurNom }}</span>
         </label>
         <div v-else class="champ">
           <label class="saisie saisie--groupe" :class="{ 'saisie--invalide': erreurs.emprunteur }">
             <span aria-hidden="true">@</span>
-            <input v-model="recherche" type="search" placeholder="Pseudo du membre" aria-label="Pseudo du membre" autocomplete="off" />
+            <input v-model="recherche" type="search" :placeholder="t('preter.pseudoMembre')" :aria-label="t('preter.pseudoMembre')" autocomplete="off" />
           </label>
           <ul v-if="suggestions.length" class="suggestions">
             <li v-for="membre in suggestions" :key="membre.id">
@@ -141,29 +143,29 @@ onMounted(async () => {
               </button>
             </li>
           </ul>
-          <span v-if="membreChoisi" class="choisi">Prêté à @{{ membreChoisi.pseudo }}</span>
+          <span v-if="membreChoisi" class="choisi">{{ t('article.preteA', { nom: `@${membreChoisi.pseudo}` }) }}</span>
           <span v-if="erreurs.emprunteur" class="champ__erreur">{{ erreurs.emprunteur }}</span>
         </div>
 
         <div class="dates">
           <label class="champ">
-            <span class="champ__libelle">Prêté le</span>
+            <span class="champ__libelle">{{ t('prets.preteLe') }}</span>
             <input v-model="valeurs.datePret" class="saisie" :class="{ 'saisie--invalide': erreurs.datePret }" type="date" :max="aujourdhui()" required />
             <span v-if="erreurs.datePret" class="champ__erreur">{{ erreurs.datePret }}</span>
           </label>
           <label class="champ">
-            <span class="champ__libelle">Retour prévu</span>
+            <span class="champ__libelle">{{ t('prets.retourPrevu') }}</span>
             <input v-model="valeurs.dateRetourPrevue" class="saisie" :class="{ 'saisie--invalide': erreurs.dateRetourPrevue }" type="date" :min="valeurs.datePret" />
             <span v-if="erreurs.dateRetourPrevue" class="champ__erreur">{{ erreurs.dateRetourPrevue }}</span>
           </label>
         </div>
 
         <label class="champ">
-          <span class="champ__libelle">Note</span>
-          <textarea v-model="valeurs.note" class="saisie saisie--zone" rows="2" maxlength="500" placeholder="Ex. Week-end à Annecy"></textarea>
+          <span class="champ__libelle">{{ t('ajout.note') }}</span>
+          <textarea v-model="valeurs.note" class="saisie saisie--zone" rows="2" maxlength="500" :placeholder="t('preter.exempleNote')"></textarea>
         </label>
 
-        <button type="submit" class="bouton-principal" :disabled="envoi">Prêter l'article</button>
+        <button type="submit" class="bouton-principal" :disabled="envoi">{{ t('preter.preterArticle') }}</button>
       </form>
     </main>
   </div>

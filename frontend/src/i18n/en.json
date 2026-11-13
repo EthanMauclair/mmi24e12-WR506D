@@ -55,6 +55,40 @@
     "enregistrerDressing": "Save to my wardrobe",
     "preRempli": "Pre-filled by AI"
   },
+  "annonce": {
+    "chargement": "Loading the listing…",
+    "retourMarche": "Back to the market",
+    "statuts": {
+      "EN_LIGNE": "Live",
+      "RESERVEE": "Reserved",
+      "VENDUE": "Sold",
+      "RETIREE": "Withdrawn"
+    },
+    "venduPar": "Sold by",
+    "voirFiche": "View the item",
+    "avertissement": "The app doesn't handle payment, returns or disputes: agree directly with each other.",
+    "voirConversation": "View the conversation",
+    "nonLus": "{n} unread | {n} unread",
+    "premierMessage": "Hi! Is this still available?",
+    "votreMessage": "Your message to {pseudo}",
+    "contacter": "Contact the seller",
+    "horsLigne": "This listing is no longer live.",
+    "prixEuros": "Price in euros",
+    "changerPrix": "Change the price",
+    "reserver": "Reserve",
+    "remettreEnLigne": "Put back online",
+    "marquerVendue": "Mark as sold",
+    "confirmerVente": "Mark this listing as sold? The item will leave your wardrobe.",
+    "venduA": "Sold to",
+    "horsApplication": "Someone outside the app",
+    "confirmerLaVente": "Confirm the sale",
+    "confirmerRetrait": "Withdraw this listing from the market? The item will become available again.",
+    "retirer": "Withdraw the listing",
+    "vendu": "Sold.",
+    "venduAMembre": "Sold to {pseudo}.",
+    "messagesRecus": "Messages received",
+    "personne": "Nobody has written to you yet."
+  },
   "article": {
     "chargement": "Loading the item…",
     "modifier": "Edit item",
@@ -84,6 +118,20 @@
     "marquerRendu": "Mark as returned",
     "preter": "Lend",
     "mettreEnVente": "Sell"
+  },
+  "carteTenue": {
+    "privee": "private",
+    "options": "More options",
+    "supprimer": "Delete the outfit",
+    "confirmerSuppression": "Delete the outfit “{titre}”?",
+    "aime": "Like",
+    "partagerImage": "Share the image",
+    "telechargerImage": "Download the image",
+    "copierLien": "Copy the link",
+    "preparation": "Preparing the image…",
+    "telechargee": "Image downloaded: post it from Instagram.",
+    "lienCopie": "Link copied.",
+    "voirCommentaires": "See all {n} comments"
   },
   "commentaires": {
     "titre": "Comments",
@@ -216,6 +264,21 @@
   "langue": {
     "choisir": "App language"
   },
+  "marche": {
+    "messagesNonLus": "Messages, {n} unread",
+    "rechercher": "Search listings",
+    "filtres": {
+      "tout": "All",
+      "vetements": "Clothing",
+      "vinyles": "Vinyl",
+      "livres": "Books & comics",
+      "mes": "My listings"
+    },
+    "paiement": "Buyer and seller arrange payment and handover between themselves.",
+    "chargement": "Loading listings…",
+    "aucuneMienne": "You don't have any listings. To sell an item, open it and tap “Sell”.",
+    "aucune": "No listings yet."
+  },
   "membres": {
     "exemple": "Username, first or last name",
     "deuxLettres": "Type at least 2 letters to find a member.",
@@ -233,6 +296,20 @@
     "retirerAmi": "Remove {pseudo} from your friends",
     "retirerAbonne": "Remove {pseudo} from your followers",
     "confirmerRetrait": "Remove {pseudo} from your followers? They won't see your content any more if your profile is private."
+  },
+  "messages": {
+    "titre": "Messages",
+    "aucune": "No conversations. Write to a seller from a market listing.",
+    "acheteur": "Buyer",
+    "vendeur": "Seller",
+    "acheteurInteresse": "Interested buyer",
+    "vous": "You:",
+    "chargement": "Loading the conversation…",
+    "retour": "Back to messages",
+    "lu": "Read",
+    "votreMessage": "Your message",
+    "ecrire": "Write a message…",
+    "envoyer": "Send"
   },
   "modifierProfil": {
     "prenom": "First name",
@@ -276,6 +353,35 @@
     "filtrer": "Filter",
     "prete": "On loan",
     "aucunArticle": "No items in this storage yet."
+  },
+  "preter": {
+    "retourArticle": "Back to the item",
+    "aQui": "To whom?",
+    "typeEmprunteur": "Borrower type",
+    "unNom": "A name",
+    "unMembre": "A member",
+    "nomEmprunteur": "Borrower's name",
+    "exempleNom": "E.g. Mark",
+    "pseudoMembre": "Member's username",
+    "choisirMembre": "Choose a member from the list.",
+    "exempleNote": "E.g. Weekend in Annecy",
+    "preterArticle": "Lend the item"
+  },
+  "prets": {
+    "statuts": "Loan status",
+    "enCours": "Ongoing",
+    "rendus": "Returned",
+    "chargement": "Loading loans…",
+    "aucunEnCours": "No ongoing loans. To lend an item, open it and tap “Lend”.",
+    "aucunRendu": "No returned loans yet.",
+    "preteANom": "Lent to {nom} · name only",
+    "rendu": "Returned",
+    "preteLe": "Lent on",
+    "retourPrevu": "Due back",
+    "renduLe": "Returned on",
+    "aucuneNote": "No note",
+    "supprimer": "Delete the loan of {titre}",
+    "confirmerSuppression": "Delete this loan of “{titre}”? Only do this if it was entered by mistake."
   },
   "profil": {
     "chargement": "Loading the profile…",
@@ -343,5 +449,57 @@
     "ouRanger": "Where to put it?",
     "suivant": "Scan the next one",
     "ajoute": "“{titre}” has been added to your wardrobe."
+  },
+  "tenues": {
+    "generer": "Generate",
+    "fil": "Outfit feed",
+    "chargementFil": "Loading the feed…",
+    "filVide": "Your feed is empty: follow members to see their outfits, or share your own.",
+    "voirPlus": "See more outfits",
+    "sansLogement": "Create your home first to generate an outfit with your clothes.",
+    "allerDressing": "Go to the wardrobe",
+    "votrePosition": "Your location",
+    "meteoEnCours": "Getting the weather…",
+    "autoriserLocalisation": "Allow location access to match the outfit to the weather",
+    "meteoIndisponible": "Weather unavailable",
+    "selonSaison": "Outfit chosen for the season",
+    "enDirect": "Live",
+    "reessayer": "Try again",
+    "occasion": "What's the occasion?",
+    "creerEtiquette": "Create a tag",
+    "nomEtiquette": "Tag name",
+    "exempleEtiquette": "E.g. Holidays",
+    "composition": "Putting your outfit together…",
+    "aucunVetement": "No clothes available for this occasion. Scan your clothes or choose another occasion.",
+    "zones": {
+      "HAUT": "Top",
+      "BAS": "Bottom",
+      "UNE_PIECE": "One-piece",
+      "COUCHE_EXTERIEURE": "Jacket",
+      "CHAUSSURES": "Shoes",
+      "ACCESSOIRE": "Accessory"
+    },
+    "pluie": "Rain",
+    "manque": "No clothes available",
+    "pasDAutreIdee": "No other idea with your available clothes: change the occasion or scan more clothes.",
+    "legende": "Caption",
+    "exempleLegende": "E.g. Rainy Monday, trench coat and burgundy jumper",
+    "privee": "Private outfit: only visible to me",
+    "autreIdee": "Another idea",
+    "partager": "Share",
+    "titreOccasion": "{occasion} outfit",
+    "titreDuJour": "My outfit of the day",
+    "tenue": "Outfit",
+    "inexistante": "This outfit no longer exists.",
+    "voirFil": "See the outfit feed",
+    "chargementTenue": "Loading the outfit…"
+  },
+  "vendre": {
+    "prix": "Price",
+    "exemplePrix": "E.g. 18",
+    "description": "Description",
+    "exempleDescription": "E.g. Worn twice, no flaws. Hand delivery in Lyon.",
+    "info": "The listing appears on the market for all members, without the item's location. Payment and handover are arranged directly with the buyer.",
+    "publier": "Post the listing"
   }
 }

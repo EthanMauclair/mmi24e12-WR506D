@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import BarreNavigation from '@/components/BarreNavigation.vue'
@@ -7,6 +8,7 @@ import { api } from '@/services/api'
 import { ilYA } from '@/utils/dates'
 import { formatPrix } from '@/utils/prix'
 
+const { t } = useI18n()
 const router = useRouter()
 
 const conversations = ref([])
@@ -28,16 +30,16 @@ onMounted(async () => {
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <button type="button" class="bouton-icone" aria-label="Retour" @click="router.back()">
+        <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <h1 class="entete__titre">Messages</h1>
+        <h1 class="entete__titre">{{ t('messages.titre') }}</h1>
       </header>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-else-if="chargement" class="etat">Chargement…</p>
+      <p v-else-if="chargement" class="etat">{{ t('commun.chargement') }}</p>
       <p v-else-if="conversations.length === 0" class="etat">
-        Aucune conversation. Écrivez à un vendeur depuis une annonce du marché.
+        {{ t('messages.aucune') }}
       </p>
       <ul v-else class="liste">
         <li v-for="conversation in conversations" :key="conversation.id">
@@ -49,13 +51,13 @@ onMounted(async () => {
                 <span v-if="conversation.dernierMessage" class="conversation__date">{{ ilYA(conversation.dernierMessage.envoyeAt) }}</span>
               </span>
               <span class="conversation__annonce">
-                {{ conversation.estVendeur ? 'Acheteur' : 'Vendeur' }} · {{ conversation.annonce.article.titre }} · {{ formatPrix(conversation.annonce.prix) }}
+                {{ t(conversation.estVendeur ? 'messages.acheteur' : 'messages.vendeur') }} · {{ conversation.annonce.article.titre }} · {{ formatPrix(conversation.annonce.prix) }}
               </span>
               <span v-if="conversation.dernierMessage" class="conversation__dernier" :class="{ 'conversation__dernier--non-lu': conversation.nonLus }">
-                <template v-if="conversation.dernierMessage.deMoi">Vous : </template>{{ conversation.dernierMessage.contenu }}
+                <template v-if="conversation.dernierMessage.deMoi">{{ `${t('messages.vous')} ` }}</template>{{ conversation.dernierMessage.contenu }}
               </span>
             </span>
-            <span v-if="conversation.nonLus" class="conversation__non-lus" :aria-label="`${conversation.nonLus} non lus`">{{ conversation.nonLus }}</span>
+            <span v-if="conversation.nonLus" class="conversation__non-lus" :aria-label="t('annonce.nonLus', conversation.nonLus)">{{ conversation.nonLus }}</span>
           </RouterLink>
         </li>
       </ul>

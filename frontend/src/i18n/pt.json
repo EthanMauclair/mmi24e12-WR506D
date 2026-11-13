@@ -55,6 +55,40 @@
     "enregistrerDressing": "Guardar no roupeiro",
     "preRempli": "Pré-preenchido pela IA"
   },
+  "annonce": {
+    "chargement": "A carregar o anúncio…",
+    "retourMarche": "Voltar ao mercado",
+    "statuts": {
+      "EN_LIGNE": "Publicado",
+      "RESERVEE": "Reservado",
+      "VENDUE": "Vendido",
+      "RETIREE": "Retirado"
+    },
+    "venduPar": "Vendido por",
+    "voirFiche": "Ver a ficha do artigo",
+    "avertissement": "A aplicação não trata de pagamentos, devoluções nem litígios: combinem diretamente.",
+    "voirConversation": "Ver a conversa",
+    "nonLus": "{n} por ler | {n} por ler",
+    "premierMessage": "Olá! Ainda está disponível?",
+    "votreMessage": "A sua mensagem para {pseudo}",
+    "contacter": "Contactar o vendedor",
+    "horsLigne": "Este anúncio já não está publicado.",
+    "prixEuros": "Preço em euros",
+    "changerPrix": "Alterar o preço",
+    "reserver": "Reservar",
+    "remettreEnLigne": "Voltar a publicar",
+    "marquerVendue": "Marcar como vendido",
+    "confirmerVente": "Marcar este anúncio como vendido? O artigo sairá do seu roupeiro.",
+    "venduA": "Vendido a",
+    "horsApplication": "Alguém fora da aplicação",
+    "confirmerLaVente": "Confirmar a venda",
+    "confirmerRetrait": "Retirar este anúncio do mercado? O artigo voltará a estar disponível.",
+    "retirer": "Retirar o anúncio",
+    "vendu": "Vendido.",
+    "venduAMembre": "Vendido a {pseudo}.",
+    "messagesRecus": "Mensagens recebidas",
+    "personne": "Ainda ninguém lhe escreveu."
+  },
   "article": {
     "chargement": "A carregar o artigo…",
     "modifier": "Editar o artigo",
@@ -84,6 +118,20 @@
     "marquerRendu": "Marcar como devolvido",
     "preter": "Emprestar",
     "mettreEnVente": "Pôr à venda"
+  },
+  "carteTenue": {
+    "privee": "privado",
+    "options": "Mais opções",
+    "supprimer": "Eliminar o conjunto",
+    "confirmerSuppression": "Eliminar o conjunto «{titre}»?",
+    "aime": "Gosto",
+    "partagerImage": "Partilhar a imagem",
+    "telechargerImage": "Transferir a imagem",
+    "copierLien": "Copiar a ligação",
+    "preparation": "A preparar a imagem…",
+    "telechargee": "Imagem transferida: publique-a a partir do Instagram.",
+    "lienCopie": "Ligação copiada.",
+    "voirCommentaires": "Ver os {n} comentários"
   },
   "commentaires": {
     "titre": "Comentários",
@@ -216,6 +264,21 @@
   "langue": {
     "choisir": "Idioma da aplicação"
   },
+  "marche": {
+    "messagesNonLus": "Mensagens, {n} por ler",
+    "rechercher": "Procurar um anúncio",
+    "filtres": {
+      "tout": "Tudo",
+      "vetements": "Roupa",
+      "vinyles": "Vinis",
+      "livres": "Livros e BD",
+      "mes": "Os meus anúncios"
+    },
+    "paiement": "O pagamento e a entrega são combinados entre comprador e vendedor.",
+    "chargement": "A carregar os anúncios…",
+    "aucuneMienne": "Não tem anúncios. Para vender um artigo, abra a ficha e toque em «Pôr à venda».",
+    "aucune": "Ainda não há anúncios."
+  },
   "membres": {
     "exemple": "Nome de utilizador, nome próprio ou apelido",
     "deuxLettres": "Escreva pelo menos 2 letras para encontrar um membro.",
@@ -233,6 +296,20 @@
     "retirerAmi": "Retirar {pseudo} dos seus amigos",
     "retirerAbonne": "Retirar {pseudo} dos seus seguidores",
     "confirmerRetrait": "Retirar {pseudo} dos seus seguidores? Deixará de ver o seu conteúdo se o seu perfil for privado."
+  },
+  "messages": {
+    "titre": "Mensagens",
+    "aucune": "Nenhuma conversa. Escreva a um vendedor a partir de um anúncio do mercado.",
+    "acheteur": "Comprador",
+    "vendeur": "Vendedor",
+    "acheteurInteresse": "Comprador interessado",
+    "vous": "Você:",
+    "chargement": "A carregar a conversa…",
+    "retour": "Voltar às mensagens",
+    "lu": "Lida",
+    "votreMessage": "A sua mensagem",
+    "ecrire": "Escrever uma mensagem…",
+    "envoyer": "Enviar"
   },
   "modifierProfil": {
     "prenom": "Nome próprio",
@@ -276,6 +353,35 @@
     "filtrer": "Filtrar",
     "prete": "Emprestado",
     "aucunArticle": "Ainda não há artigos nesta arrumação."
+  },
+  "preter": {
+    "retourArticle": "Voltar ao artigo",
+    "aQui": "A quem?",
+    "typeEmprunteur": "Tipo de pessoa",
+    "unNom": "Um nome",
+    "unMembre": "Um membro",
+    "nomEmprunteur": "Nome da pessoa",
+    "exempleNom": "Ex. Marco",
+    "pseudoMembre": "Nome de utilizador do membro",
+    "choisirMembre": "Escolha um membro da lista.",
+    "exempleNote": "Ex. Fim de semana em Annecy",
+    "preterArticle": "Emprestar o artigo"
+  },
+  "prets": {
+    "statuts": "Estado dos empréstimos",
+    "enCours": "A decorrer",
+    "rendus": "Devolvidos",
+    "chargement": "A carregar os empréstimos…",
+    "aucunEnCours": "Nenhum empréstimo a decorrer. Para emprestar um artigo, abra a ficha e toque em «Emprestar».",
+    "aucunRendu": "Ainda não há empréstimos devolvidos.",
+    "preteANom": "Emprestado a {nom} · só o nome",
+    "rendu": "Devolvido",
+    "preteLe": "Emprestado a",
+    "retourPrevu": "Devolução prevista",
+    "renduLe": "Devolvido a",
+    "aucuneNote": "Sem nota",
+    "supprimer": "Eliminar o empréstimo de {titre}",
+    "confirmerSuppression": "Eliminar este empréstimo de «{titre}»? Faça-o apenas se tiver sido registado por engano."
   },
   "profil": {
     "chargement": "A carregar o perfil…",
@@ -343,5 +449,57 @@
     "ouRanger": "Onde o arrumar?",
     "suivant": "Digitalizar o seguinte",
     "ajoute": "«{titre}» foi adicionado ao seu roupeiro."
+  },
+  "tenues": {
+    "generer": "Gerar",
+    "fil": "Feed de conjuntos",
+    "chargementFil": "A carregar o feed…",
+    "filVide": "O seu feed está vazio: siga membros para ver os conjuntos deles ou partilhe o seu.",
+    "voirPlus": "Ver mais conjuntos",
+    "sansLogement": "Crie primeiro a sua casa para gerar um conjunto com as suas roupas.",
+    "allerDressing": "Ir para o roupeiro",
+    "votrePosition": "A sua localização",
+    "meteoEnCours": "A obter o tempo…",
+    "autoriserLocalisation": "Autorize a localização para adaptar o conjunto ao tempo que faz",
+    "meteoIndisponible": "Tempo indisponível",
+    "selonSaison": "Conjunto escolhido de acordo com a estação",
+    "enDirect": "Em direto",
+    "reessayer": "Tentar novamente",
+    "occasion": "Para que ocasião?",
+    "creerEtiquette": "Criar uma etiqueta",
+    "nomEtiquette": "Nome da etiqueta",
+    "exempleEtiquette": "Ex. Férias",
+    "composition": "A compor o seu conjunto…",
+    "aucunVetement": "Nenhuma peça disponível para esta ocasião. Digitalize as suas roupas ou escolha outra ocasião.",
+    "zones": {
+      "HAUT": "Parte de cima",
+      "BAS": "Parte de baixo",
+      "UNE_PIECE": "Peça única",
+      "COUCHE_EXTERIEURE": "Casaco",
+      "CHAUSSURES": "Calçado",
+      "ACCESSOIRE": "Acessório"
+    },
+    "pluie": "Chuva",
+    "manque": "Nenhuma peça disponível",
+    "pasDAutreIdee": "Não há outra ideia com as suas roupas disponíveis: mude de ocasião ou digitalize mais roupas.",
+    "legende": "Legenda",
+    "exempleLegende": "Ex. Segunda-feira chuvosa, gabardina e camisola bordô",
+    "privee": "Conjunto privado: visível apenas para mim",
+    "autreIdee": "Outra ideia",
+    "partager": "Partilhar",
+    "titreOccasion": "Conjunto {occasion}",
+    "titreDuJour": "O meu conjunto do dia",
+    "tenue": "Conjunto",
+    "inexistante": "Este conjunto já não existe.",
+    "voirFil": "Ver o feed de conjuntos",
+    "chargementTenue": "A carregar o conjunto…"
+  },
+  "vendre": {
+    "prix": "Preço",
+    "exemplePrix": "Ex. 18",
+    "description": "Descrição",
+    "exempleDescription": "Ex. Usado duas vezes, sem defeitos. Entrega em mão em Lyon.",
+    "info": "O anúncio aparece no mercado para todos os membros, sem a localização do artigo. O pagamento e a entrega são combinados diretamente com o comprador.",
+    "publier": "Publicar o anúncio"
   }
 }

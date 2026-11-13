@@ -1,16 +1,19 @@
 <script setup>
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import { api } from '@/services/api'
 import { fondVignette } from '@/utils/couleurs'
+import { formatDate } from '@/utils/dates'
 import { formatPrix } from '@/utils/prix'
 
 // Les nouveaux messages sont récupérés toutes les 5 secondes tant que la conversation est ouverte
 const INTERVALLE = 5000
-const FORMAT_HEURE = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
-const FORMAT_JOUR = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+const FORMAT_HEURE = { hour: '2-digit', minute: '2-digit' }
+const FORMAT_JOUR = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
 
+const { t } = useI18n()
 const route = useRoute()
 
 const conversation = ref(null)
@@ -24,7 +27,7 @@ let minuterie = null
 
 function heure(dateIso) {
   const date = new Date(dateIso)
-  return (date.toDateString() === new Date().toDateString() ? FORMAT_HEURE : FORMAT_JOUR).format(date)
+  return formatDate(date, date.toDateString() === new Date().toDateString() ? FORMAT_HEURE : FORMAT_JOUR)
 }
 
 async function descendre() {
@@ -75,22 +78,22 @@ onBeforeUnmount(() => clearInterval(minuterie))
 
 <template>
   <div class="ecran ecran--conversation">
-    <p v-if="!conversation && !erreur" class="etat">Chargement de la conversation…</p>
+    <p v-if="!conversation && !erreur" class="etat">{{ t('messages.chargement') }}</p>
     <div v-else-if="!conversation" class="erreur">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
-      <RouterLink :to="{ name: 'messages' }">Retour aux messages</RouterLink>
+      <RouterLink :to="{ name: 'messages' }">{{ t('messages.retour') }}</RouterLink>
     </div>
 
     <template v-else>
       <header class="entete">
-        <RouterLink :to="{ name: 'messages' }" class="bouton-icone" aria-label="Retour aux messages">
+        <RouterLink :to="{ name: 'messages' }" class="bouton-icone" :aria-label="t('messages.retour')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
         <RouterLink :to="{ name: 'membre', params: { pseudo: conversation.interlocuteur.pseudo } }" class="interlocuteur">
           <AvatarMembre :membre="conversation.interlocuteur" :taille="40" />
           <span class="interlocuteur__textes">
             <span class="interlocuteur__pseudo">{{ conversation.interlocuteur.pseudo }}</span>
-            <span class="interlocuteur__role">{{ conversation.estVendeur ? 'Acheteur intéressé' : 'Vendeur' }}</span>
+            <span class="interlocuteur__role">{{ t(conversation.estVendeur ? 'messages.acheteurInteresse' : 'messages.vendeur') }}</span>
           </span>
         </RouterLink>
       </header>
@@ -103,14 +106,14 @@ onBeforeUnmount(() => clearInterval(minuterie))
           <span class="annonce__titre">{{ conversation.annonce.article.titre }} · {{ conversation.annonce.article.infos }}</span>
           <span class="annonce__prix">{{ formatPrix(conversation.annonce.prix) }}</span>
         </span>
-        <span class="annonce__voir">Voir</span>
+        <span class="annonce__voir">{{ t('commun.voir') }}</span>
       </RouterLink>
 
       <main ref="fil" class="fil" aria-live="polite">
-        <p class="avertissement">L'application ne gère ni paiement, ni retour, ni litige. Mettez-vous d'accord directement.</p>
+        <p class="avertissement">{{ t('annonce.avertissement') }}</p>
         <div v-for="message in conversation.messages" :key="message.id" class="message" :class="{ 'message--moi': message.deMoi }">
           <span class="message__bulle">{{ message.contenu }}</span>
-          <span class="message__heure">{{ heure(message.envoyeAt) }}<template v-if="message.deMoi && message.lu"> · Lu</template></span>
+          <span class="message__heure">{{ heure(message.envoyeAt) }}<template v-if="message.deMoi && message.lu"> · {{ t('messages.lu') }}</template></span>
         </div>
       </main>
 
@@ -118,9 +121,9 @@ onBeforeUnmount(() => clearInterval(minuterie))
         <p v-if="erreurEnvoi" class="message-erreur" role="alert">{{ erreurEnvoi }}</p>
         <div class="saisie-message__ligne">
           <label class="saisie-message__champ">
-            <input v-model="brouillon" type="text" aria-label="Votre message" placeholder="Écrire un message…" maxlength="2000" />
+            <input v-model="brouillon" type="text" :aria-label="t('messages.votreMessage')" :placeholder="t('messages.ecrire')" maxlength="2000" />
           </label>
-          <button type="submit" class="saisie-message__envoyer" aria-label="Envoyer" :disabled="envoi || !brouillon.trim()">
+          <button type="submit" class="saisie-message__envoyer" :aria-label="t('messages.envoyer')" :disabled="envoi || !brouillon.trim()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
           </button>
         </div>

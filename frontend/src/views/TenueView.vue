@@ -1,10 +1,12 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BlocCommentaires from '@/components/BlocCommentaires.vue'
 import CarteTenue from '@/components/CarteTenue.vue'
 import { api } from '@/services/api'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -16,7 +18,7 @@ async function charger(id) {
   try {
     tenue.value = await api(`/tenues/${id}`)
   } catch (e) {
-    erreur.value = e.statut === 404 ? "Cette tenue n'existe plus." : e.message
+    erreur.value = e.statut === 404 ? t('tenues.inexistante') : e.message
   }
 }
 
@@ -27,17 +29,17 @@ watch(() => route.params.id, charger, { immediate: true })
   <div class="ecran">
     <main class="contenu">
       <header class="entete">
-        <button type="button" class="bouton-icone" aria-label="Retour" @click="router.back()">
+        <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <h1 class="entete__titre">Tenue</h1>
+        <h1 class="entete__titre">{{ t('tenues.tenue') }}</h1>
       </header>
 
       <div v-if="erreur" class="contenu-erreur">
         <p class="message-erreur" role="alert">{{ erreur }}</p>
-        <RouterLink :to="{ name: 'tenues' }">Voir le fil des tenues</RouterLink>
+        <RouterLink :to="{ name: 'tenues' }">{{ t('tenues.voirFil') }}</RouterLink>
       </div>
-      <p v-else-if="!tenue" class="etat">Chargement de la tenue…</p>
+      <p v-else-if="!tenue" class="etat">{{ t('tenues.chargementTenue') }}</p>
       <template v-else>
         <CarteTenue :tenue="tenue" :apercu-commentaires="false" @supprimee="router.replace({ name: 'profil', query: { onglet: 'tenues' } })" />
         <BlocCommentaires

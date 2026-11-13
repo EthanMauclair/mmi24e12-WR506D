@@ -55,6 +55,40 @@
     "enregistrerDressing": "Enregistrer dans le dressing",
     "preRempli": "Pré-rempli par l'IA"
   },
+  "annonce": {
+    "chargement": "Chargement de l'annonce…",
+    "retourMarche": "Retour au marché",
+    "statuts": {
+      "EN_LIGNE": "En ligne",
+      "RESERVEE": "Réservée",
+      "VENDUE": "Vendue",
+      "RETIREE": "Retirée"
+    },
+    "venduPar": "Vendu par",
+    "voirFiche": "Voir la fiche de l'article",
+    "avertissement": "L'application ne gère ni paiement, ni retour, ni litige : mettez-vous d'accord directement.",
+    "voirConversation": "Voir la conversation",
+    "nonLus": "{n} non lu | {n} non lus",
+    "premierMessage": "Bonjour ! Est-ce toujours disponible ?",
+    "votreMessage": "Votre message à {pseudo}",
+    "contacter": "Contacter le vendeur",
+    "horsLigne": "Cette annonce n'est plus en ligne.",
+    "prixEuros": "Prix en euros",
+    "changerPrix": "Changer le prix",
+    "reserver": "Réserver",
+    "remettreEnLigne": "Remettre en ligne",
+    "marquerVendue": "Marquer vendue",
+    "confirmerVente": "Marquer cette annonce comme vendue ? L'article quittera votre dressing.",
+    "venduA": "Vendu à",
+    "horsApplication": "Quelqu'un hors de l'application",
+    "confirmerLaVente": "Confirmer la vente",
+    "confirmerRetrait": "Retirer cette annonce du marché ? L'article redeviendra disponible.",
+    "retirer": "Retirer l'annonce",
+    "vendu": "Vendu.",
+    "venduAMembre": "Vendu à {pseudo}.",
+    "messagesRecus": "Messages reçus",
+    "personne": "Personne ne vous a encore écrit."
+  },
   "article": {
     "chargement": "Chargement de l'article…",
     "modifier": "Modifier l'article",
@@ -84,6 +118,20 @@
     "marquerRendu": "Marquer rendu",
     "preter": "Prêter",
     "mettreEnVente": "Mettre en vente"
+  },
+  "carteTenue": {
+    "privee": "privée",
+    "options": "Plus d'options",
+    "supprimer": "Supprimer la tenue",
+    "confirmerSuppression": "Supprimer la tenue « {titre} » ?",
+    "aime": "J'aime",
+    "partagerImage": "Partager l'image",
+    "telechargerImage": "Télécharger l'image",
+    "copierLien": "Copier le lien",
+    "preparation": "Préparation de l'image…",
+    "telechargee": "Image téléchargée : publiez-la depuis Instagram.",
+    "lienCopie": "Lien copié.",
+    "voirCommentaires": "Voir les {n} commentaires"
   },
   "commentaires": {
     "titre": "Commentaires",
@@ -216,6 +264,21 @@
   "langue": {
     "choisir": "Langue de l'application"
   },
+  "marche": {
+    "messagesNonLus": "Messages, {n} non lus",
+    "rechercher": "Rechercher une annonce",
+    "filtres": {
+      "tout": "Tout",
+      "vetements": "Vêtements",
+      "vinyles": "Vinyles",
+      "livres": "Livres et BD",
+      "mes": "Mes annonces"
+    },
+    "paiement": "Paiement et remise s'organisent entre acheteur et vendeur.",
+    "chargement": "Chargement des annonces…",
+    "aucuneMienne": "Vous n'avez aucune annonce. Pour vendre un article, ouvrez sa fiche et touchez « Mettre en vente ».",
+    "aucune": "Aucune annonce pour le moment."
+  },
   "membres": {
     "exemple": "Pseudo, prénom ou nom",
     "deuxLettres": "Tapez au moins 2 lettres pour trouver un membre.",
@@ -233,6 +296,20 @@
     "retirerAmi": "Retirer {pseudo} de vos amis",
     "retirerAbonne": "Retirer {pseudo} de vos abonnés",
     "confirmerRetrait": "Retirer {pseudo} de vos abonnés ? Il ne verra plus votre contenu si votre profil est privé."
+  },
+  "messages": {
+    "titre": "Messages",
+    "aucune": "Aucune conversation. Écrivez à un vendeur depuis une annonce du marché.",
+    "acheteur": "Acheteur",
+    "vendeur": "Vendeur",
+    "acheteurInteresse": "Acheteur intéressé",
+    "vous": "Vous :",
+    "chargement": "Chargement de la conversation…",
+    "retour": "Retour aux messages",
+    "lu": "Lu",
+    "votreMessage": "Votre message",
+    "ecrire": "Écrire un message…",
+    "envoyer": "Envoyer"
   },
   "modifierProfil": {
     "prenom": "Prénom",
@@ -276,6 +353,35 @@
     "filtrer": "Filtrer",
     "prete": "Prêté",
     "aucunArticle": "Aucun article dans ce stockage pour le moment."
+  },
+  "preter": {
+    "retourArticle": "Retour à l'article",
+    "aQui": "À qui ?",
+    "typeEmprunteur": "Type d'emprunteur",
+    "unNom": "Un nom",
+    "unMembre": "Un membre",
+    "nomEmprunteur": "Nom de l'emprunteur",
+    "exempleNom": "Ex. Marc",
+    "pseudoMembre": "Pseudo du membre",
+    "choisirMembre": "Choisissez un membre dans la liste.",
+    "exempleNote": "Ex. Week-end à Annecy",
+    "preterArticle": "Prêter l'article"
+  },
+  "prets": {
+    "statuts": "Statut des prêts",
+    "enCours": "En cours",
+    "rendus": "Rendus",
+    "chargement": "Chargement des prêts…",
+    "aucunEnCours": "Aucun prêt en cours. Pour prêter un article, ouvrez sa fiche et touchez « Prêter ».",
+    "aucunRendu": "Aucun prêt rendu pour le moment.",
+    "preteANom": "Prêté à {nom} · nom libre",
+    "rendu": "Rendu",
+    "preteLe": "Prêté le",
+    "retourPrevu": "Retour prévu",
+    "renduLe": "Rendu le",
+    "aucuneNote": "Aucune note",
+    "supprimer": "Supprimer le prêt de {titre}",
+    "confirmerSuppression": "Supprimer ce prêt de « {titre} » ? À faire seulement s'il a été saisi par erreur."
   },
   "profil": {
     "chargement": "Chargement du profil…",
@@ -343,5 +449,57 @@
     "ouRanger": "Où le ranger ?",
     "suivant": "Scanner le suivant",
     "ajoute": "« {titre} » est ajouté à votre dressing."
+  },
+  "tenues": {
+    "generer": "Générer",
+    "fil": "Fil des tenues",
+    "chargementFil": "Chargement du fil…",
+    "filVide": "Votre fil est vide : abonnez-vous à des membres pour voir leurs tenues, ou partagez la vôtre.",
+    "voirPlus": "Voir plus de tenues",
+    "sansLogement": "Créez d'abord votre logement pour générer une tenue avec vos vêtements.",
+    "allerDressing": "Aller au dressing",
+    "votrePosition": "Votre position",
+    "meteoEnCours": "Météo en cours…",
+    "autoriserLocalisation": "Autorisez la localisation pour adapter la tenue au temps qu'il fait",
+    "meteoIndisponible": "Météo indisponible",
+    "selonSaison": "Tenue choisie selon la saison",
+    "enDirect": "En direct",
+    "reessayer": "Réessayer",
+    "occasion": "Pour quelle occasion ?",
+    "creerEtiquette": "Créer une étiquette",
+    "nomEtiquette": "Nom de l'étiquette",
+    "exempleEtiquette": "Ex. Vacances",
+    "composition": "On compose votre tenue…",
+    "aucunVetement": "Aucun vêtement disponible pour cette occasion. Scannez vos vêtements, ou choisissez une autre occasion.",
+    "zones": {
+      "HAUT": "Haut",
+      "BAS": "Bas",
+      "UNE_PIECE": "Une pièce",
+      "COUCHE_EXTERIEURE": "Veste",
+      "CHAUSSURES": "Chaussures",
+      "ACCESSOIRE": "Accessoire"
+    },
+    "pluie": "Pluie",
+    "manque": "Aucun vêtement disponible",
+    "pasDAutreIdee": "Pas d'autre idée avec vos vêtements disponibles : changez d'occasion ou scannez d'autres vêtements.",
+    "legende": "Légende",
+    "exempleLegende": "Ex. Lundi pluvieux, trench et pull bordeaux",
+    "privee": "Tenue privée : visible uniquement par moi",
+    "autreIdee": "Autre idée",
+    "partager": "Partager",
+    "titreOccasion": "Tenue {occasion}",
+    "titreDuJour": "Ma tenue du jour",
+    "tenue": "Tenue",
+    "inexistante": "Cette tenue n'existe plus.",
+    "voirFil": "Voir le fil des tenues",
+    "chargementTenue": "Chargement de la tenue…"
+  },
+  "vendre": {
+    "prix": "Prix",
+    "exemplePrix": "Ex. 18",
+    "description": "Description",
+    "exempleDescription": "Ex. Porté deux fois, aucun défaut. Remise en main propre à Lyon.",
+    "info": "L'annonce apparaît sur le marché pour tous les membres, sans l'emplacement de l'article. Le paiement et la remise s'organisent directement avec l'acheteur.",
+    "publier": "Publier l'annonce"
   }
 }
