@@ -120,216 +120,223 @@ onMounted(charger)
 </script>
 
 <template>
-  <div class="admin-pile">
-    <div>
-      <h1 class="admin-titre">{{ t('admin.membres.titre') }}</h1>
-      <p class="admin-sous-titre">{{ t('admin.membres.sousTitre') }}</p>
-    </div>
+  <div class="pile membres">
+    <header class="entete">
+      <h1 class="titre-page seulement-ordinateur">{{ t('admin.membres.titre') }}</h1>
+      <label class="recherche">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+        <input v-model="recherche" type="search" :placeholder="t('admin.membres.rechercher')" :aria-label="t('admin.membres.rechercher')" />
+      </label>
+    </header>
 
-    <input v-model="recherche" type="search" class="admin-saisie recherche" :placeholder="t('admin.membres.rechercher')" :aria-label="t('admin.membres.rechercher')" />
+    <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+    <p v-if="succes" class="bandeau-info" role="status">{{ succes }}</p>
 
-    <p v-if="erreur" class="admin-message admin-message--erreur" role="alert">{{ erreur }}</p>
-    <p v-if="succes" class="admin-message admin-message--succes" role="status">{{ succes }}</p>
-
-    <div class="disposition" :class="{ 'disposition--detail': selection }">
-      <section class="admin-carte">
-        <p v-if="!resultat" class="admin-etat">{{ t('commun.chargement') }}</p>
-        <p v-else-if="resultat.total === 0" class="admin-etat">{{ t('admin.membres.aucun') }}</p>
+    <div class="colonne-droite disposition">
+      <div class="pile">
+        <p v-if="!resultat" class="etat">{{ t('commun.chargement') }}</p>
+        <p v-else-if="resultat.total === 0" class="etat">{{ t('admin.membres.aucun') }}</p>
         <template v-else>
-          <div class="admin-defilement">
-            <table class="admin-tableau">
+          <!-- Téléphone : liste de membres -->
+          <div class="lignes seulement-mobile">
+            <button v-for="membre in resultat.membres" :key="membre.id" type="button" class="ligne ligne-bouton" :class="{ 'ligne--choisie': selection?.id === membre.id }" @click="ouvrir(membre)">
+              <AvatarMembre :membre="membre" :taille="32" />
+              <span class="ligne__textes">
+                <b>@{{ membre.pseudo }}</b>
+                <span class="texte-secondaire">{{ membre.email }}</span>
+              </span>
+              <span v-if="membre.estBloque" class="badge badge--plein">{{ t('admin.membres.statutBloque') }}</span>
+              <span v-else class="badge">{{ t(`admin.roles.${membre.role}`) }}</span>
+            </button>
+          </div>
+
+          <!-- Ordinateur : tableau -->
+          <div class="defilement seulement-ordinateur">
+            <table class="tableau-admin">
               <thead>
                 <tr>
                   <th scope="col">{{ t('admin.membres.membre') }}</th>
+                  <th scope="col">{{ t('admin.membres.email') }}</th>
                   <th scope="col">{{ t('admin.membres.role') }}</th>
-                  <th scope="col">{{ t('admin.membres.inscription') }}</th>
-                  <th scope="col">{{ t('admin.membres.derniereConnexion') }}</th>
-                  <th scope="col" class="nombre">{{ t('admin.membres.articles') }}</th>
-                  <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
+                  <th scope="col">{{ t('admin.membres.inscritLe') }}</th>
+                  <th scope="col">{{ t('admin.membres.statut') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="membre in resultat.membres" :key="membre.id" :class="{ 'ligne--choisie': selection?.id === membre.id }">
                   <td>
-                    <span class="identite">
-                      <AvatarMembre :membre="membre" :taille="32" />
-                      <span>
-                        <span class="identite__pseudo">@{{ membre.pseudo }}</span>
-                        <span v-if="membre.estBloque" class="admin-pastille admin-pastille--alerte">{{ t('admin.membres.statutBloque') }}</span>
-                        <span v-if="membre.estMineur" class="admin-pastille">{{ t('admin.membres.mineur') }}</span>
-                        <span class="admin-secondaire identite__email">{{ membre.email }}</span>
-                      </span>
-                    </span>
+                    <button type="button" class="lien-tableau" @click="ouvrir(membre)">@{{ membre.pseudo }}</button>
                   </td>
+                  <td>{{ membre.email }}</td>
+                  <td><span class="badge">{{ t(`admin.roles.${membre.role}`) }}</span></td>
+                  <td>{{ formatDate(new Date(membre.createdAt), { day: 'numeric', month: 'short' }) }}</td>
                   <td>
-                    <span class="admin-pastille" :class="{ 'admin-pastille--accent': membre.role !== 'MEMBRE' }">{{ t(`admin.roles.${membre.role}`) }}</span>
-                  </td>
-                  <td class="admin-secondaire">{{ formatDate(new Date(membre.createdAt), { day: 'numeric', month: 'short', year: 'numeric' }) }}</td>
-                  <td class="admin-secondaire">{{ membre.derniereConnexionAt ? ilYA(membre.derniereConnexionAt) : t('admin.membres.jamais') }}</td>
-                  <td class="nombre">{{ membre.nbArticles }}</td>
-                  <td class="actions">
-                    <button type="button" class="admin-bouton" @click="ouvrir(membre)">{{ t('admin.membres.gerer') }}</button>
+                    <span v-if="membre.estBloque" class="badge badge--plein">{{ t('admin.membres.statutBloque') }}</span>
+                    <template v-else>{{ t('admin.membres.actif') }}</template>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <nav v-if="resultat.pages > 1" class="pagination" :aria-label="t('admin.membres.pagination')">
-            <button type="button" class="admin-bouton" :disabled="page <= 1" @click="changerPage(-1)">{{ t('admin.membres.precedent') }}</button>
-            <span class="admin-secondaire">{{ t('admin.membres.page', { page, pages: resultat.pages, total: resultat.total }) }}</span>
-            <button type="button" class="admin-bouton" :disabled="page >= resultat.pages" @click="changerPage(1)">{{ t('admin.membres.suivant') }}</button>
+          <nav v-if="resultat.pages > 1" class="pagination texte-secondaire" :aria-label="t('admin.membres.pagination')">
+            <button type="button" class="lien lien--neutre" :disabled="page <= 1" @click="changerPage(-1)">‹ {{ t('admin.membres.precedent') }}</button>
+            <b>{{ t('admin.membres.pageSur', { page, pages: resultat.pages }) }}</b>
+            <button type="button" class="lien lien--neutre" :disabled="page >= resultat.pages" @click="changerPage(1)">{{ t('admin.membres.suivant') }} ›</button>
           </nav>
         </template>
-      </section>
+      </div>
 
-      <aside v-if="selection" class="admin-carte detail" :aria-label="t('admin.membres.fiche', { pseudo: selection.pseudo })">
+      <!-- Panneau de détail du membre choisi -->
+      <aside v-if="selection" class="carte detail" :aria-label="t('admin.membres.fiche', { pseudo: selection.pseudo })">
         <div class="detail__entete">
-          <AvatarMembre :membre="selection" :taille="48" />
-          <div class="detail__identite">
-            <RouterLink :to="{ name: 'membre', params: { pseudo: selection.pseudo } }" class="identite__pseudo">@{{ selection.pseudo }}</RouterLink>
-            <span class="admin-secondaire">{{ selection.nomComplet ?? selection.email }}</span>
-          </div>
+          <b class="detail__titre">@{{ selection.pseudo }} · {{ t('admin.membres.detail') }}</b>
           <button type="button" class="bouton-icone detail__fermer" :aria-label="t('admin.membres.fermer')" @click="selection = null">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
         </div>
+        <span class="texte-secondaire">
+          {{ selection.email }} · {{ t('admin.membres.derniereConnexion') }} : {{ selection.derniereConnexionAt ? ilYA(selection.derniereConnexionAt) : t('admin.membres.jamais') }}
+        </span>
+        <RouterLink :to="{ name: 'membre', params: { pseudo: selection.pseudo } }" class="lien">{{ t('admin.membres.voirProfil') }}</RouterLink>
 
-        <dl class="faits">
-          <div><dt>{{ t('admin.membres.email') }}</dt><dd>{{ selection.email }}</dd></div>
-          <div><dt>{{ t('admin.membres.profil') }}</dt><dd>{{ selection.estPrive ? t('admin.membres.prive') : t('admin.membres.public') }}</dd></div>
-          <div><dt>{{ t('admin.membres.articles') }}</dt><dd>{{ selection.impact.articles }}</dd></div>
-          <div><dt>{{ t('admin.membres.logements') }}</dt><dd>{{ selection.impact.logements }}</dd></div>
-          <div><dt>{{ t('admin.membres.tenues') }}</dt><dd>{{ selection.impact.tenues }}</dd></div>
-          <div><dt>{{ t('admin.membres.commentaires') }}</dt><dd>{{ selection.impact.commentaires }}</dd></div>
-        </dl>
-
-        <p v-if="estMoi(selection)" class="admin-message admin-message--info">{{ t('admin.membres.votreCompte') }}</p>
+        <p v-if="estMoi(selection)" class="bandeau-info">{{ t('admin.membres.votreCompte') }}</p>
         <template v-else>
-          <label class="admin-champ">
-            {{ t('admin.membres.role') }}
-            <select class="admin-saisie" :value="selection.role" @change="changerRole">
+          <button type="button" class="bouton bouton--contour bouton--petit bouton--large" @click="basculerBlocage">
+            {{ selection.estBloque ? t('admin.membres.debloquer') : t('admin.membres.bloquer') }}
+          </button>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('admin.membres.role') }}</span>
+            <select class="saisie" :value="selection.role" @change="changerRole">
               <option v-for="role in ROLES" :key="role" :value="role">{{ t(`admin.roles.${role}`) }}</option>
             </select>
           </label>
-          <p class="admin-secondaire">{{ t(`admin.membres.descriptionRoles.${selection.role}`) }}</p>
-
-          <div class="detail__actions">
-            <button type="button" class="admin-bouton" @click="basculerBlocage">
-              {{ selection.estBloque ? t('admin.membres.debloquer') : t('admin.membres.bloquer') }}
-            </button>
-            <button type="button" class="admin-bouton admin-bouton--danger" @click="supprimer">{{ t('admin.membres.supprimer') }}</button>
-          </div>
-          <p class="admin-secondaire">{{ t('admin.membres.aideBlocage') }}</p>
+          <p class="bandeau-info">
+            {{ t('admin.membres.impactArticles', selection.impact.articles) }}
+            {{ t('admin.membres.impactLogements', { n: selection.impact.logements, autres: selection.impact.articlesAutres }) }}
+            {{ t('admin.membres.impactSocial', { tenues: selection.impact.tenues, commentaires: selection.impact.commentaires }) }}
+          </p>
+          <button type="button" class="bouton bouton--contour bouton--petit bouton--large danger" @click="supprimer">{{ t('admin.membres.supprimer') }}</button>
         </template>
       </aside>
+      <aside v-else class="carte carte--grise texte-secondaire seulement-ordinateur">{{ t('admin.membres.choisir') }}</aside>
     </div>
   </div>
 </template>
 
 <style scoped>
+.membres {
+  gap: 14px;
+}
+
 .recherche {
-  width: 100%;
-  max-width: 420px;
-  height: 42px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 12px;
+  background: var(--couleur-surface);
+  color: var(--couleur-texte-secondaire);
+}
+
+.recherche:focus-within {
+  border-color: var(--couleur-primaire);
+}
+
+.recherche input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--couleur-texte);
 }
 
 .disposition {
-  display: grid;
-  gap: 16px;
-  /* minmax(0, …) : le tableau défile dans sa carte au lieu d'élargir la page */
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-
-@media (min-width: 900px) {
-  .disposition--detail {
-    grid-template-columns: minmax(0, 1fr) 340px;
-  }
-}
-
-.identite {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.identite__pseudo {
-  font-weight: 700;
-  margin-right: 6px;
+.ligne-bouton {
+  width: 100%;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.identite__email {
-  display: block;
-}
-
+.ligne--choisie,
 .ligne--choisie td {
   background: var(--couleur-primaire-pale);
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 .detail {
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 2px solid var(--couleur-primaire);
 }
 
 .detail__entete {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.detail__identite {
+.detail__titre {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
   overflow-wrap: anywhere;
 }
 
 .detail__fermer {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
 }
 
-.faits {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+.danger {
+  color: var(--couleur-erreur);
+  border-color: var(--couleur-erreur);
 }
 
-.faits div {
-  min-width: 0;
-}
-
-.faits dt {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.faits dd {
-  margin: 0;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.detail__actions {
+.pagination {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
 }
 
-.detail__actions .admin-bouton + .admin-bouton {
-  margin-left: 0;
+.lien--neutre {
+  color: var(--couleur-texte-secondaire);
+  text-decoration: none;
 }
 
-.detail p {
-  margin: 0;
+.lien--neutre:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (min-width: 1024px) {
+  .recherche {
+    flex: none;
+    width: 360px;
+  }
+
+  .disposition {
+    display: grid;
+    --largeur-colonne-fixe: 320px;
+    gap: 28px;
+  }
 }
 </style>

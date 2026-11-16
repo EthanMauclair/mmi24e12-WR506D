@@ -590,3 +590,25 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - Fixtures en deux groupes : `base` (catégories, couleurs, un super admin et un membre classique) et `demo` (la même chose plus les données de démonstration)
 - Base locale remise à zéro avec le groupe `base` et photos de test supprimées
 - README et collection Postman mis à jour
+
+---
+
+## 2026-11-16 — Reprise des maquettes
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/maquettes`
+
+**Prompt :**
+
+> Modifie le site, reprends exactement les maquette qui sont dans ce dossier : wireframes-penderie
+
+**Prompt de suivi :**
+
+> Fini
+
+**Résultat retenu :**
+
+- Les 32 écrans des maquettes (téléphone et ordinateur) repris sur une base commune de briques d'interface (`maquette.css`) et de composants (vignette d'article, rappel d'article, illustration d'accueil)
+- Ordinateur : menu latéral sur tous les écrans, menu propre au back office avec « Retour à l'application »
+- API : météo pour la carte « tenue du jour », photo de profil, relation dans la recherche de membres, chemin complet de rangement et de catégorie sur la fiche, source des fiches code-barres
+- Nouveaux textes en français, anglais et portugais ; vérifié dans le navigateur à 390 et 1280 px

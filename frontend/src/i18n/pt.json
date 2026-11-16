@@ -1,19 +1,12 @@
 {
   "accueil": {
     "atouts": {
-      "scan": {
-        "titre": "Digitalize e fica arrumado",
-        "texte": "Basta uma foto: a IA reconhece a categoria, a cor e a marca. Livros e vinis por código de barras."
-      },
-      "rangement": {
-        "titre": "Encontre tudo",
-        "texte": "Cada artigo tem a sua divisão e o seu arrumo, partilhados com toda a casa."
-      },
-      "partage": {
-        "titre": "Empreste, venda, partilhe",
-        "texte": "Acompanhe os empréstimos, venda entre membros e crie conjuntos de acordo com o tempo."
-      }
-    }
+      "scan": "Digitalize, a IA preenche a ficha",
+      "rangement": "Saiba onde cada artigo está arrumado",
+      "partage": "Venda, empreste e partilhe os seus conjuntos"
+    },
+    "inscriptionAccroche": "Catalogue o seu roupeiro e partilhe os seus conjuntos.",
+    "gratuit": "Gratuito, sem pagamentos: comprador e vendedor entendem-se entre si."
   },
   "admin": {
     "titre": "Back office",
@@ -75,12 +68,17 @@
       "likes": "Gostos",
       "commentaires": "Comentários",
       "abonnements": "Seguimentos",
-      "demandesEnAttente": "{n} pedido pendente | {n} pedidos pendentes"
+      "demandesEnAttente": "{n} pedido pendente | {n} pedidos pendentes",
+      "partScanTitre": "Parte dos artigos adicionados por leitura",
+      "marcheActivite": "Mercado e atividade",
+      "pretsRetard": "Empréstimos em atraso",
+      "ventesTitre": "Vendas",
+      "reseauSocial": "Rede social"
     },
     "membres": {
       "titre": "Membros",
       "sousTitre": "Procure um membro para o bloquear, alterar a função ou eliminar a conta.",
-      "rechercher": "Nome de utilizador, e-mail ou nome",
+      "rechercher": "Nome de utilizador, nome próprio, apelido ou e-mail",
       "aucun": "Nenhum membro corresponde.",
       "membre": "Membro",
       "role": "Função",
@@ -125,7 +123,14 @@
       "impactLogements": "As suas casas ({n}) serão eliminadas, com os {autres} artigos que outros membros lá guardaram.",
       "impactSocial": "Os seus conjuntos ({tenues}) e comentários ({commentaires}) serão eliminados.",
       "irreversible": "Esta ação é irreversível.",
-      "supprime": "A conta de {pseudo} foi eliminada."
+      "supprime": "A conta de {pseudo} foi eliminada.",
+      "inscritLe": "Inscrito a",
+      "statut": "Estado",
+      "actif": "Ativo",
+      "pageSur": "Página {page} / {pages}",
+      "detail": "detalhe",
+      "voirProfil": "Ver o perfil",
+      "choisir": "Escolha um membro na lista para o bloquear, alterar a função ou eliminar a conta."
     },
     "referentiels": {
       "titre": "Referenciais",
@@ -161,7 +166,15 @@
       "enregistre": "Alteração guardada.",
       "confirmerSuppression": "Eliminar «{nom}»?",
       "confirmerSuppressionMarque": "Eliminar «{nom}»? Os {n} artigos que a têm ficarão sem marca.",
-      "supprime": "«{nom}» foi eliminado."
+      "supprime": "«{nom}» foi eliminado.",
+      "renommerNom": "Mudar o nome de {nom}",
+      "supprimerNom": "Eliminar {nom}",
+      "nouvelleCategorie": "Nova categoria",
+      "nouvelleCouleur": "Nova cor",
+      "zoneParent": "A da categoria principal",
+      "nomFrancais": "Nome (em francês)",
+      "exempleCategorie": "Ex. Gilets",
+      "regles": "Uma categoria ou cor usada por artigos não pode ser eliminada. A zona do conjunto alimenta o gerador de conjuntos."
     },
     "moderation": {
       "titre": "Moderação",
@@ -179,7 +192,14 @@
       "confirmerAnnonce": "Retirar o anúncio «{titre}» do mercado? O artigo volta a ficar disponível para o dono.",
       "annonceRetiree": "Anúncio retirado.",
       "confirmerTenue": "Eliminar o conjunto «{titre}»? Os artigos que contém não são eliminados.",
-      "tenueSupprimee": "Conjunto eliminado."
+      "tenueSupprimee": "Conjunto eliminado.",
+      "sur": "em",
+      "retirerMarche": "Retirar do mercado",
+      "supprimerTenue": "Eliminar o conjunto",
+      "auteur": "Autor",
+      "contenu": "Conteúdo",
+      "surColonne": "Em",
+      "date": "Data"
     }
   },
   "ajout": {
@@ -236,7 +256,8 @@
     "envoiPhoto": "A enviar a foto…",
     "enregistrerModifications": "Guardar as alterações",
     "enregistrerDressing": "Guardar no roupeiro",
-    "preRempli": "Pré-preenchido pela IA"
+    "preRempli": "Pré-preenchido pela IA",
+    "enregistrerArticle": "Guardar o artigo"
   },
   "annonce": {
     "chargement": "A carregar o anúncio…",
@@ -270,7 +291,12 @@
     "vendu": "Vendido.",
     "venduAMembre": "Vendido a {pseudo}.",
     "messagesRecus": "Mensagens recebidas",
-    "personne": "Ainda ninguém lhe escreveu."
+    "personne": "Ainda ninguém lhe escreveu.",
+    "votreAnnonceTitre": "O seu anúncio",
+    "votreAnnonce": "O seu anúncio · {prix}",
+    "changerPrixEuros": "Alterar o preço (€)",
+    "modifier": "Alterar",
+    "conversations": "Conversas · {n}"
   },
   "article": {
     "chargement": "A carregar o artigo…",
@@ -314,7 +340,8 @@
     "preparation": "A preparar a imagem…",
     "telechargee": "Imagem transferida: publique-a a partir do Instagram.",
     "lienCopie": "Ligação copiada.",
-    "voirCommentaires": "Ver os {n} comentários"
+    "voirCommentaires": "Ver os {n} comentários",
+    "commentaires": "{n} comentário | {n} comentários"
   },
   "commentaires": {
     "titre": "Comentários",
@@ -376,7 +403,8 @@
     "aucune": "Nenhum pedido pendente.",
     "accepter": "Aceitar",
     "refuser": "Recusar",
-    "refuserDe": "Recusar o pedido de {pseudo}"
+    "refuserDe": "Recusar o pedido de {pseudo}",
+    "titreCourt": "Pedidos"
   },
   "dressing": {
     "chargement": "A carregar o seu roupeiro…",
@@ -410,7 +438,8 @@
     "ajouterPiece": "+ Adicionar uma divisão",
     "nomPiece": "Nome da divisão",
     "aucunePiece": "Ainda não há divisões.",
-    "aucunStockage": "Sem arrumações"
+    "aucunStockage": "Sem arrumações",
+    "articlesTrouves": "{n} artigo encontrado | {n} artigos encontrados"
   },
   "emplacement": {
     "libelle": "Localização",
@@ -473,7 +502,8 @@
     "confidentialite": "política de privacidade",
     "creer": "Criar a minha conta",
     "enCours": "A criar a conta…",
-    "dejaInscrit": "Já tem conta?"
+    "dejaInscrit": "Já tem conta?",
+    "exemplePseudo": "Ex. lea.chine"
   },
   "langue": {
     "choisir": "Idioma da aplicação"
@@ -509,7 +539,10 @@
     "choisirAmi": "Escolher {pseudo} como amigo",
     "retirerAmi": "Retirar {pseudo} dos seus amigos",
     "retirerAbonne": "Retirar {pseudo} dos seus seguidores",
-    "confirmerRetrait": "Retirar {pseudo} dos seus seguidores? Deixará de ver o seu conteúdo se o seu perfil for privado."
+    "confirmerRetrait": "Retirar {pseudo} dos seus seguidores? Deixará de ver o seu conteúdo se o seu perfil for privado.",
+    "choisirCommeAmi": "Escolher como amigo",
+    "retirer": "Remover",
+    "profilPrive": "perfil privado"
   },
   "messages": {
     "titre": "Mensagens",
@@ -531,7 +564,11 @@
     "bio": "Biografia",
     "exempleBio": "Ex. Caçadora de achados em Lyon, fã de vinis",
     "aidePrive": "Só os seguidores que aceitar veem os seus artigos",
-    "devientPublic": "Ao tornar o seu perfil público, o pedido pendente será aceite. | Ao tornar o seu perfil público, os {n} pedidos pendentes serão aceites."
+    "devientPublic": "Ao tornar o seu perfil público, o pedido pendente será aceite. | Ao tornar o seu perfil público, os {n} pedidos pendentes serão aceites.",
+    "pseudo": "Nome de utilizador",
+    "langue": "Língua",
+    "changerPhoto": "Mudar a foto",
+    "envoiPhoto": "A enviar a foto…"
   },
   "navigation": {
     "principale": "Navegação principal",
@@ -563,11 +600,12 @@
     },
     "articles": "{n} artigo | {n} artigos",
     "aucunStockage": "Nenhuma arrumação nesta divisão.",
-    "ajoutezStockage": "Adicione uma com o botão ⋯ no canto superior direito.",
+    "ajoutezStockage": "Adicione uma com «Adicionar uma arrumação».",
     "stockages": "Arrumações da divisão",
     "filtrer": "Filtrar",
     "prete": "Emprestado",
-    "aucunArticle": "Ainda não há artigos nesta arrumação."
+    "aucunArticle": "Ainda não há artigos nesta arrumação.",
+    "ajouterArticle": "Adicionar um artigo"
   },
   "preter": {
     "retourArticle": "Voltar ao artigo",
@@ -580,7 +618,8 @@
     "pseudoMembre": "Nome de utilizador do membro",
     "choisirMembre": "Escolha um membro da lista.",
     "exempleNote": "Ex. Fim de semana em Annecy",
-    "preterArticle": "Emprestar o artigo"
+    "preterArticle": "Emprestar o artigo",
+    "datePret": "Data do empréstimo"
   },
   "prets": {
     "statuts": "Estado dos empréstimos",
@@ -596,7 +635,11 @@
     "renduLe": "Devolvido a",
     "aucuneNote": "Sem nota",
     "supprimer": "Eliminar o empréstimo de {titre}",
-    "confirmerSuppression": "Eliminar este empréstimo de «{titre}»? Faça-o apenas se tiver sido registado por engano."
+    "confirmerSuppression": "Eliminar este empréstimo de «{titre}»? Faça-o apenas se tiver sido registado por engano.",
+    "retourProfil": "Voltar ao perfil",
+    "preteLeDate": "Emprestado a {date}",
+    "renduLeDate": "Devolvido a {date}",
+    "retourPrevuDate": "Devolução prevista a {date}"
   },
   "profil": {
     "chargement": "A carregar o perfil…",
@@ -645,13 +688,18 @@
     "consigneCode": "Aponte para o código de barras de um livro, de um vinil ou de uma banda desenhada. As informações preenchem-se sozinhas.",
     "typeScan": "Tipo de digitalização",
     "modes": {
-      "vetement": "Roupa · IA",
-      "code-barres": "Código de barras"
+      "vetement": "Roupa",
+      "code-barres": "Livro · Vinil"
     },
     "importer": "Importar da galeria",
     "prendrePhoto": "Tirar a foto",
     "lireCode": "Ler o código de barras",
-    "saisieManuelle": "Introduzir manualmente"
+    "saisieManuelle": "Introdução manual",
+    "commentScanner": "Como digitalizar",
+    "galerie": "Galeria",
+    "importerPhoto": "Importar uma foto",
+    "importerPhotoCode": "Importar uma foto do código",
+    "codeLu": "Código {code} lido, a pesquisar…"
   },
   "scanCode": {
     "vinyleTrouve": "Vinil encontrado",
@@ -665,7 +713,9 @@
     "etat": "Estado",
     "ouRanger": "Onde o arrumar?",
     "suivant": "Digitalizar o seguinte",
-    "ajoute": "«{titre}» foi adicionado ao seu roupeiro."
+    "ajoute": "«{titre}» foi adicionado ao seu roupeiro.",
+    "preRempliDepuis": "Pré-preenchido a partir de {source}",
+    "visuelsBase": "Imagem fornecida por {source}."
   },
   "stats": {
     "voirDonnees": "Ver os dados",
@@ -724,10 +774,14 @@
     "tenue": "Conjunto",
     "inexistante": "Este conjunto já não existe.",
     "voirFil": "Ver o feed de conjuntos",
-    "chargementTenue": "A carregar o conjunto…"
+    "chargementTenue": "A carregar o conjunto…",
+    "toutes": "Todas",
+    "partagerLien": "Partilhar a ligação",
+    "instagram": "Instagram (imagem)",
+    "instagramTelecharger": "Instagram (transferir a imagem)"
   },
   "vendre": {
-    "prix": "Preço",
+    "prix": "Preço (€)",
     "exemplePrix": "Ex. 18",
     "description": "Descrição",
     "exempleDescription": "Ex. Usado duas vezes, sem defeitos. Entrega em mão em Lyon.",

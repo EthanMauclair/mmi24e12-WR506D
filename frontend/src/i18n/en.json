@@ -1,19 +1,12 @@
 {
   "accueil": {
     "atouts": {
-      "scan": {
-        "titre": "Scan it, it's stored",
-        "texte": "One photo is enough: AI recognises the category, colour and brand. Books and vinyl by barcode."
-      },
-      "rangement": {
-        "titre": "Find everything",
-        "texte": "Every item has its room and its storage spot, shared with the whole household."
-      },
-      "partage": {
-        "titre": "Lend, sell, share",
-        "texte": "Track your loans, sell between members and put outfits together based on the weather."
-      }
-    }
+      "scan": "Scan it, AI fills in the details",
+      "rangement": "Know where every item is stored",
+      "partage": "Sell, lend and share your outfits"
+    },
+    "inscriptionAccroche": "Catalogue your wardrobe and share your outfits.",
+    "gratuit": "Free, with no payments: buyers and sellers sort things out between themselves."
   },
   "admin": {
     "titre": "Back office",
@@ -75,12 +68,17 @@
       "likes": "Likes",
       "commentaires": "Comments",
       "abonnements": "Follows",
-      "demandesEnAttente": "{n} pending request | {n} pending requests"
+      "demandesEnAttente": "{n} pending request | {n} pending requests",
+      "partScanTitre": "Share of items added by scanning",
+      "marcheActivite": "Market and activity",
+      "pretsRetard": "Overdue loans",
+      "ventesTitre": "Sales",
+      "reseauSocial": "Social network"
     },
     "membres": {
       "titre": "Members",
       "sousTitre": "Search for a member to block them, change their role or delete their account.",
-      "rechercher": "Username, email or name",
+      "rechercher": "Username, first name, last name or email",
       "aucun": "No members match.",
       "membre": "Member",
       "role": "Role",
@@ -125,7 +123,14 @@
       "impactLogements": "Their homes ({n}) will be deleted, along with the {autres} items other members stored there.",
       "impactSocial": "Their outfits ({tenues}) and comments ({commentaires}) will be deleted.",
       "irreversible": "This cannot be undone.",
-      "supprime": "{pseudo}'s account has been deleted."
+      "supprime": "{pseudo}'s account has been deleted.",
+      "inscritLe": "Joined",
+      "statut": "Status",
+      "actif": "Active",
+      "pageSur": "Page {page} / {pages}",
+      "detail": "details",
+      "voirProfil": "View profile",
+      "choisir": "Choose a member in the list to block them, change their role or delete their account."
     },
     "referentiels": {
       "titre": "Reference data",
@@ -161,7 +166,15 @@
       "enregistre": "Change saved.",
       "confirmerSuppression": "Delete “{nom}”?",
       "confirmerSuppressionMarque": "Delete “{nom}”? The {n} items that have it will no longer have a brand.",
-      "supprime": "“{nom}” has been deleted."
+      "supprime": "“{nom}” has been deleted.",
+      "renommerNom": "Rename {nom}",
+      "supprimerNom": "Delete {nom}",
+      "nouvelleCategorie": "New category",
+      "nouvelleCouleur": "New colour",
+      "zoneParent": "Same as the parent category",
+      "nomFrancais": "Name (in French)",
+      "exempleCategorie": "E.g. Gilets",
+      "regles": "A category or colour used by items can't be deleted. The outfit zone feeds the outfit generator."
     },
     "moderation": {
       "titre": "Moderation",
@@ -179,7 +192,14 @@
       "confirmerAnnonce": "Remove the listing “{titre}” from the marketplace? The item becomes available again for its owner.",
       "annonceRetiree": "Listing removed.",
       "confirmerTenue": "Delete the outfit “{titre}”? The items in it are not deleted.",
-      "tenueSupprimee": "Outfit deleted."
+      "tenueSupprimee": "Outfit deleted.",
+      "sur": "on",
+      "retirerMarche": "Remove from market",
+      "supprimerTenue": "Delete the outfit",
+      "auteur": "Author",
+      "contenu": "Content",
+      "surColonne": "On",
+      "date": "Date"
     }
   },
   "ajout": {
@@ -236,7 +256,8 @@
     "envoiPhoto": "Uploading the photo…",
     "enregistrerModifications": "Save changes",
     "enregistrerDressing": "Save to my wardrobe",
-    "preRempli": "Pre-filled by AI"
+    "preRempli": "Pre-filled by AI",
+    "enregistrerArticle": "Save the item"
   },
   "annonce": {
     "chargement": "Loading the listing…",
@@ -270,7 +291,12 @@
     "vendu": "Sold.",
     "venduAMembre": "Sold to {pseudo}.",
     "messagesRecus": "Messages received",
-    "personne": "Nobody has written to you yet."
+    "personne": "Nobody has written to you yet.",
+    "votreAnnonceTitre": "Your listing",
+    "votreAnnonce": "Your listing · {prix}",
+    "changerPrixEuros": "Change the price (€)",
+    "modifier": "Update",
+    "conversations": "Conversations · {n}"
   },
   "article": {
     "chargement": "Loading the item…",
@@ -314,7 +340,8 @@
     "preparation": "Preparing the image…",
     "telechargee": "Image downloaded: post it from Instagram.",
     "lienCopie": "Link copied.",
-    "voirCommentaires": "See all {n} comments"
+    "voirCommentaires": "See all {n} comments",
+    "commentaires": "{n} comment | {n} comments"
   },
   "commentaires": {
     "titre": "Comments",
@@ -376,7 +403,8 @@
     "aucune": "No pending requests.",
     "accepter": "Accept",
     "refuser": "Decline",
-    "refuserDe": "Decline {pseudo}'s request"
+    "refuserDe": "Decline {pseudo}'s request",
+    "titreCourt": "Requests"
   },
   "dressing": {
     "chargement": "Loading your wardrobe…",
@@ -410,7 +438,8 @@
     "ajouterPiece": "+ Add a room",
     "nomPiece": "Room name",
     "aucunePiece": "No rooms yet.",
-    "aucunStockage": "No storage"
+    "aucunStockage": "No storage",
+    "articlesTrouves": "{n} item found | {n} items found"
   },
   "emplacement": {
     "libelle": "Location",
@@ -473,7 +502,8 @@
     "confidentialite": "privacy policy",
     "creer": "Create my account",
     "enCours": "Creating your account…",
-    "dejaInscrit": "Already have an account?"
+    "dejaInscrit": "Already have an account?",
+    "exemplePseudo": "E.g. lea.chine"
   },
   "langue": {
     "choisir": "App language"
@@ -509,7 +539,10 @@
     "choisirAmi": "Add {pseudo} as a friend",
     "retirerAmi": "Remove {pseudo} from your friends",
     "retirerAbonne": "Remove {pseudo} from your followers",
-    "confirmerRetrait": "Remove {pseudo} from your followers? They won't see your content any more if your profile is private."
+    "confirmerRetrait": "Remove {pseudo} from your followers? They won't see your content any more if your profile is private.",
+    "choisirCommeAmi": "Choose as friend",
+    "retirer": "Remove",
+    "profilPrive": "private profile"
   },
   "messages": {
     "titre": "Messages",
@@ -531,7 +564,11 @@
     "bio": "Bio",
     "exempleBio": "E.g. Lyon thrifter, vinyl lover",
     "aidePrive": "Only the followers you accept can see your items",
-    "devientPublic": "If you make your profile public, the pending request will be accepted. | If you make your profile public, the {n} pending requests will be accepted."
+    "devientPublic": "If you make your profile public, the pending request will be accepted. | If you make your profile public, the {n} pending requests will be accepted.",
+    "pseudo": "Username",
+    "langue": "Language",
+    "changerPhoto": "Change photo",
+    "envoiPhoto": "Uploading the photo…"
   },
   "navigation": {
     "principale": "Main navigation",
@@ -563,11 +600,12 @@
     },
     "articles": "{n} item | {n} items",
     "aucunStockage": "No storage in this room.",
-    "ajoutezStockage": "Add one with the ⋯ button at the top right.",
+    "ajoutezStockage": "Add one with “Add a storage unit”.",
     "stockages": "Storage in this room",
     "filtrer": "Filter",
     "prete": "On loan",
-    "aucunArticle": "No items in this storage yet."
+    "aucunArticle": "No items in this storage yet.",
+    "ajouterArticle": "Add an item"
   },
   "preter": {
     "retourArticle": "Back to the item",
@@ -580,7 +618,8 @@
     "pseudoMembre": "Member's username",
     "choisirMembre": "Choose a member from the list.",
     "exempleNote": "E.g. Weekend in Annecy",
-    "preterArticle": "Lend the item"
+    "preterArticle": "Lend the item",
+    "datePret": "Loan date"
   },
   "prets": {
     "statuts": "Loan status",
@@ -596,7 +635,11 @@
     "renduLe": "Returned on",
     "aucuneNote": "No note",
     "supprimer": "Delete the loan of {titre}",
-    "confirmerSuppression": "Delete this loan of “{titre}”? Only do this if it was entered by mistake."
+    "confirmerSuppression": "Delete this loan of “{titre}”? Only do this if it was entered by mistake.",
+    "retourProfil": "Back to profile",
+    "preteLeDate": "Lent on {date}",
+    "renduLeDate": "Returned on {date}",
+    "retourPrevuDate": "Due back on {date}"
   },
   "profil": {
     "chargement": "Loading the profile…",
@@ -645,13 +688,18 @@
     "consigneCode": "Aim at the barcode of a book, a vinyl record or a comic. The details fill in by themselves.",
     "typeScan": "Scan type",
     "modes": {
-      "vetement": "Clothing · AI",
-      "code-barres": "Barcode"
+      "vetement": "Clothing",
+      "code-barres": "Book · Vinyl"
     },
     "importer": "Import from the gallery",
     "prendrePhoto": "Take the photo",
     "lireCode": "Read the barcode",
-    "saisieManuelle": "Enter manually"
+    "saisieManuelle": "Manual entry",
+    "commentScanner": "How to scan",
+    "galerie": "Gallery",
+    "importerPhoto": "Import a photo",
+    "importerPhotoCode": "Import a photo of the code",
+    "codeLu": "Code {code} read, searching…"
   },
   "scanCode": {
     "vinyleTrouve": "Vinyl found",
@@ -665,7 +713,9 @@
     "etat": "Condition",
     "ouRanger": "Where to put it?",
     "suivant": "Scan the next one",
-    "ajoute": "“{titre}” has been added to your wardrobe."
+    "ajoute": "“{titre}” has been added to your wardrobe.",
+    "preRempliDepuis": "Pre-filled from {source}",
+    "visuelsBase": "Image provided by {source}."
   },
   "stats": {
     "voirDonnees": "Show the data",
@@ -724,10 +774,14 @@
     "tenue": "Outfit",
     "inexistante": "This outfit no longer exists.",
     "voirFil": "See the outfit feed",
-    "chargementTenue": "Loading the outfit…"
+    "chargementTenue": "Loading the outfit…",
+    "toutes": "All",
+    "partagerLien": "Share the link",
+    "instagram": "Instagram (image)",
+    "instagramTelecharger": "Instagram (download the image)"
   },
   "vendre": {
-    "prix": "Price",
+    "prix": "Price (€)",
     "exemplePrix": "E.g. 18",
     "description": "Description",
     "exempleDescription": "E.g. Worn twice, no flaws. Hand delivery in Lyon.",

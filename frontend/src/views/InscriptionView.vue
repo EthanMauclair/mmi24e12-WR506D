@@ -2,8 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
-import AtoutsAccueil from '@/components/AtoutsAccueil.vue'
-import SelecteurLangue from '@/components/SelecteurLangue.vue'
+import IllustrationAccueil from '@/components/IllustrationAccueil.vue'
 import { useSessionStore } from '@/stores/session'
 
 const { t } = useI18n()
@@ -61,179 +60,135 @@ async function creerCompte() {
 </script>
 
 <template>
-  <div class="ecran ecran--accueil">
-    <div class="bandeau">
-      <div class="bandeau__haut">
-        <h1 class="bandeau__titre">{{ t('inscription.titre') }}</h1>
-        <SelecteurLangue />
-      </div>
-      <span class="bandeau__texte">{{ t('inscription.sousTitre') }}</span>
-      <AtoutsAccueil class="bandeau__atouts" />
-    </div>
+  <div class="accueil">
+    <div class="accueil__carte">
+      <!-- Ordinateur : présentation à gauche -->
+      <section class="presentation">
+        <p class="presentation__titre">{{ t('accueil.inscriptionAccroche') }}</p>
+        <IllustrationAccueil class="presentation__illustration" />
+        <p class="texte-secondaire">{{ t('accueil.gratuit') }}</p>
+      </section>
 
-    <form id="formulaire-inscription" class="formulaire" novalidate @submit.prevent="creerCompte">
-      <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+      <div class="formulaire">
+        <header class="entete">
+          <RouterLink to="/connexion" class="bouton-icone seulement-mobile" :aria-label="t('commun.retour')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </RouterLink>
+          <h1 class="titre-page">{{ t('inscription.titre') }}</h1>
+        </header>
+        <p class="texte-secondaire sous-titre">{{ t('inscription.sousTitre') }}</p>
 
-      <label class="champ">
-        <span class="champ__libelle">{{ t('inscription.pseudo') }}</span>
-        <input v-model="pseudo" class="saisie" :class="{ 'saisie--invalide': erreurs.pseudo }" type="text" autocomplete="username" :placeholder="t('inscription.pseudo')" />
-        <span v-if="erreurs.pseudo" class="champ__erreur">{{ erreurs.pseudo }}</span>
-      </label>
+        <form class="pile" novalidate @submit.prevent="creerCompte">
+          <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
-      <label class="champ">
-        <span class="champ__libelle">{{ t('connexion.email') }}</span>
-        <input v-model="email" class="saisie" :class="{ 'saisie--invalide': erreurs.email }" type="email" autocomplete="email" :placeholder="t('connexion.email')" />
-        <span v-if="erreurs.email" class="champ__erreur">{{ erreurs.email }}</span>
-      </label>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('inscription.pseudo') }}</span>
+            <input v-model="pseudo" class="saisie" :class="{ 'saisie--invalide': erreurs.pseudo }" type="text" autocomplete="username" :placeholder="t('inscription.exemplePseudo')" />
+            <span v-if="erreurs.pseudo" class="champ__erreur">{{ erreurs.pseudo }}</span>
+          </label>
 
-      <div class="deux-colonnes">
-        <label class="champ">
-          <span class="champ__libelle">{{ t('connexion.motDePasse') }}</span>
-          <input v-model="motDePasse" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.motDePasse }" type="password" autocomplete="new-password" :placeholder="t('inscription.motDePasseMin')" />
-          <span v-if="erreurs.motDePasse" class="champ__erreur">{{ erreurs.motDePasse }}</span>
-        </label>
-        <label class="champ">
-          <span class="champ__libelle">{{ t('inscription.dateNaissance') }}</span>
-          <input v-model="dateNaissance" class="saisie saisie--compacte" :class="{ 'saisie--invalide': erreurs.dateNaissance }" type="date" :max="aujourdhui" autocomplete="bday" />
-          <span v-if="erreurs.dateNaissance" class="champ__erreur">{{ erreurs.dateNaissance }}</span>
-        </label>
-      </div>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('connexion.email') }}</span>
+            <input v-model="email" class="saisie" :class="{ 'saisie--invalide': erreurs.email }" type="email" autocomplete="email" :placeholder="t('connexion.exempleEmail')" />
+            <span v-if="erreurs.email" class="champ__erreur">{{ erreurs.email }}</span>
+          </label>
 
-      <p class="info">
-        <svg class="info__icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
-        {{ t('inscription.mineur') }}
-      </p>
+          <div class="identifiants">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('connexion.motDePasse') }}</span>
+              <input v-model="motDePasse" class="saisie" :class="{ 'saisie--invalide': erreurs.motDePasse }" type="password" autocomplete="new-password" :placeholder="t('inscription.motDePasseMin')" />
+              <span v-if="erreurs.motDePasse" class="champ__erreur">{{ erreurs.motDePasse }}</span>
+            </label>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('inscription.dateNaissance') }}</span>
+              <input v-model="dateNaissance" class="saisie" :class="{ 'saisie--invalide': erreurs.dateNaissance }" type="date" :max="aujourdhui" autocomplete="bday" />
+              <span v-if="erreurs.dateNaissance" class="champ__erreur">{{ erreurs.dateNaissance }}</span>
+            </label>
+          </div>
 
-      <label v-if="estMineur" class="champ">
-        <span class="champ__libelle">{{ t('inscription.emailTuteur') }}</span>
-        <input v-model="emailTuteur" class="saisie" :class="{ 'saisie--invalide': erreurs.emailTuteur }" type="email" :placeholder="t('inscription.emailTuteurExemple')" />
-        <span v-if="erreurs.emailTuteur" class="champ__erreur">{{ erreurs.emailTuteur }}</span>
-      </label>
+          <!-- Moins de 18 ans : e-mail du compte majeur qui rattache le mineur -->
+          <template v-if="estMineur">
+            <p class="bandeau-info">{{ t('inscription.mineur') }}</p>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('inscription.emailTuteur') }}</span>
+              <input v-model="emailTuteur" class="saisie" :class="{ 'saisie--invalide': erreurs.emailTuteur }" type="email" :placeholder="t('inscription.emailTuteurExemple')" />
+              <span v-if="erreurs.emailTuteur" class="champ__erreur">{{ erreurs.emailTuteur }}</span>
+            </label>
+          </template>
 
-      <fieldset class="visibilite">
-        <legend class="visibilite__legende">{{ t('inscription.visibilite') }}</legend>
-        <div class="deux-colonnes">
-          <button
-            v-for="option in optionsVisibilite"
-            :key="option"
-            type="button"
-            class="option"
-            :class="{ 'option--active': option === visibilite }"
-            :aria-pressed="option === visibilite"
-            @click="visibilite = option"
-          >
-            <span class="option__titre">{{ t(`inscription.${option}`) }}</span>
-            <span class="option__description">{{ t(`inscription.${option}Description`) }}</span>
+          <fieldset class="visibilite">
+            <legend class="champ__libelle">{{ t('inscription.visibilite') }}</legend>
+            <div class="grille-2">
+              <button
+                v-for="option in optionsVisibilite"
+                :key="option"
+                type="button"
+                class="carte option"
+                :class="{ 'option--active': option === visibilite }"
+                :aria-pressed="option === visibilite"
+                @click="visibilite = option"
+              >
+                <b>{{ t(`inscription.${option}`) }}</b>
+                <span class="texte-secondaire">{{ t(`inscription.${option}Description`) }}</span>
+              </button>
+            </div>
+          </fieldset>
+
+          <label class="conditions texte-secondaire">
+            <input v-model="conditionsAcceptees" type="checkbox" class="conditions__case" />
+            <i18n-t keypath="inscription.conditions" tag="span" scope="global">
+              <template #cgu><a href="#" class="lien">{{ t('inscription.cgu') }}</a></template>
+              <template #confidentialite><a href="#" class="lien">{{ t('inscription.confidentialite') }}</a></template>
+            </i18n-t>
+          </label>
+          <span v-if="erreurs.conditionsAcceptees" class="champ__erreur">{{ erreurs.conditionsAcceptees }}</span>
+
+          <button type="submit" class="bouton bouton--large" :disabled="envoiEnCours">
+            {{ t(envoiEnCours ? 'inscription.enCours' : 'inscription.creer') }}
           </button>
-        </div>
-      </fieldset>
+        </form>
 
-      <label class="conditions">
-        <input v-model="conditionsAcceptees" type="checkbox" class="conditions__case" />
-        <i18n-t keypath="inscription.conditions" tag="span" scope="global">
-          <template #cgu><a href="#" class="conditions__lien">{{ t('inscription.cgu') }}</a></template>
-          <template #confidentialite><a href="#" class="conditions__lien">{{ t('inscription.confidentialite') }}</a></template>
-        </i18n-t>
-      </label>
-      <span v-if="erreurs.conditionsAcceptees" class="champ__erreur">{{ erreurs.conditionsAcceptees }}</span>
-    </form>
-
-    <div class="pied">
-      <button type="submit" form="formulaire-inscription" class="bouton-principal" :disabled="envoiEnCours">
-        {{ t(envoiEnCours ? 'inscription.enCours' : 'inscription.creer') }}
-      </button>
-      <p class="pied__texte">
-        {{ t('inscription.dejaInscrit') }}
-        <RouterLink to="/connexion" class="pied__lien">{{ t('connexion.seConnecter') }}</RouterLink>
-      </p>
+        <p class="texte-secondaire pied">
+          {{ t('inscription.dejaInscrit') }}
+          <RouterLink to="/connexion" class="lien">{{ t('connexion.seConnecter') }}</RouterLink>
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Même habillage que le bandeau de l'écran de connexion */
-.bandeau {
-  flex-shrink: 0;
-  padding: 32px 24px 48px;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.accueil {
+  max-width: 390px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 18px 16px 24px;
+  box-sizing: border-box;
+  background: var(--couleur-surface);
 }
 
-.bandeau__haut {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.bandeau__titre {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-}
-
-.bandeau__texte {
-  font-size: 14px;
-  font-weight: 500;
-  opacity: 0.85;
+.presentation {
+  display: none;
 }
 
 .formulaire {
-  flex: 1;
-  margin-top: -24px;
-  padding: 24px 24px 0;
-  border-radius: 26px 26px 0 0;
-  background: var(--couleur-fond);
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.champ {
-  gap: 5px;
+.formulaire .pile {
+  gap: 12px;
 }
 
-.saisie {
-  height: 50px;
+.sous-titre {
+  margin-top: -4px;
 }
 
-.saisie--compacte {
-  min-width: 0;
-  padding: 0 14px;
-  font-size: 14px;
-}
-
-.saisie[type='date']::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-}
-
-.deux-colonnes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.info {
-  margin: 0;
+.identifiants {
   display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--couleur-info-fond);
-  color: var(--couleur-primaire-fonce);
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.45;
-}
-
-.info__icone {
-  flex-shrink: 0;
-  margin-top: 1px;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .visibilite {
@@ -245,56 +200,31 @@ async function creerCompte() {
   gap: 6px;
 }
 
-.visibilite__legende {
+.visibilite legend {
   padding: 0 0 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-libelle);
 }
 
 .option {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
+  gap: 2px;
   padding: 10px 12px;
-  border-radius: 14px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
   font: inherit;
   text-align: left;
+  color: var(--couleur-texte);
   cursor: pointer;
 }
 
 .option--active {
-  border-color: var(--couleur-primaire);
+  border: 2px solid var(--couleur-primaire);
   background: var(--couleur-primaire-pale);
-}
-
-.option__titre {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--couleur-texte);
-}
-
-.option--active .option__titre {
-  color: var(--couleur-primaire);
-}
-
-.option__description {
-  font-size: 11.5px;
-  color: var(--couleur-texte-secondaire);
-  line-height: 1.35;
 }
 
 .conditions {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--couleur-libelle);
   cursor: pointer;
 }
 
@@ -306,59 +236,84 @@ async function creerCompte() {
   accent-color: var(--couleur-primaire);
 }
 
-.conditions__lien {
-  font-weight: 700;
-}
-
 .pied {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px 24px 20px;
-  background: var(--couleur-surface);
-  border-top: 1px solid var(--couleur-bordure);
-}
-
-.pied__texte {
-  margin: 0;
   text-align: center;
-  font-size: 13.5px;
-  color: var(--couleur-texte-secondaire);
 }
 
-.pied__lien {
-  font-weight: 800;
+/* Tablette : carte centrée avec le seul formulaire */
+@media (min-width: 600px) {
+  .accueil {
+    max-width: 480px;
+    padding: 40px 0;
+    background: var(--couleur-fond);
+  }
+
+  .accueil__carte {
+    padding: 32px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 18px;
+    background: var(--couleur-surface);
+    box-shadow: var(--ombre-menu);
+  }
 }
 
-/* Ordinateur : le bandeau devient un panneau à gauche qui présente l'application, le formulaire est à droite */
+/* Ordinateur : carte large en deux parties, présentation à gauche et formulaire à droite */
 @media (min-width: 1024px) {
-  .bandeau {
-    grid-row: 1 / 3;
-    padding: 48px 44px;
-    gap: 10px;
+  .accueil {
+    max-width: 960px;
+    display: flex;
+    align-items: center;
   }
 
-  .bandeau__titre {
-    font-size: 36px;
+  .accueil__carte {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 720px;
+    padding: 0;
+    overflow: hidden;
   }
 
-  .bandeau__texte {
-    font-size: 16px;
+  .presentation {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 40px;
+    border-right: 1.5px solid var(--couleur-bordure);
+    background: var(--couleur-primaire-pale);
   }
 
-  .bandeau__atouts {
-    margin-top: 26px;
+  .presentation__titre {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .presentation__illustration {
+    flex: 1;
+    background: var(--couleur-fond);
   }
 
   .formulaire {
-    margin-top: 0;
-    padding: 40px 44px 8px;
-    border-radius: 0;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px 40px;
   }
 
-  .pied {
-    padding: 16px 44px 28px;
-    background: var(--couleur-fond);
+  .formulaire .pile {
+    gap: 10px;
+  }
+
+  .sous-titre {
+    display: none;
+  }
+
+  .identifiants {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 }
 </style>

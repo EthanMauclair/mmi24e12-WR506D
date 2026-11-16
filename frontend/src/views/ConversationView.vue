@@ -3,8 +3,9 @@ import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
+import BarreNavigation from '@/components/BarreNavigation.vue'
+import VignetteArticle from '@/components/VignetteArticle.vue'
 import { api } from '@/services/api'
-import { fondVignette } from '@/utils/couleurs'
 import { formatDate } from '@/utils/dates'
 import { formatPrix } from '@/utils/prix'
 
@@ -28,6 +29,11 @@ let minuterie = null
 function heure(dateIso) {
   const date = new Date(dateIso)
   return formatDate(date, date.toDateString() === new Date().toDateString() ? FORMAT_HEURE : FORMAT_JOUR)
+}
+
+// « 18 € · Réservée »
+function resumeAnnonce(annonce) {
+  return [formatPrix(annonce.prix), annonce.statut ? t(`annonce.statuts.${annonce.statut}`) : null].filter(Boolean).join(' · ')
 }
 
 async function descendre() {
@@ -79,56 +85,58 @@ onBeforeUnmount(() => clearInterval(minuterie))
 <template>
   <div class="ecran ecran--conversation">
     <p v-if="!conversation && !erreur" class="etat">{{ t('messages.chargement') }}</p>
-    <div v-else-if="!conversation" class="erreur">
+    <div v-else-if="!conversation" class="page">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
-      <RouterLink :to="{ name: 'messages' }">{{ t('messages.retour') }}</RouterLink>
+      <RouterLink :to="{ name: 'messages' }" class="lien">{{ t('messages.retour') }}</RouterLink>
     </div>
 
-    <template v-else>
+    <main v-else class="page conversation">
       <header class="entete">
         <RouterLink :to="{ name: 'messages' }" class="bouton-icone" :aria-label="t('messages.retour')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
         <RouterLink :to="{ name: 'membre', params: { pseudo: conversation.interlocuteur.pseudo } }" class="interlocuteur">
-          <AvatarMembre :membre="conversation.interlocuteur" :taille="40" />
-          <span class="interlocuteur__textes">
-            <span class="interlocuteur__pseudo">{{ conversation.interlocuteur.pseudo }}</span>
-            <span class="interlocuteur__role">{{ t(conversation.estVendeur ? 'messages.acheteurInteresse' : 'messages.vendeur') }}</span>
+          <AvatarMembre :membre="conversation.interlocuteur" :taille="32" />
+          <span class="entete__textes">
+            <b>@{{ conversation.interlocuteur.pseudo }}</b>
+            <span class="texte-secondaire">{{ t(conversation.estVendeur ? 'messages.acheteurInteresse' : 'messages.vendeur') }}</span>
           </span>
         </RouterLink>
       </header>
 
-      <RouterLink :to="{ name: 'annonce', params: { id: conversation.annonce.id } }" class="annonce">
-        <span class="annonce__vignette" :style="{ background: fondVignette(conversation.annonce.article.couleur) }">
-          <img v-if="conversation.annonce.article.photo" :src="conversation.annonce.article.photo" alt="" class="annonce__photo" />
-        </span>
-        <span class="annonce__textes">
-          <span class="annonce__titre">{{ conversation.annonce.article.titre }} · {{ conversation.annonce.article.infos }}</span>
-          <span class="annonce__prix">{{ formatPrix(conversation.annonce.prix) }}</span>
-        </span>
-        <span class="annonce__voir">{{ t('commun.voir') }}</span>
-      </RouterLink>
+      <div class="disposition">
+        <!-- Rappel de l'annonce : carte en haut sur téléphone, colonne de droite sur ordinateur -->
+        <RouterLink :to="{ name: 'annonce', params: { id: conversation.annonce.id } }" class="carte annonce">
+          <VignetteArticle class="annonce__vignette" :photo="conversation.annonce.article.photo" :couleur="conversation.annonce.article.couleur" :icone="22" />
+          <span class="ligne__textes">
+            <b class="annonce__titre">{{ conversation.annonce.article.titre }}</b>
+            <span class="texte-secondaire">{{ resumeAnnonce(conversation.annonce) }}</span>
+          </span>
+          <svg class="ligne__chevron seulement-mobile" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          <span class="bouton bouton--contour bouton--petit seulement-ordinateur">{{ t('article.voirAnnonce') }}</span>
+        </RouterLink>
 
-      <main ref="fil" class="fil" aria-live="polite">
-        <p class="avertissement">{{ t('annonce.avertissement') }}</p>
-        <div v-for="message in conversation.messages" :key="message.id" class="message" :class="{ 'message--moi': message.deMoi }">
-          <span class="message__bulle">{{ message.contenu }}</span>
-          <span class="message__heure">{{ heure(message.envoyeAt) }}<template v-if="message.deMoi && message.lu"> · {{ t('messages.lu') }}</template></span>
-        </div>
-      </main>
+        <div class="discussion">
+          <div ref="fil" class="fil" aria-live="polite">
+            <p class="avertissement">{{ t('annonce.avertissement') }}</p>
+            <div v-for="message in conversation.messages" :key="message.id" class="message" :class="{ 'message--moi': message.deMoi }">
+              <span class="message__bulle">{{ message.contenu }}</span>
+              <span class="message__heure">{{ heure(message.envoyeAt) }}<template v-if="message.deMoi && message.lu"> · {{ t('messages.lu') }}</template></span>
+            </div>
+          </div>
 
-      <form class="saisie-message" @submit.prevent="envoyer">
-        <p v-if="erreurEnvoi" class="message-erreur" role="alert">{{ erreurEnvoi }}</p>
-        <div class="saisie-message__ligne">
-          <label class="saisie-message__champ">
-            <input v-model="brouillon" type="text" :aria-label="t('messages.votreMessage')" :placeholder="t('messages.ecrire')" maxlength="2000" />
-          </label>
-          <button type="submit" class="saisie-message__envoyer" :aria-label="t('messages.envoyer')" :disabled="envoi || !brouillon.trim()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
-          </button>
+          <form class="barre-actions saisie-message" @submit.prevent="envoyer">
+            <p v-if="erreurEnvoi" class="message-erreur" role="alert">{{ erreurEnvoi }}</p>
+            <div class="saisie-message__ligne">
+              <input v-model="brouillon" class="saisie saisie-message__champ" type="text" :aria-label="t('messages.votreMessage')" :placeholder="t('messages.ecrire')" maxlength="2000" />
+              <button type="submit" class="bouton" :disabled="envoi || !brouillon.trim()">{{ t('messages.envoyer') }}</button>
+            </div>
+          </form>
         </div>
-      </form>
-    </template>
+      </div>
+    </main>
+
+    <BarreNavigation actif="marche" ordinateur-seulement />
   </div>
 </template>
 
@@ -138,20 +146,10 @@ onBeforeUnmount(() => clearInterval(minuterie))
   height: 100dvh;
 }
 
-.erreur {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 24px 20px;
-}
-
-.entete {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px 12px;
-  background: var(--couleur-surface);
-  border-bottom: 1px solid var(--couleur-bordure);
+.conversation {
+  min-height: 0;
+  padding-bottom: 0;
+  gap: 10px;
 }
 
 .interlocuteur {
@@ -159,103 +157,69 @@ onBeforeUnmount(() => clearInterval(minuterie))
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: var(--couleur-texte);
 }
 
-.interlocuteur__textes {
+.interlocuteur:hover {
+  color: var(--couleur-texte);
+}
+
+.disposition {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-}
-
-.interlocuteur__pseudo {
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.interlocuteur__role {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
+  gap: 10px;
 }
 
 .annonce {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 14px 20px 0;
-  padding: 10px;
-  border-radius: 16px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
+  padding: 8px;
+  color: var(--couleur-texte);
+}
+
+.annonce:hover {
+  border-color: var(--couleur-primaire);
   color: var(--couleur-texte);
 }
 
 .annonce__vignette {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  border-radius: 10px;
-  border: 1px solid var(--couleur-bordure);
-  overflow: hidden;
-}
-
-.annonce__photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.annonce__textes {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  width: 44px;
+  height: 44px;
 }
 
 .annonce__titre {
-  font-size: 14px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.annonce__prix {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--couleur-primaire);
-}
-
-.annonce__voir {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-primaire);
-  padding-right: 4px;
+}
+
+.discussion {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .fil {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  padding-bottom: 10px;
 }
 
 .avertissement {
   margin: 0 0 6px;
   align-self: center;
-  max-width: 290px;
+  max-width: 300px;
   text-align: center;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--couleur-texte-secondaire);
 }
 
@@ -271,83 +235,94 @@ onBeforeUnmount(() => clearInterval(minuterie))
 }
 
 .message__bulle {
-  /* Trois quarts de la largeur : 260 px environ sur téléphone, plus sur grand écran */
-  max-width: min(75%, 520px);
-  padding: 10px 14px;
-  border-radius: 18px 18px 18px 6px;
+  /* Trois quarts de la largeur : 290 px environ sur téléphone, plus sur grand écran */
+  max-width: min(76%, 520px);
+  padding: 10px 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
   background: var(--couleur-surface);
   color: var(--couleur-texte);
-  font-size: 14px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.4;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .message--moi .message__bulle {
-  border-radius: 18px 18px 6px 18px;
   background: var(--couleur-primaire);
+  border-color: var(--couleur-primaire);
   color: var(--couleur-sur-primaire);
 }
 
 .message__heure {
+  padding: 0 4px;
   font-size: 11px;
   color: var(--couleur-texte-secondaire);
-  padding: 0 4px;
 }
 
 .saisie-message {
-  display: flex;
+  margin: 0 -16px;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 20px 22px;
-  background: var(--couleur-surface);
-  border-top: 1px solid var(--couleur-bordure);
 }
 
 .saisie-message__ligne {
   display: flex;
-  align-items: center;
   gap: 10px;
 }
 
 .saisie-message__champ {
   flex: 1;
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: 999px;
-  background: var(--couleur-fond);
-  border: 1px solid var(--couleur-bordure);
-}
-
-.saisie-message__champ input {
-  flex: 1;
   min-width: 0;
-  border: 0;
-  outline: none;
-  background: none;
-  font: inherit;
-  font-size: 15px;
-  color: var(--couleur-texte);
 }
 
-.saisie-message__envoyer {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 0;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
+/* Ordinateur : la conversation dans une carte à gauche, l'annonce rappelée à droite */
+@media (min-width: 1024px) {
+  .conversation {
+    padding-bottom: 28px;
+  }
 
-.saisie-message__envoyer:disabled {
-  opacity: 0.5;
-  cursor: default;
+  .disposition {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .annonce {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .annonce__vignette {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .annonce__titre {
+    font-size: 15px;
+  }
+
+  .annonce .bouton {
+    align-self: flex-start;
+  }
+
+  .discussion {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 16px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 14px;
+    background: var(--couleur-surface);
+  }
+
+  .saisie-message {
+    margin: 0;
+  }
 }
 </style>

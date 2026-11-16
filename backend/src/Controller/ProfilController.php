@@ -11,10 +11,13 @@ use App\Repository\ArticleRepository;
 use App\Repository\PretRepository;
 use App\Repository\UtilisateurRepository;
 use App\Security\Voter\ProfilVoter;
+use App\Service\Photo\PhotoInvalideException;
+use App\Service\Photo\TraitementPhoto;
 use App\Service\Social\Relations;
 use App\Service\Statistiques\StatistiquesMembre;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,14 +44,18 @@ final class ProfilController extends ApiController
     }
 
     #[Route('/membres', name: 'api_membres', methods: ['GET'])]
-    public function rechercher(Request $request, UtilisateurRepository $utilisateurs): JsonResponse
+    public function rechercher(Request $request, UtilisateurRepository $utilisateurs, #[CurrentUser] ?Utilisateur $visiteur): JsonResponse
     {
         $texte = trim((string) $request->query->get('q', ''));
         if (mb_strlen($texte) < 2) {
             return $this->json([]);
         }
 
-        return $this->json(array_map($this->presentateur->membre(...), $utilisateurs->rechercher($texte)));
+        // Avec la relation du visiteur connecté, pour afficher le bon bouton (S'abonner, Abonné, Demande envoyée)
+        return $this->json(array_map(fn (Utilisateur $membre) => $this->presentateur->membre($membre) + [
+            'estMoi' => $membre === $visiteur,
+            'abonnement' => $this->relations->abonnement($visiteur, $membre)?->getStatut()->value,
+        ], $utilisateurs->rechercher($texte)));
     }
 
     /**
@@ -183,6 +190,31 @@ final class ProfilController extends ApiController
         $em->flush();
 
         return $this->json($this->presentateur->utilisateur($utilisateur));
+    }
+
+    /**
+     * Change la photo de profil (`photo`, multipart) : réduite et convertie en JPEG comme les photos d'articles.
+     */
+    #[Route('/moi/avatar', name: 'api_moi_avatar', methods: ['POST'])]
+    public function changerAvatar(
+        Request $request,
+        #[CurrentUser] Utilisateur $utilisateur,
+        TraitementPhoto $photos,
+        EntityManagerInterface $em,
+    ): JsonResponse {
+        $fichier = $request->files->get('photo');
+        if (!$fichier instanceof UploadedFile) {
+            return $this->reponseInvalide(['photo' => 'Choisissez une photo.']);
+        }
+
+        try {
+            $utilisateur->setAvatar($photos->enregistrer($fichier));
+        } catch (PhotoInvalideException $e) {
+            return $this->reponseInvalide(['photo' => $e->getMessage()]);
+        }
+        $em->flush();
+
+        return $this->json($this->presentateur->membre($utilisateur));
     }
 
     #[Route('/moi/demandes', name: 'api_moi_demandes', methods: ['GET'])]

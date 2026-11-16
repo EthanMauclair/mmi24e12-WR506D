@@ -1,7 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
+import BarreNavigation from '@/components/BarreNavigation.vue'
 import BarresHorizontales from '@/components/stats/BarresHorizontales.vue'
 import GraphiqueColonnes from '@/components/stats/GraphiqueColonnes.vue'
 import TuileChiffre from '@/components/stats/TuileChiffre.vue'
@@ -10,7 +11,6 @@ import { formatDate } from '@/utils/dates'
 import { formatPrix } from '@/utils/prix'
 
 const { t } = useI18n()
-const router = useRouter()
 
 const stats = ref(null)
 const erreur = ref('')
@@ -37,14 +37,14 @@ onMounted(async () => {
 
 <template>
   <div class="ecran">
-    <main class="contenu">
+    <main class="page">
       <header class="entete">
-        <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
+        <RouterLink :to="{ name: 'profil' }" class="bouton-icone" :aria-label="t('demandes.retourProfil')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-        </button>
-        <div>
-          <h1 class="entete__titre">{{ t('espace.titre') }}</h1>
-          <p class="entete__sous-titre">{{ t('espace.sousTitre') }}</p>
+        </RouterLink>
+        <div class="entete__textes">
+          <h1 class="titre-page">{{ t('espace.titre') }}</h1>
+          <span class="texte-secondaire">{{ t('espace.sousTitre') }}</span>
         </div>
       </header>
 
@@ -54,129 +54,74 @@ onMounted(async () => {
       <template v-else>
         <div class="tuiles">
           <TuileChiffre :libelle="t('espace.articles')" :valeur="stats.articles.total" :detail="t('espace.dontPersonnels', stats.articles.personnels)" />
-          <TuileChiffre :libelle="t('espace.ventes')" :valeur="formatPrix(stats.ventes.montant)" :detail="`${t('espace.vendus', stats.ventes.vendues)} · ${t('espace.enVente', stats.ventes.enCours)}`" />
+          <TuileChiffre :libelle="t('espace.ventes')" :valeur="formatPrix(stats.ventes.montant)" :detail="`${t('espace.vendus', stats.ventes.vendues)}, ${t('espace.enVente', stats.ventes.enCours)}`" />
           <TuileChiffre
             :libelle="t('espace.pretsEnCours')"
             :valeur="stats.prets.enCours"
             :detail="stats.prets.enRetard ? t('espace.enRetard', stats.prets.enRetard) : t('espace.rendus', stats.prets.rendus)"
             :alerte="stats.prets.enRetard > 0"
           />
-          <TuileChiffre :libelle="t('espace.abonnes')" :valeur="stats.social.abonnes" :detail="`${t('espace.abonnementsN', stats.social.abonnements)} · ${t('espace.amisN', stats.social.amis)}`" />
+          <TuileChiffre :libelle="t('espace.abonnes')" :valeur="stats.social.abonnes" />
         </div>
 
-        <section class="carte">
+        <div class="sections">
           <GraphiqueColonnes :titre="t('espace.ajoutsParMois')" :points="mois" />
-        </section>
+          <BarresHorizontales :titre="t('espace.parFamille')" :parts="false" :elements="repartition(stats.articles.parFamille, 'stats.familles')" :vide="t('espace.aucunArticle')" />
+          <BarresHorizontales :titre="t('espace.modesAjout')" :elements="repartition(stats.articles.parMode, 'stats.modes')" :vide="t('espace.aucunArticle')" />
 
-        <section class="carte">
-          <BarresHorizontales :titre="t('espace.parFamille')" :elements="repartition(stats.articles.parFamille, 'stats.familles')" :vide="t('espace.aucunArticle')" />
+          <section class="pile">
+            <h2 class="titre-section">{{ t('espace.activiteSociale') }}</h2>
+            <div class="grille-3">
+              <TuileChiffre :libelle="t('espace.tenues')" :valeur="stats.social.tenues" />
+              <TuileChiffre :libelle="t('espace.likesRecus')" :valeur="stats.social.likesRecus" />
+              <TuileChiffre :libelle="t('espace.commentairesRecus')" :valeur="stats.social.commentairesRecus" />
+            </div>
+          </section>
+
           <BarresHorizontales :titre="t('espace.parStatut')" :elements="repartition(stats.articles.parStatut, 'article.statuts')" :vide="t('espace.aucunArticle')" />
           <BarresHorizontales
             v-if="stats.articles.parLogement.length > 1"
             :titre="t('espace.parLogement')"
             :elements="stats.articles.parLogement.map((l) => ({ cle: l.nom, libelle: l.nom, valeur: l.nombre }))"
           />
-        </section>
-
-        <section class="carte">
           <BarresHorizontales
             :titre="t('espace.couleurs')"
             :parts="false"
             :elements="stats.couleurs.map((c) => ({ cle: c.nom, libelle: c.nom, valeur: c.nombre, pastille: c.codeHex }))"
             :vide="t('espace.aucunVetement')"
           />
-          <BarresHorizontales :titre="t('espace.marques')"
-            :parts="false" :elements="stats.marques.map((m) => ({ cle: m.nom, libelle: m.nom, valeur: m.nombre }))" :vide="t('espace.aucuneMarque')" />
-          <BarresHorizontales :titre="t('espace.modesAjout')" :elements="repartition(stats.articles.parMode, 'stats.modes')" :vide="t('espace.aucunArticle')" />
-        </section>
-
-        <section class="carte">
-          <h2 class="carte__titre">{{ t('espace.activiteSociale') }}</h2>
-          <div class="tuiles">
-            <TuileChiffre :libelle="t('espace.tenues')" :valeur="stats.social.tenues" />
-            <TuileChiffre :libelle="t('espace.likesRecus')" :valeur="stats.social.likesRecus" />
-            <TuileChiffre :libelle="t('espace.commentairesRecus')" :valeur="stats.social.commentairesRecus" />
-            <TuileChiffre :libelle="t('espace.abonnements')" :valeur="stats.social.abonnements" />
-          </div>
-        </section>
+          <BarresHorizontales :titre="t('espace.marques')" :parts="false" :elements="stats.marques.map((m) => ({ cle: m.nom, libelle: m.nom, valeur: m.nombre }))" :vide="t('espace.aucuneMarque')" />
+        </div>
       </template>
     </main>
+
+    <BarreNavigation actif="profil" ordinateur-seulement />
   </div>
 </template>
 
 <style scoped>
-.contenu {
-  flex: 1;
-  padding: 16px 20px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.entete {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.entete__titre {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.entete__sous-titre {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.etat {
-  margin: 24px 0;
-  text-align: center;
-  color: var(--couleur-texte-secondaire);
-}
-
-.message-erreur {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--couleur-erreur-fond);
-  color: var(--couleur-erreur);
-  font-size: 14px;
-}
-
 .tuiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.carte {
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
+.sections {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.carte .tuiles :deep(.tuile) {
-  background: var(--couleur-fond);
-}
-
-.carte__titre {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-/* Tablette et ordinateur : les quatre chiffres clés sur une ligne */
-@media (min-width: 600px) {
+@media (min-width: 1024px) {
   .tuiles {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    align-items: start;
   }
 }
 </style>

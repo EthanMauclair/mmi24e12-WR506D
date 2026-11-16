@@ -68,141 +68,46 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
 
 <template>
   <div class="ecran">
-    <main class="contenu">
+    <main class="page">
       <header class="entete">
         <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <div class="entete__titres">
-          <span v-if="liste !== 'amis'" class="entete__pseudo">@{{ pseudo }}</span>
-          <h1 class="entete__titre">{{ titre }}<template v-if="liste === 'amis'"> · {{ nbAmis }}</template></h1>
+        <div class="entete__textes">
+          <span v-if="liste !== 'amis'" class="fil-ariane">@{{ pseudo }}</span>
+          <h1 class="titre-page">{{ titre }}<template v-if="liste === 'amis'"> · {{ nbAmis }}</template></h1>
         </div>
       </header>
 
-      <p v-if="liste === 'amis'" class="aide">
-        {{ t('membres.aideAmis') }}
-      </p>
+      <p v-if="liste === 'amis'" class="carte carte--grise texte-secondaire colonne-etroite">{{ t('membres.aideAmis') }}</p>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
       <p v-if="chargement" class="etat">{{ t('commun.chargement') }}</p>
       <p v-else-if="membres.length === 0" class="etat">
         {{ t(liste === 'abonnements' ? 'membres.aucunAbonnement' : 'membres.aucunAbonne') }}
       </p>
-      <ul v-else class="liste">
+      <ul v-else class="lignes liste-membres liste-membres--grille">
         <LigneMembre v-for="membre in membres" :key="membre.id" :membre="membre">
           <template v-if="gereSesAbonnes">
+            <!-- Badge « Ami » plein, ou « Choisir comme ami » : un clic bascule -->
             <button
               type="button"
-              class="ami"
-              :class="{ 'ami--actif': membre.estAmi }"
+              class="badge"
+              :class="{ 'badge--plein': membre.estAmi }"
               :aria-pressed="membre.estAmi"
               :aria-label="t(membre.estAmi ? 'membres.retirerAmi' : 'membres.choisirAmi', { pseudo: membre.pseudo })"
               @click="basculerAmi(membre)"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" :fill="membre.estAmi ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z" /></svg>
-              {{ t(membre.estAmi ? 'membres.ami' : 'commun.ajouter') }}
+              {{ t(membre.estAmi ? 'membres.ami' : 'membres.choisirCommeAmi') }}
             </button>
-            <button type="button" class="retirer" :aria-label="t('membres.retirerAbonne', { pseudo: membre.pseudo })" @click="retirer(membre)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <button v-if="liste === 'abonnes'" type="button" class="bouton bouton--contour bouton--petit" :aria-label="t('membres.retirerAbonne', { pseudo: membre.pseudo })" @click="retirer(membre)">
+              {{ t('membres.retirer') }}
             </button>
           </template>
         </LigneMembre>
       </ul>
     </main>
 
-    <BarreNavigation actif="profil" />
+    <BarreNavigation actif="profil" ordinateur-seulement />
   </div>
 </template>
-
-<style scoped>
-.contenu {
-  flex: 1;
-  padding: 20px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.entete {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.entete__titres {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.entete__pseudo {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.entete__titre {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.aide {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire-fonce);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.liste {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.ami {
-  flex-shrink: 0;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.ami--actif {
-  border-color: var(--couleur-primaire);
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.retirer {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 0;
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-</style>

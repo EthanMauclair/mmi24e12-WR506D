@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
+import BarreNavigation from '@/components/BarreNavigation.vue'
 import BlocCommentaires from '@/components/BlocCommentaires.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
@@ -29,10 +30,13 @@ const retour = computed(() => {
   return article.value.emplacement ? `/pieces/${article.value.emplacement.piece.id}` : '/dressing'
 })
 const ajouteParUnAutre = computed(() => article.value.proprietaire.id !== session.utilisateur?.id)
+// « Appartement Lyon › Chambre › Armoire »
 const chemin = computed(() => {
   const emplacement = article.value.emplacement
-  return emplacement ? `${emplacement.piece.nom} › ${emplacement.stockage.nom}` : t('commun.aRanger')
+  return emplacement ? [emplacement.logement.nom, emplacement.piece.nom, emplacement.stockage.nom].join(' › ') : t('commun.aRanger')
 })
+const peutPreter = computed(() => article.value.statut === 'DISPONIBLE' && !article.value.estPersonnel)
+const peutVendre = computed(() => article.value.peutVendre && !article.value.estPersonnel && article.value.statut === 'DISPONIBLE')
 
 async function charger(id) {
   chargement.value = true
@@ -73,501 +77,183 @@ watch(() => route.params.id, charger, { immediate: true })
 </script>
 
 <template>
-  <div class="ecran ecran--fiche">
+  <div class="ecran">
     <p v-if="chargement && !article" class="etat">{{ t('article.chargement') }}</p>
-    <div v-else-if="erreur" class="contenu-erreur">
+    <div v-else-if="erreur" class="page">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
-      <RouterLink to="/dressing">{{ t('piece.retour') }}</RouterLink>
+      <RouterLink to="/dressing" class="lien">{{ t('piece.retour') }}</RouterLink>
     </div>
 
-    <template v-else-if="article">
-      <div
-        class="photo"
-        :class="{ 'photo--claire': estCouleurClaire(article.couleur?.codeHex) }"
-        :style="{ background: fondVignette(article.couleur?.codeHex) }"
-      >
-        <img v-if="article.photos.length" :src="article.photos[indexPhoto]" alt="" class="photo__image" />
-        <svg v-else width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-        <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche" :aria-label="t('commun.retour')">
+    <main v-else-if="article" class="page fiche">
+      <!-- Ordinateur : retour, chemin de rangement et modification au-dessus des deux colonnes -->
+      <div class="entete seulement-ordinateur">
+        <RouterLink :to="retour" class="bouton-icone" :aria-label="t('commun.retour')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </RouterLink>
-        <RouterLink
-          v-if="article.peutModifier"
-          :to="{ name: 'article-modifier', params: { id: article.id } }"
-          class="photo__bouton photo__bouton--droite"
-          :aria-label="t('article.modifier')"
-        >
+        <span class="fil-ariane entete__textes">{{ article.voitEmplacement ? chemin : article.proprietaire.pseudo }}</span>
+        <RouterLink v-if="article.peutModifier" :to="{ name: 'article-modifier', params: { id: article.id } }" class="bouton-icone" :aria-label="t('article.modifier')">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
         </RouterLink>
-        <span v-if="article.dateScan" class="photo__source">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-          {{ t('article.photoScan', { date: formatDate(new Date(article.dateScan)) }) }}
-        </span>
-        <span v-if="article.photos.length > 1" class="photo__indicateurs">
-          <button
-            v-for="(photo, index) in article.photos"
-            :key="photo"
-            type="button"
-            class="indicateur"
-            :class="{ 'indicateur--actif': index === indexPhoto }"
-            :aria-label="t('article.photo', { n: index + 1 })"
-            @click="indexPhoto = index"
-          ></button>
-        </span>
       </div>
 
-      <main class="contenu">
-        <div class="titre">
-          <div class="titre__textes">
-            <h1 class="titre__nom">{{ article.titre }}</h1>
-            <span class="titre__infos">{{ article.infos }}</span>
+      <div class="deux-colonnes">
+        <div class="galerie">
+          <div
+            class="photo"
+            :class="{ 'photo--claire': estCouleurClaire(article.couleur?.codeHex) }"
+            :style="{ background: article.photos.length ? 'var(--couleur-pastel-sable)' : fondVignette(article.couleur?.codeHex) }"
+          >
+            <img v-if="article.photos.length" :src="article.photos[indexPhoto]" alt="" class="photo__image" />
+            <svg v-else width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
+            <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche seulement-mobile" :aria-label="t('commun.retour')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+            </RouterLink>
+            <RouterLink
+              v-if="article.peutModifier"
+              :to="{ name: 'article-modifier', params: { id: article.id } }"
+              class="photo__bouton photo__bouton--droite seulement-mobile"
+              :aria-label="t('article.modifier')"
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+            </RouterLink>
+            <span v-if="article.dateScan" class="badge badge--blanc photo__source">{{ t('article.photoScan', { date: formatDate(new Date(article.dateScan)) }) }}</span>
           </div>
-          <span class="statut" :class="{ 'statut--indisponible': article.statut !== 'DISPONIBLE' }">{{ t(`article.statuts.${article.statut}`) }}</span>
+          <div v-if="article.photos.length > 1" class="indicateurs">
+            <button
+              v-for="(photo, index) in article.photos"
+              :key="photo"
+              type="button"
+              class="indicateur"
+              :class="{ 'indicateur--actif': index === indexPhoto }"
+              :aria-label="t('article.photo', { n: index + 1 })"
+              :aria-pressed="index === indexPhoto"
+              @click="indexPhoto = index"
+            ></button>
+          </div>
         </div>
 
-        <RouterLink v-if="ajouteParUnAutre" :to="{ name: 'membre', params: { pseudo: article.proprietaire.pseudo } }" class="auteur">
-          <AvatarMembre :membre="article.proprietaire" :taille="32" />
-          <span class="auteur__textes">
-            <span class="auteur__libelle">{{ t('article.ajoutePar') }}</span>
-            <span class="auteur__pseudo">{{ article.proprietaire.pseudo }}</span>
-          </span>
-        </RouterLink>
+        <div class="informations">
+          <div class="titre">
+            <div class="entete__textes">
+              <h1 class="titre-page titre__nom">{{ article.titre }}</h1>
+              <span class="texte-secondaire">{{ article.infos }}</span>
+            </div>
+            <span class="badge" :class="{ 'badge--plein': article.statut === 'DISPONIBLE' }">{{ t(`article.statuts.${article.statut}`) }}</span>
+          </div>
 
-        <!-- Un visiteur ou un abonné ne voit jamais où l'article est rangé -->
-        <div v-if="article.voitEmplacement" class="emplacement">
-          <span class="emplacement__icone">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-          </span>
-          <span class="emplacement__textes">
-            <span class="emplacement__libelle">{{ t('article.rangeDans') }}</span>
-            <span class="emplacement__chemin">{{ chemin }}</span>
-          </span>
-        </div>
-
-        <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="vente">
-          <span class="vente__textes">
-            <span class="vente__statut">{{ t(article.annonce.statut === 'RESERVEE' ? 'article.reserve' : 'article.enVente') }}</span>
-            <span class="vente__prix">{{ formatPrix(article.annonce.prix) }}</span>
-          </span>
-          <span class="vente__voir">{{ t('article.voirAnnonce') }}</span>
-        </RouterLink>
-
-        <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="pret" :class="{ 'pret--retard': article.pretEnCours.joursRestants < 0 }">
-          <span class="pret__textes">
-            <span class="pret__qui">
-              {{ t('article.preteA', { nom: article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }) }}
+          <RouterLink v-if="ajouteParUnAutre" :to="{ name: 'membre', params: { pseudo: article.proprietaire.pseudo } }" class="carte carte--rangee auteur">
+            <AvatarMembre :membre="article.proprietaire" :taille="32" />
+            <span class="entete__textes">
+              <span class="texte-secondaire">{{ t('article.ajoutePar') }}</span>
+              <b>{{ article.proprietaire.pseudo }}</b>
             </span>
-            <span class="pret__dates">
-              {{ t('article.depuis', { date: jourCourt(article.pretEnCours.datePret) }) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · {{ t('article.retourPrevu', { date: jourCourt(article.pretEnCours.dateRetourPrevue) }) }}</template>
+          </RouterLink>
+
+          <!-- Un visiteur ou un abonné ne voit jamais où l'article est rangé -->
+          <div v-if="article.voitEmplacement" class="carte carte--rangee emplacement">
+            <span class="emplacement__icone">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
             </span>
-          </span>
-          <span class="pret__echeance">{{ echeance(article.pretEnCours.joursRestants) }}</span>
-        </RouterLink>
-        <p v-if="erreurPret" class="message-erreur" role="alert">{{ erreurPret }}</p>
-
-        <dl class="caracteristiques">
-          <div class="caracteristique">
-            <dt class="caracteristique__libelle">{{ t('article.categorie') }}</dt>
-            <dd class="caracteristique__valeur">{{ article.categorie }}</dd>
+            <span class="entete__textes">
+              <span class="texte-secondaire">{{ t('article.rangeDans') }}</span>
+              <b class="emplacement__chemin">{{ chemin }}</b>
+            </span>
           </div>
-          <div v-if="article.couleur" class="caracteristique">
-            <dt class="caracteristique__libelle">{{ t('article.couleur') }}</dt>
-            <dd class="caracteristique__valeur caracteristique__valeur--couleur">
-              <span class="pastille-couleur" :style="{ background: article.couleur.codeHex }"></span>{{ article.couleur.nom }}
-            </dd>
-          </div>
-        </dl>
 
-        <div v-if="article.voitEmplacement" class="etiquettes">
-          <span class="etiquettes__titre">{{ t('article.etiquettes') }}</span>
-          <div class="etiquettes__liste">
-            <span v-for="etiquette in article.etiquettes" :key="etiquette.id" class="etiquette">{{ etiquette.nom }}</span>
-            <span v-if="!article.etiquettes.length && !article.peutModifier" class="etiquettes__vide">{{ t('article.aucuneEtiquette') }}</span>
-            <button v-if="article.peutModifier" type="button" class="etiquette-ajout">{{ t('article.ajouterEtiquette') }}</button>
+          <!-- Autre statut : prêté ou en vente -->
+          <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="bandeau" :class="{ 'bandeau--retard': article.pretEnCours.joursRestants < 0 }">
+            <span class="entete__textes">
+              <b>{{ t('article.preteA', { nom: article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }) }}</b>
+              <span class="bandeau__detail">
+                {{ t('article.depuis', { date: jourCourt(article.pretEnCours.datePret) }) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · {{ t('article.retourPrevu', { date: jourCourt(article.pretEnCours.dateRetourPrevue) }) }}</template>
+              </span>
+            </span>
+            <span class="badge badge--blanc">{{ echeance(article.pretEnCours.joursRestants) }}</span>
+          </RouterLink>
+          <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="bandeau">
+            <span class="entete__textes">
+              <b>{{ t(article.annonce.statut === 'RESERVEE' ? 'article.reserve' : 'article.enVente') }} · {{ formatPrix(article.annonce.prix) }}</b>
+            </span>
+            <span class="bandeau__lien">{{ t('article.voirAnnonce') }}</span>
+          </RouterLink>
+          <p v-if="erreurPret" class="message-erreur" role="alert">{{ erreurPret }}</p>
+
+          <dl class="proprietes">
+            <div class="propriete">
+              <dt class="propriete__libelle">{{ t('article.categorie') }}</dt>
+              <dd class="propriete__valeur">{{ article.categorieChemin }}</dd>
+            </div>
+            <div v-if="article.couleur" class="propriete">
+              <dt class="propriete__libelle">{{ t('article.couleur') }}</dt>
+              <dd class="propriete__valeur couleur">
+                <span class="pastille-couleur" :style="{ background: article.couleur.codeHex }"></span>{{ article.couleur.nom }}
+              </dd>
+            </div>
+            <div v-if="article.voitEmplacement" class="propriete propriete--etiquettes">
+              <dt class="propriete__libelle">{{ t('article.etiquettes') }}</dt>
+              <dd class="etiquettes">
+                <span v-for="etiquette in article.etiquettes" :key="etiquette.id" class="puce puce--petite">{{ etiquette.nom }}</span>
+                <span v-if="!article.etiquettes.length && !article.peutModifier" class="texte-secondaire">{{ t('article.aucuneEtiquette') }}</span>
+                <RouterLink v-if="article.peutModifier" :to="{ name: 'article-modifier', params: { id: article.id } }" class="lien">{{ t('article.ajouterEtiquette') }}</RouterLink>
+              </dd>
+            </div>
+          </dl>
+
+          <label v-if="article.peutChangerConfidentialite" class="carte carte--grise carte--rangee personnel">
+            <span class="entete__textes">
+              <b class="personnel__titre">{{ t('article.personnel') }}</b>
+              <span class="texte-secondaire">{{ t('article.personnelAide') }}</span>
+            </span>
+            <input :checked="article.estPersonnel" type="checkbox" role="switch" class="interrupteur" @change="changerConfidentialite($event.target.checked)" />
+          </label>
+          <p v-if="erreurConfidentialite" class="message-erreur" role="alert">{{ erreurConfidentialite }}</p>
+
+          <BlocCommentaires
+            v-if="!article.estPersonnel"
+            :key="article.id"
+            class="commentaires-fiche"
+            :source="`/articles/${article.id}`"
+            :peut-commenter="article.peutCommenter"
+            :auteur="article.proprietaire.pseudo"
+          />
+
+          <!-- En bas de l'écran sur téléphone ; juste après les informations sur ordinateur -->
+          <div v-if="article.peutModifier" class="barre-actions barre-actions--dans-page actions-fiche">
+            <button v-if="article.pretEnCours" type="button" class="bouton bouton--contour bouton--flexible" @click="marquerRendu">{{ t('article.marquerRendu') }}</button>
+            <RouterLink v-else-if="peutPreter" :to="{ name: 'article-preter', params: { id: article.id } }" class="bouton bouton--contour bouton--flexible">{{ t('article.preter') }}</RouterLink>
+            <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="bouton bouton--flexible">{{ t('article.voirAnnonce') }}</RouterLink>
+            <!-- Seul celui qui a ajouté l'article le vend ; un article personnel ou prêté ne peut pas être mis en vente -->
+            <RouterLink v-else-if="peutVendre" :to="{ name: 'article-vendre', params: { id: article.id } }" class="bouton bouton--flexible">{{ t('article.mettreEnVente') }}</RouterLink>
           </div>
         </div>
-
-        <label v-if="article.peutChangerConfidentialite" class="personnel">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="personnel__icone"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-          <span class="personnel__textes">
-            <span class="personnel__titre">{{ t('article.personnel') }}</span>
-            <span class="personnel__aide">{{ t('article.personnelAide') }}</span>
-          </span>
-          <input :checked="article.estPersonnel" type="checkbox" class="visuellement-cache" @change="changerConfidentialite($event.target.checked)" />
-          <span class="interrupteur" :class="{ 'interrupteur--actif': article.estPersonnel }" aria-hidden="true">
-            <span class="interrupteur__curseur"></span>
-          </span>
-        </label>
-        <p v-if="erreurConfidentialite" class="message-erreur" role="alert">{{ erreurConfidentialite }}</p>
-
-        <BlocCommentaires
-          v-if="!article.estPersonnel"
-          :key="article.id"
-          :source="`/articles/${article.id}`"
-          :peut-commenter="article.peutCommenter"
-          :auteur="article.proprietaire.pseudo"
-        />
-      </main>
-
-      <div v-if="article.peutModifier" class="actions">
-        <button v-if="article.pretEnCours" type="button" class="action action--secondaire" @click="marquerRendu">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-          {{ t('article.marquerRendu') }}
-        </button>
-        <RouterLink v-else-if="article.statut === 'DISPONIBLE'" :to="{ name: 'article-preter', params: { id: article.id } }" class="action action--secondaire">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg>
-          {{ t('article.preter') }}
-        </RouterLink>
-        <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="action action--principale">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-          {{ t('article.voirAnnonce') }}
-        </RouterLink>
-        <!-- Seul celui qui a ajouté l'article le vend ; un article personnel ou prêté ne peut pas être mis en vente -->
-        <RouterLink
-          v-else-if="article.peutVendre && !article.estPersonnel && article.statut === 'DISPONIBLE'"
-          :to="{ name: 'article-vendre', params: { id: article.id } }"
-          class="action action--principale"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-          {{ t('article.mettreEnVente') }}
-        </RouterLink>
       </div>
-    </template>
+    </main>
+
+    <BarreNavigation actif="dressing" ordinateur-seulement />
   </div>
 </template>
 
 <style scoped>
+/* Téléphone : la photo occupe le haut de l'écran, bord à bord */
+.fiche {
+  padding-top: 0;
+}
+
+.galerie {
+  margin: 0 -16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .photo {
   position: relative;
-  height: 330px;
-  flex-shrink: 0;
+  height: 270px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   color: var(--couleur-photo-icone-grande);
-}
-
-.photo__bouton {
-  position: absolute;
-  top: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 0;
-  background: var(--couleur-photo-bouton);
-  color: var(--couleur-texte);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.photo__bouton--gauche {
-  left: 16px;
-}
-
-.photo__bouton--droite {
-  right: 16px;
-}
-
-/* 36 px = 16 px de marge + les 20 px recouverts par le contenu */
-.photo__source {
-  position: absolute;
-  left: 16px;
-  bottom: 36px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: var(--couleur-photo-voile);
-  color: var(--couleur-sur-primaire);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.photo__indicateurs {
-  position: absolute;
-  right: 16px;
-  bottom: 40px;
-  display: flex;
-  gap: 6px;
-}
-
-.indicateur {
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--couleur-photo-indicateur);
-}
-
-.indicateur--actif {
-  width: 18px;
-  background: var(--couleur-sur-primaire);
-}
-
-.contenu {
-  flex: 1;
-  margin-top: -20px;
-  padding: 22px 20px 0;
-  border-radius: 24px 24px 0 0;
-  background: var(--couleur-fond);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.titre {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.titre__textes {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.titre__nom {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.titre__infos {
-  font-size: 14px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.statut {
-  flex-shrink: 0;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--couleur-succes-fond);
-  color: var(--couleur-succes);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.emplacement {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.emplacement__icone {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--couleur-sur-primaire-voile);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emplacement__textes {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.emplacement__libelle {
-  font-size: 12px;
-  font-weight: 600;
-  opacity: 0.8;
-}
-
-.emplacement__chemin {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.caracteristiques {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.caracteristique {
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
-}
-
-.caracteristique__libelle {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.caracteristique__valeur {
-  margin: 2px 0 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.caracteristique__valeur--couleur {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pastille-couleur {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.etiquettes {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.etiquettes__titre {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
-}
-
-.etiquettes__liste {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.etiquette {
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.etiquette-ajout {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px dashed var(--couleur-bordure-pointillee);
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.personnel {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
-  cursor: pointer;
-}
-
-.personnel__icone {
-  color: var(--couleur-primaire);
-}
-
-.personnel__textes {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.personnel__titre {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.personnel__aide {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.interrupteur {
-  width: 46px;
-  height: 28px;
-  border-radius: 999px;
-  background: var(--couleur-interrupteur-inactif);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 3px;
-  box-sizing: border-box;
-}
-
-.interrupteur--actif {
-  background: var(--couleur-primaire);
-  justify-content: flex-end;
-}
-
-.personnel input:focus-visible + .interrupteur {
-  outline: 2px solid var(--couleur-primaire);
-  outline-offset: 2px;
-}
-
-.interrupteur__curseur {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--couleur-surface);
-  box-shadow: var(--ombre-curseur);
-}
-
-.actions {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  gap: 10px;
-  padding: 12px 20px 22px;
-  background: var(--couleur-surface);
-  border-top: 1px solid var(--couleur-bordure);
-}
-
-.action {
-  flex: 1;
-  height: 52px;
-  box-sizing: border-box;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.action--secondaire {
-  border: 1.5px solid var(--couleur-primaire);
-  color: var(--couleur-primaire);
-}
-
-.action--principale {
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.action--principale:hover {
-  color: var(--couleur-sur-primaire);
-  background: var(--couleur-primaire-fonce);
 }
 
 .photo--claire {
@@ -582,183 +268,226 @@ watch(() => route.params.id, charger, { immediate: true })
   object-fit: cover;
 }
 
+.photo__bouton {
+  position: absolute;
+  top: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--couleur-photo-bouton);
+  color: var(--couleur-texte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo__bouton--gauche {
+  left: 14px;
+}
+
+.photo__bouton--droite {
+  right: 14px;
+}
+
+.photo__source {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+}
+
+/* Points de la galerie : sur la photo en bas à droite sur téléphone, sous la photo sur ordinateur */
+.indicateurs {
+  position: absolute;
+  right: 30px;
+  top: 252px;
+  display: flex;
+  gap: 5px;
+}
+
+.galerie {
+  position: relative;
+}
+
 .indicateur {
+  width: 8px;
+  height: 8px;
   padding: 0;
   border: 0;
+  border-radius: 50%;
+  background: var(--couleur-photo-indicateur);
   cursor: pointer;
 }
 
-.statut--indisponible {
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire);
+.indicateur--actif {
+  background: var(--couleur-primaire);
 }
 
-.etiquettes__vide {
-  font-size: 13px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.contenu-erreur {
+.informations {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 24px 20px;
-}
-
-/* « Marquer rendu » est un bouton, « Prêter » un lien : même apparence */
-button.action--secondaire {
-  background: var(--couleur-surface);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.vente {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--couleur-surface);
-  border: 1.5px solid var(--couleur-primaire);
-  color: var(--couleur-texte);
-}
-
-.vente__textes {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.vente__statut {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--couleur-texte-secondaire);
-}
-
-.vente__prix {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--couleur-primaire);
-}
-
-.vente__voir {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-primaire);
-}
-
-.pret {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire-fonce);
-}
-
-.pret--retard {
-  background: var(--couleur-alerte-fond);
-  color: var(--couleur-alerte);
-}
-
-.pret__textes {
-  flex: 1;
   min-width: 0;
+}
+
+.titre {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.pret__qui {
-  font-size: 14px;
-  font-weight: 800;
-  overflow-wrap: anywhere;
+.titre .badge {
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
-.pret__dates {
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.pret__echeance {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-/* Sans barre d'actions, le contenu garde une marge en bas */
-.contenu:last-child {
-  padding-bottom: 24px;
-}
-
-.auteur {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.auteur,
+.auteur:hover {
   color: var(--couleur-texte);
 }
 
-.auteur__textes {
+.emplacement__icone {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--couleur-primaire-pale);
+  color: var(--couleur-primaire);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emplacement__chemin {
+  font-size: 14px;
+}
+
+.bandeau {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+  font-size: 14px;
+}
+
+.bandeau:hover {
+  background: var(--couleur-primaire-fonce);
+  color: var(--couleur-sur-primaire);
+}
+
+.bandeau--retard {
+  background: var(--couleur-erreur);
+}
+
+.bandeau__detail {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.bandeau__lien {
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.proprietes {
+  margin: 0;
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-.auteur__libelle {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
+.proprietes dd {
+  margin: 0;
 }
 
-.auteur__pseudo {
+.propriete--etiquettes {
+  align-items: flex-start;
+}
+
+.propriete--etiquettes .propriete__libelle {
+  padding-top: 5px;
+}
+
+.couleur {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pastille-couleur {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(30, 20, 22, 0.15);
+}
+
+.etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.personnel {
+  cursor: pointer;
+}
+
+.personnel__titre {
   font-size: 14px;
-  font-weight: 800;
 }
 
-
-/* Ordinateur : la photo à gauche reste visible pendant qu'on fait défiler la fiche à droite */
+/* Ordinateur : photo carrée à gauche, informations et actions à droite */
 @media (min-width: 1024px) {
-  .ecran--fiche {
-    max-width: var(--largeur-contenu);
-    padding: 24px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: 1fr auto;
-    column-gap: 40px;
-    align-items: start;
+  .fiche {
+    padding-top: 28px;
+  }
+
+  .galerie {
+    margin: 0;
   }
 
   .photo {
-    grid-row: 1 / 3;
-    position: sticky;
-    top: 24px;
-    height: min(640px, calc(100dvh - 48px));
-    border-radius: 24px;
-    overflow: hidden;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
   }
 
   .photo__source {
-    bottom: 16px;
+    left: 12px;
+    bottom: 12px;
   }
 
-  .photo__indicateurs {
-    bottom: 20px;
+  .indicateurs {
+    position: static;
+    justify-content: center;
   }
 
-  .contenu {
-    margin-top: 0;
-    padding: 0 0 16px;
-    border-radius: 0;
+  .indicateur {
+    background: var(--couleur-bordure);
   }
 
-  .actions {
-    grid-column: 2;
-    padding: 16px 0 0;
-    border-top: 0;
-    background: var(--couleur-fond);
+  .indicateur--actif {
+    background: var(--couleur-primaire);
   }
+
+  .titre__nom {
+    font-size: 26px;
+  }
+
+  .actions-fiche {
+    order: 1;
+  }
+
+  .commentaires-fiche {
+    order: 2;
+  }
+}
+
+/* Téléphone : la barre colle au bas de la page, qui finit sous elle */
+.actions-fiche {
+  margin-top: auto;
 }
 </style>

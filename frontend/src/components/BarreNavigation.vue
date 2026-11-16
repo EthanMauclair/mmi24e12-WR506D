@@ -4,6 +4,8 @@ import { RouterLink } from 'vue-router'
 
 defineProps({
   actif: { type: String, default: 'dressing' },
+  // Écrans sans barre en bas sur téléphone (fiche, formulaire) : le menu latéral n'apparaît que sur ordinateur
+  ordinateurSeulement: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
@@ -36,7 +38,7 @@ const onglets = [
 </script>
 
 <template>
-  <nav class="barre barre-navigation" :aria-label="t('navigation.principale')">
+  <nav class="barre barre-navigation" :class="{ 'barre--ordinateur': ordinateurSeulement }" :aria-label="t('navigation.principale')">
     <!-- Nom de l'application, affiché seulement dans le menu latéral sur ordinateur -->
     <RouterLink to="/dressing" class="marque">
       <span class="marque__logo">
@@ -115,6 +117,13 @@ const onglets = [
   display: none;
 }
 
+/* Écran sans barre du bas sur téléphone et tablette */
+@media (max-width: 1023px) {
+  .barre--ordinateur {
+    display: none;
+  }
+}
+
 /* Ordinateur : la barre du bas devient un menu latéral fixe, le scan en tête */
 @media (min-width: 1024px) {
   .barre {
@@ -125,13 +134,14 @@ const onglets = [
     z-index: 10;
     width: var(--largeur-menu);
     height: auto;
-    padding: 24px 16px;
+    padding: 22px 14px;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: 4px;
+    gap: 6px;
     border-top: 0;
-    border-right: 1px solid var(--couleur-bordure);
+    border-right: 1.5px solid var(--couleur-bordure);
+    background: var(--couleur-fond);
   }
 
   .marque {
@@ -139,17 +149,17 @@ const onglets = [
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 0 8px 20px;
-    font-size: 20px;
+    margin: 0 0 14px 6px;
+    font-size: 18px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--couleur-texte);
   }
 
   .marque__logo {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -160,10 +170,11 @@ const onglets = [
   .scan {
     order: -1;
     width: auto;
-    height: 48px;
-    margin: 0 0 16px;
+    height: 46px;
+    margin: 0 0 10px;
     gap: 10px;
-    border-radius: 14px;
+    border-radius: 12px;
+    box-shadow: none;
     font-size: 14px;
     font-weight: 700;
   }
@@ -181,9 +192,10 @@ const onglets = [
     flex-direction: row;
     gap: 12px;
     min-width: 0;
-    padding: 11px 12px;
-    border-radius: 12px;
-    font-size: 15px;
+    height: 44px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 14px;
   }
 
   .onglet:hover {
@@ -193,8 +205,8 @@ const onglets = [
 
   .onglet--actif,
   .onglet--actif:hover {
-    background: var(--couleur-primaire-pale);
-    color: var(--couleur-primaire);
+    background: var(--couleur-primaire);
+    color: var(--couleur-sur-primaire);
   }
 }
 </style>

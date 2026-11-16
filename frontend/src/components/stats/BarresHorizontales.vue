@@ -49,8 +49,8 @@ const part = (valeur) => new Intl.NumberFormat(localeIntl(), { style: 'percent' 
 }
 
 .barres__titre {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: var(--couleur-texte);
 }
 
@@ -71,9 +71,9 @@ const part = (valeur) => new Intl.NumberFormat(localeIntl(), { style: 'percent' 
 
 .barre {
   display: grid;
-  grid-template-columns: minmax(0, 9em) 1fr auto;
+  grid-template-columns: minmax(0, 7.5em) 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 13px;
 }
 
@@ -83,7 +83,7 @@ const part = (valeur) => new Intl.NumberFormat(localeIntl(), { style: 'percent' 
   gap: 6px;
   min-width: 0;
   overflow-wrap: anywhere;
-  color: var(--couleur-texte);
+  color: var(--couleur-texte-secondaire);
 }
 
 .barre__pastille {
@@ -94,15 +94,19 @@ const part = (valeur) => new Intl.NumberFormat(localeIntl(), { style: 'percent' 
   box-shadow: inset 0 0 0 1px rgba(30, 20, 22, 0.15);
 }
 
+/* Piste pâle sur toute la largeur, remplie à la couleur des données (forme des maquettes) */
 .barre__piste {
-  height: 12px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--couleur-piste);
+  overflow: hidden;
 }
 
 .barre__remplissage {
   display: block;
   height: 100%;
   min-width: 2px;
-  border-radius: 0 4px 4px 0;
+  border-radius: 5px;
   background: var(--couleur-donnee);
 }
 
@@ -112,7 +116,7 @@ const part = (valeur) => new Intl.NumberFormat(localeIntl(), { style: 'percent' 
 
 .barre__valeur {
   font-weight: 700;
-  color: var(--couleur-texte);
+  color: var(--couleur-texte-secondaire);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

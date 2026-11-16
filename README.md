@@ -164,6 +164,7 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
   - l'acheteur écrit au vendeur depuis l'annonce : une conversation privée par acheteur et par annonce, mise à jour toutes les 5 secondes, avec un badge des messages non lus sur le marché ;
   - le vendeur change le prix, réserve l'annonce ou la remet en ligne, la marque vendue (à un membre qui lui a écrit, ou à quelqu'un hors de l'application) ou la retire. Vendu, l'article quitte le dressing ; retiré, il redevient disponible ;
   - aucun paiement : acheteur et vendeur s'arrangent entre eux.
+- **Interface reprise des maquettes** (wireframes du téléphone et de l'ordinateur) : briques communes dans `frontend/src/assets/maquette.css` (en-tête, cartes, listes, puces, badges, boutons, tuiles chiffrées, barre d'actions, mises en page sur deux colonnes). Sur ordinateur, le menu latéral est présent sur tous les écrans et le back office a le sien. Le profil se présente comme sur Instagram, la pièce affiche tous ses stockages avec leur grille d'articles, la photo de profil se change depuis « Modifier le profil », et la recherche de membres propose de s'abonner directement.
 - **Responsive** : l'application, pensée d'abord pour le téléphone, s'adapte à la tablette et à l'ordinateur :
   - téléphone (moins de 600 px) : une colonne et la barre de navigation en bas ;
   - tablette (à partir de 600 px) : une colonne plus large (720 px), et des grilles (articles d'une pièce, marché, profil, tenues) qui prennent autant de colonnes que la place le permet ;
@@ -259,6 +260,8 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
 | POST    | `/api/profils/{pseudo}/abonnement`      | S'abonne, ou envoie une demande (profil privé) |
 | DELETE  | `/api/profils/{pseudo}/abonnement`      | Se désabonne, ou annule la demande             |
 | PUT     | `/api/moi/profil`                       | Modifie son profil                             |
+| POST    | `/api/moi/avatar`                       | Change sa photo de profil (`photo`, multipart) |
+| GET     | `/api/meteo?lat=…&lon=…`                | Météo du moment (carte « tenue du jour » du dressing) |
 | GET     | `/api/moi/demandes`                     | Demandes d'abonnement reçues                   |
 | POST    | `/api/moi/demandes/{id}/acceptation`    | Accepte une demande                            |
 | DELETE  | `/api/moi/demandes/{id}`                | Refuse une demande                             |

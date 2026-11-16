@@ -6,6 +6,8 @@ const props = defineProps({
   // Une fois connecté, les données déjà chargées (catégories, couleurs…) viennent de l'API dans l'ancienne
   // langue : la page est rechargée pour les recevoir traduites
   recharger: { type: Boolean, default: false },
+  // Noms complets des langues (Français, English, Português) au lieu de FR / EN / PT
+  complet: { type: Boolean, default: false },
 })
 
 const { t, locale } = useI18n()
@@ -22,50 +24,35 @@ function choisir(code) {
 </script>
 
 <template>
-  <div class="langues" role="radiogroup" :aria-label="t('langue.choisir')">
+  <div class="segments langues" :class="{ 'langues--complet': complet }" role="radiogroup" :aria-label="t('langue.choisir')">
     <button
       v-for="langue in LANGUES"
       :key="langue.code"
       type="button"
       role="radio"
-      class="langue"
-      :class="{ 'langue--active': langue.code === locale }"
+      class="segment"
+      :class="{ 'segment--actif': langue.code === locale }"
       :aria-checked="langue.code === locale"
       :lang="langue.code"
       :title="langue.libelle"
       @click="choisir(langue.code)"
     >
-      {{ langue.abrege }}
+      {{ complet ? langue.libelle : langue.abrege }}
     </button>
   </div>
 </template>
 
 <style scoped>
+/* Abréviations FR / EN / PT : sélecteur compact ; noms complets : sélecteur pleine largeur (paramètres du profil) */
 .langues {
   display: inline-flex;
-  padding: 3px;
-  border-radius: 12px;
-  background: var(--couleur-info-fond);
+  width: 130px;
+  flex-shrink: 0;
 }
 
-.langue {
-  min-width: 40px;
-  height: 32px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.langue--active {
-  background: var(--couleur-surface);
-  color: var(--couleur-primaire);
-  font-weight: 800;
-  box-shadow: var(--ombre-segment);
+.langues--complet {
+  display: flex;
+  width: 100%;
+  max-width: 320px;
 }
 </style>

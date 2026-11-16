@@ -1,4 +1,5 @@
 @import './variables.css';
+@import './maquette.css';
 
 body {
   margin: 0;
@@ -49,33 +50,6 @@ a:hover {
     max-width: var(--largeur-contenu);
     margin-inline: auto;
     box-sizing: border-box;
-  }
-
-  /* Connexion et inscription : carte large en deux parties, présentation à gauche et formulaire à droite */
-  .ecran--accueil {
-    max-width: 960px;
-    margin: max(40px, calc((100dvh - 680px) / 2)) auto 40px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: 1fr auto;
-  }
-}
-
-/* Connexion et inscription sur tablette et ordinateur : une carte centrée sur la page */
-@media (min-width: 600px) {
-  .ecran--accueil {
-    min-height: auto;
-    border: 1px solid var(--couleur-bordure);
-    border-radius: 28px;
-    overflow: hidden;
-    box-shadow: var(--ombre-menu);
-  }
-}
-
-@media (min-width: 600px) and (max-width: 1023px) {
-  .ecran--accueil {
-    max-width: 480px;
-    margin: 40px auto;
   }
 }
 

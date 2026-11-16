@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import CarteTenue from '@/components/CarteTenue.vue'
+import VignetteArticle from '@/components/VignetteArticle.vue'
 import { api } from '@/services/api'
-import { fondVignette } from '@/utils/couleurs'
 import { idLogementActif } from '@/utils/logementActif'
 import { lirePosition } from '@/utils/position'
 
@@ -92,8 +92,11 @@ async function localiser() {
   await generer()
 }
 
+/**
+ * @param {number|null} id étiquette choisie, ou null pour « Toutes »
+ */
 function choisirEtiquette(id) {
-  etiquetteId.value = etiquetteId.value === id ? null : id
+  etiquetteId.value = id === null || etiquetteId.value === id ? null : id
   generer()
 }
 
@@ -126,7 +129,7 @@ async function publier() {
     })
     partage.value = false
     description.value = ''
-    // Comme sur la maquette, une tenue partagée s'affiche en tête du fil ; une tenue privée, sur le profil
+    // Une tenue partagée s'affiche en tête du fil ; une tenue privée, sur le profil
     if (tenue.estPrivee) {
       router.push({ name: 'profil', query: { onglet: 'tenues' } })
     } else {
@@ -198,149 +201,138 @@ onMounted(() => ouvrirOnglet(onglet.value))
 
 <template>
   <div class="ecran">
-    <main class="contenu">
-      <div class="segments" role="tablist" :aria-label="t('navigation.tenues')">
-        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="ouvrirOnglet('generer')">{{ t('tenues.generer') }}</button>
-        <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="ouvrirOnglet('fil')">{{ t('tenues.fil') }}</button>
-      </div>
+    <main class="page">
+      <header class="entete entete--onglets">
+        <h1 class="titre-page">{{ t('navigation.tenues') }}</h1>
+        <div class="segments onglets" role="tablist" :aria-label="t('navigation.tenues')">
+          <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'generer' }" :aria-selected="onglet === 'generer'" @click="ouvrirOnglet('generer')">{{ t('tenues.generer') }}</button>
+          <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'fil' }" :aria-selected="onglet === 'fil'" @click="ouvrirOnglet('fil')">{{ t('tenues.fil') }}</button>
+        </div>
+      </header>
 
+      <!-- Fil des tenues : une carte sous l'autre, deux colonnes sur ordinateur -->
       <template v-if="onglet === 'fil'">
         <p v-if="erreurFil" class="message-erreur" role="alert">{{ erreurFil }}</p>
         <p v-if="fil === null" class="etat">{{ t('tenues.chargementFil') }}</p>
-        <div v-else-if="fil.length === 0" class="fil-vide">
+        <div v-else-if="fil.length === 0" class="pile">
           <p class="etat">{{ t('tenues.filVide') }}</p>
-          <RouterLink :to="{ name: 'membres' }" class="bouton-principal">{{ t('profil.rechercherMembres') }}</RouterLink>
+          <RouterLink :to="{ name: 'membres' }" class="bouton bouton--large">{{ t('profil.rechercherMembres') }}</RouterLink>
         </div>
         <template v-else>
           <div class="fil-cartes">
             <CarteTenue v-for="tenueDuFil in fil" :key="tenueDuFil.id" :tenue="tenueDuFil" @supprimee="retirerDuFil" />
           </div>
-          <button v-if="suiteFil" type="button" class="voir-plus" :disabled="chargementFil" @click="chargerFil(true)">{{ t('tenues.voirPlus') }}</button>
+          <button v-if="suiteFil" type="button" class="bouton bouton--contour voir-plus" :disabled="chargementFil" @click="chargerFil(true)">{{ t('tenues.voirPlus') }}</button>
         </template>
       </template>
 
       <template v-else-if="logementId === null && !chargement">
         <p class="etat">{{ t('tenues.sansLogement') }}</p>
-        <RouterLink :to="{ name: 'dressing' }" class="bouton-principal">{{ t('tenues.allerDressing') }}</RouterLink>
+        <RouterLink :to="{ name: 'dressing' }" class="bouton bouton--large">{{ t('tenues.allerDressing') }}</RouterLink>
       </template>
 
-      <template v-else>
-        <div class="meteo">
-          <span class="meteo__icone">
-            <svg v-if="etatMeteo === 'ok' && iconeMeteo === 'pluie'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><path d="M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2" /></svg>
-            <svg v-else-if="etatMeteo === 'ok' && iconeMeteo === 'soleil'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
-            <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg>
-          </span>
-          <span class="meteo__textes">
-            <template v-if="etatMeteo === 'ok'">
-              <span class="meteo__titre">{{ meteo.ville ?? t('tenues.votrePosition') }} · {{ meteo.libelle }} · {{ meteo.temperature }} °C</span>
-              <span class="meteo__conseil">{{ meteo.conseil }}</span>
-            </template>
-            <template v-else-if="etatMeteo === 'recherche'">
-              <span class="meteo__titre">{{ t('tenues.meteoEnCours') }}</span>
-              <span class="meteo__conseil">{{ t('tenues.autoriserLocalisation') }}</span>
-            </template>
-            <template v-else>
-              <span class="meteo__titre">{{ t('tenues.meteoIndisponible') }}</span>
-              <span class="meteo__conseil">{{ t('tenues.selonSaison') }}</span>
-            </template>
-          </span>
-          <span v-if="etatMeteo === 'ok'" class="meteo__direct">{{ t('tenues.enDirect') }}</span>
-          <button v-else-if="etatMeteo === 'indisponible'" type="button" class="meteo__reessayer" @click="localiser">{{ t('tenues.reessayer') }}</button>
-        </div>
-
-        <div class="occasions">
-          <span class="occasions__titre">{{ t('tenues.occasion') }}</span>
-          <div class="occasions__liste">
-            <button
-              v-for="etiquette in etiquettes"
-              :key="etiquette.id"
-              type="button"
-              class="occasion"
-              :class="{ 'occasion--active': etiquette.id === etiquetteId }"
-              :aria-pressed="etiquette.id === etiquetteId"
-              @click="choisirEtiquette(etiquette.id)"
-            >
-              {{ etiquette.nom }}
-            </button>
-            <button
-              v-if="peutCreerEtiquette && !creationEtiquette"
-              type="button"
-              class="occasion-ajout"
-              :aria-label="t('tenues.creerEtiquette')"
-              @click="creationEtiquette = true"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-            </button>
+      <!-- Générateur : météo et occasion à gauche, tenue composée à droite (sur ordinateur) -->
+      <div v-else class="colonne-gauche generateur">
+        <div class="reglages">
+          <div class="carte carte--rangee meteo">
+            <span class="meteo__icone">
+              <svg v-if="etatMeteo === 'ok' && iconeMeteo === 'pluie'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><path d="M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2" /></svg>
+              <svg v-else-if="etatMeteo === 'ok' && iconeMeteo === 'soleil'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
+              <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg>
+            </span>
+            <span class="entete__textes">
+              <template v-if="etatMeteo === 'ok'">
+                <b class="meteo__titre">{{ meteo.ville ?? t('tenues.votrePosition') }} · {{ meteo.libelle }} · {{ meteo.temperature }} °C</b>
+                <span class="texte-secondaire">{{ meteo.conseil }}</span>
+              </template>
+              <template v-else-if="etatMeteo === 'recherche'">
+                <b class="meteo__titre">{{ t('tenues.meteoEnCours') }}</b>
+                <span class="texte-secondaire">{{ t('tenues.autoriserLocalisation') }}</span>
+              </template>
+              <template v-else>
+                <b class="meteo__titre">{{ t('tenues.meteoIndisponible') }}</b>
+                <span class="texte-secondaire">{{ t('tenues.selonSaison') }}</span>
+              </template>
+            </span>
+            <span v-if="etatMeteo === 'ok'" class="badge">{{ t('tenues.enDirect') }}</span>
+            <button v-else-if="etatMeteo === 'indisponible'" type="button" class="badge" @click="localiser">{{ t('tenues.reessayer') }}</button>
           </div>
-          <form v-if="creationEtiquette" class="nouvelle-etiquette" @submit.prevent="creerEtiquette">
-            <input v-model.trim="nomEtiquette" class="saisie nouvelle-etiquette__nom" :class="{ 'saisie--invalide': erreurEtiquette }" type="text" maxlength="30" :placeholder="t('tenues.exempleEtiquette')" :aria-label="t('tenues.nomEtiquette')" autofocus />
-            <button type="button" class="nouvelle-etiquette__annuler" @click="creationEtiquette = false">{{ t('commun.annuler') }}</button>
-            <button type="submit" class="nouvelle-etiquette__valider" :disabled="!nomEtiquette">{{ t('commun.creer') }}</button>
-          </form>
-          <span v-if="erreurEtiquette" class="champ__erreur">{{ erreurEtiquette }}</span>
-        </div>
 
-        <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-        <p v-else-if="chargement && tenue.length === 0" class="etat">{{ t('tenues.composition') }}</p>
-        <p v-else-if="tenue.length && articlesProposes.length === 0" class="etat">
-          {{ t('tenues.aucunVetement') }}
-        </p>
-        <div v-else class="tenue" :class="{ 'tenue--chargement': chargement }" aria-live="polite">
-          <template v-for="ligne in tenue" :key="ligne.zone">
-            <RouterLink
-              v-if="ligne.article"
-              :to="{ name: 'article', params: { id: ligne.article.id } }"
-              class="piece"
-              :style="{ background: fondVignette(ligne.article.couleur) }"
-            >
-              <img v-if="ligne.article.photo" :src="ligne.article.photo" alt="" class="piece__photo" />
-              <span class="piece__zone">{{ t(`tenues.zones.${ligne.zone}`) }}</span>
-              <span v-if="ligne.pluie" class="piece__pluie">{{ t('tenues.pluie') }}</span>
-              <span class="piece__textes">
-                <span class="piece__nom">{{ ligne.article.titre }}</span>
-                <span class="piece__emplacement">{{ ligne.article.emplacement ?? t('commun.aRanger') }}</span>
-              </span>
-            </RouterLink>
-            <div v-else class="piece piece--vide">
-              <span class="piece__zone">{{ t(`tenues.zones.${ligne.zone}`) }}</span>
-              <span class="piece__manque">{{ t('tenues.manque') }}</span>
+          <div class="pile occasions">
+            <span class="champ__libelle">{{ t('tenues.occasion') }}</span>
+            <div class="puces puces--retour">
+              <button type="button" class="puce" :class="{ 'puce--active': etiquetteId === null }" :aria-pressed="etiquetteId === null" @click="choisirEtiquette(null)">{{ t('tenues.toutes') }}</button>
+              <button
+                v-for="etiquette in etiquettes"
+                :key="etiquette.id"
+                type="button"
+                class="puce"
+                :class="{ 'puce--active': etiquette.id === etiquetteId }"
+                :aria-pressed="etiquette.id === etiquetteId"
+                @click="choisirEtiquette(etiquette.id)"
+              >
+                {{ etiquette.nom }}
+              </button>
+              <button v-if="peutCreerEtiquette && !creationEtiquette" type="button" class="puce" :aria-label="t('tenues.creerEtiquette')" @click="creationEtiquette = true">
+                +<span class="seulement-ordinateur creer">{{ t('commun.creer') }}</span>
+              </button>
             </div>
-          </template>
-        </div>
-        <p v-if="pasDAutreIdee" class="info">{{ t('tenues.pasDAutreIdee') }}</p>
-
-        <form v-if="partage" class="partage" @submit.prevent="publier">
-          <label class="champ">
-            <span class="champ__libelle">{{ t('scanCode.titre') }}</span>
-            <input v-model.trim="titre" class="saisie partage__saisie" type="text" maxlength="100" required />
-          </label>
-          <label class="champ">
-            <span class="champ__libelle">{{ t('tenues.legende') }}</span>
-            <textarea v-model="description" class="saisie partage__zone" rows="2" maxlength="500" :placeholder="t('tenues.exempleLegende')"></textarea>
-          </label>
-          <label class="partage__privee">
-            <input v-model="estPrivee" type="checkbox" />
-            {{ t('tenues.privee') }}
-          </label>
-          <p v-if="erreurPartage" class="message-erreur" role="alert">{{ erreurPartage }}</p>
-          <div class="actions">
-            <button type="button" class="action action--secondaire" @click="partage = false">{{ t('commun.annuler') }}</button>
-            <button type="submit" class="action action--principale" :disabled="envoi || !titre">{{ t('commun.publier') }}</button>
+            <form v-if="creationEtiquette" class="nouvelle-etiquette" @submit.prevent="creerEtiquette">
+              <input v-model.trim="nomEtiquette" class="saisie nouvelle-etiquette__nom" :class="{ 'saisie--invalide': erreurEtiquette }" type="text" maxlength="30" :placeholder="t('tenues.exempleEtiquette')" :aria-label="t('tenues.nomEtiquette')" autofocus />
+              <button type="button" class="bouton bouton--contour bouton--petit" @click="creationEtiquette = false">{{ t('commun.annuler') }}</button>
+              <button type="submit" class="bouton bouton--petit" :disabled="!nomEtiquette">{{ t('commun.creer') }}</button>
+            </form>
+            <span v-if="erreurEtiquette" class="champ__erreur">{{ erreurEtiquette }}</span>
           </div>
-        </form>
 
-        <div v-else class="actions">
-          <button type="button" class="action action--secondaire" :disabled="chargement" @click="generer(true)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
-            {{ t('tenues.autreIdee') }}
-          </button>
-          <button type="button" class="action action--principale" :disabled="chargement || articlesProposes.length === 0" @click="ouvrirPartage">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
-            {{ t('tenues.partager') }}
-          </button>
+          <form v-if="partage" class="carte carte--grise partage" @submit.prevent="publier">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('scanCode.titre') }}</span>
+              <input v-model.trim="titre" class="saisie" type="text" maxlength="100" required />
+            </label>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('tenues.legende') }}</span>
+              <textarea v-model="description" class="saisie" rows="2" maxlength="500" :placeholder="t('tenues.exempleLegende')"></textarea>
+            </label>
+            <label class="partage__privee">
+              <input v-model="estPrivee" type="checkbox" />
+              {{ t('tenues.privee') }}
+            </label>
+            <p v-if="erreurPartage" class="message-erreur" role="alert">{{ erreurPartage }}</p>
+            <div class="boutons">
+              <button type="button" class="bouton bouton--contour bouton--flexible" @click="partage = false">{{ t('commun.annuler') }}</button>
+              <button type="submit" class="bouton bouton--flexible" :disabled="envoi || !titre">{{ t('commun.publier') }}</button>
+            </div>
+          </form>
+
+          <!-- Autre idée et Partager : sous la tenue sur téléphone, dans la colonne de gauche sur ordinateur -->
+          <div v-else class="actions">
+            <button type="button" class="bouton bouton--contour" :disabled="chargement" @click="generer(true)">{{ t('tenues.autreIdee') }}</button>
+            <button type="button" class="bouton" :disabled="chargement || articlesProposes.length === 0" @click="ouvrirPartage">{{ t('tenues.partager') }}</button>
+          </div>
         </div>
-      </template>
+
+        <div class="composition">
+          <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+          <p v-else-if="chargement && tenue.length === 0" class="etat">{{ t('tenues.composition') }}</p>
+          <p v-else-if="tenue.length && articlesProposes.length === 0" class="etat">{{ t('tenues.aucunVetement') }}</p>
+          <div v-else class="tenue" :class="{ 'tenue--chargement': chargement }" aria-live="polite">
+            <template v-for="ligne in tenue" :key="ligne.zone">
+              <RouterLink v-if="ligne.article" :to="{ name: 'article', params: { id: ligne.article.id } }" class="piece">
+                <VignetteArticle class="piece__vignette" :photo="ligne.article.photo" :couleur="ligne.article.couleur">
+                  <span v-if="ligne.pluie" class="badge badge--blanc piece__pluie">{{ t('tenues.pluie') }}</span>
+                </VignetteArticle>
+                <span class="texte-secondaire piece__legende"><b>{{ t(`tenues.zones.${ligne.zone}`) }}</b> · {{ ligne.article.titre }}</span>
+              </RouterLink>
+              <div v-else class="piece">
+                <span class="piece__vignette piece__vignette--vide">{{ t('tenues.manque') }}</span>
+                <span class="texte-secondaire piece__legende"><b>{{ t(`tenues.zones.${ligne.zone}`) }}</b></span>
+              </div>
+            </template>
+          </div>
+          <p v-if="pasDAutreIdee" class="bandeau-info">{{ t('tenues.pasDAutreIdee') }}</p>
+        </div>
+      </div>
     </main>
 
     <BarreNavigation actif="tenues" />
@@ -348,359 +340,78 @@ onMounted(() => ouvrirOnglet(onglet.value))
 </template>
 
 <style scoped>
-.contenu {
-  flex: 1;
-  padding: 20px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.entete--onglets {
+  flex-wrap: wrap;
 }
 
-.fil-vide {
+.onglets {
+  flex-basis: 100%;
+}
+
+.fil-cartes {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
 }
 
 .voir-plus {
-  height: 44px;
-  border-radius: 14px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
+  width: 100%;
 }
 
-.segments {
+.generateur {
   display: flex;
-  padding: 4px;
-  border-radius: 14px;
-  background: var(--couleur-info-fond);
+  flex-direction: column;
+  gap: 11px;
 }
 
-.segment {
-  flex: 1;
-  height: 38px;
-  border: 0;
-  border-radius: 11px;
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.segment--actif {
-  background: var(--couleur-surface);
-  color: var(--couleur-primaire);
-  font-weight: 800;
-  box-shadow: var(--ombre-segment);
+.reglages {
+  display: contents;
 }
 
 .meteo {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
+  padding: 10px;
 }
 
 .meteo__icone {
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--couleur-meteo-fond);
   color: var(--couleur-meteo);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.meteo__textes {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 .meteo__titre {
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.meteo__conseil {
-  font-size: 12.5px;
-  color: var(--couleur-texte-secondaire);
-}
-
-.meteo__direct,
-.meteo__reessayer {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--couleur-meteo-fond);
-  color: var(--couleur-meteo);
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.meteo__reessayer {
-  cursor: pointer;
+  font-size: 14px;
 }
 
 .occasions {
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
-.occasions__titre {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
-}
-
-.occasions__liste {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.occasion {
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.occasion--active {
-  border-color: var(--couleur-primaire);
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.occasion-ajout {
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  border: 1.5px dashed var(--couleur-bordure-pointillee);
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.creer {
+  margin-left: 4px;
 }
 
 .nouvelle-etiquette {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
 
 .nouvelle-etiquette__nom {
   flex: 1;
   min-width: 0;
-  height: 40px;
-}
-
-.nouvelle-etiquette__annuler,
-.nouvelle-etiquette__valider {
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 0;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.nouvelle-etiquette__annuler {
-  background: none;
-  color: var(--couleur-texte-secondaire);
-}
-
-.nouvelle-etiquette__valider {
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.nouvelle-etiquette__valider:disabled {
-  opacity: 0.5;
-}
-
-.tenue {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  transition: opacity 0.2s;
-}
-
-.tenue--chargement {
-  opacity: 0.5;
-}
-
-.piece {
-  position: relative;
-  height: 150px;
-  box-sizing: border-box;
-  padding: 10px;
-  border-radius: 18px;
-  /* Un vêtement blanc reste visible sur le fond de l'écran */
-  border: 1px solid var(--couleur-bordure);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  color: var(--couleur-texte);
-}
-
-.piece__photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.piece__zone,
-.piece__pluie {
-  position: absolute;
-  top: 10px;
-  padding: 3px 8px;
-  border-radius: 8px;
-  font-size: 11px;
-}
-
-.piece__zone {
-  left: 10px;
-  background: var(--couleur-photo-etiquette);
-  color: var(--couleur-texte);
-  font-weight: 800;
-}
-
-.piece__pluie {
-  right: 10px;
-  background: var(--couleur-meteo);
-  color: var(--couleur-sur-primaire);
-  font-weight: 700;
-}
-
-.piece__textes {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: var(--couleur-photo-bouton);
-}
-
-.piece__nom {
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.piece__emplacement {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--couleur-texte-secondaire);
-}
-
-.piece--vide {
-  justify-content: center;
-  align-items: center;
-  border: 1.5px dashed var(--couleur-bordure-pointillee);
-}
-
-.piece__manque {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--couleur-texte-secondaire);
-  text-align: center;
-}
-
-.info {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--couleur-primaire);
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-}
-
-.action {
-  flex: 1;
-  height: 52px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.action:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.action--secondaire {
-  border: 1.5px solid var(--couleur-primaire);
-  background: var(--couleur-surface);
-  color: var(--couleur-primaire);
-}
-
-.action--principale {
-  border: 0;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
+  height: 36px;
 }
 
 .partage {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 18px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
-}
-
-.partage .champ {
-  gap: 6px;
-}
-
-.partage__saisie {
-  height: 46px;
-}
-
-.partage__zone {
-  padding: 10px 16px;
-  resize: vertical;
-  line-height: 1.5;
+  gap: 10px;
 }
 
 .partage__privee {
@@ -709,27 +420,133 @@ onMounted(() => ouvrirOnglet(onglet.value))
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  accent-color: var(--couleur-primaire);
 }
 
-/* Le fil : une carte sous l'autre sur téléphone */
-.fil-cartes {
+/* Les boutons passent après la tenue sur téléphone */
+.actions {
+  order: 3;
+  display: flex;
+  gap: 10px;
+}
+
+.actions .bouton {
+  flex: 1;
+}
+
+.composition {
+  order: 2;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
-/* Tablette et ordinateur : toutes les pièces de la tenue sur une ligne, cartes du fil côte à côte */
-@media (min-width: 600px) {
-  .tenue {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+.tenue {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  transition: opacity 0.2s;
+}
+
+.tenue--chargement {
+  opacity: 0.5;
+}
+
+.piece {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--couleur-texte);
+}
+
+.piece:hover {
+  color: var(--couleur-texte);
+}
+
+.piece__vignette {
+  width: 100%;
+  height: 118px;
+}
+
+.piece__vignette--vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--couleur-bordure-pointillee);
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--couleur-texte-secondaire);
+}
+
+.piece__pluie {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}
+
+.piece__legende {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.piece__legende b {
+  color: var(--couleur-texte);
+}
+
+@media (min-width: 1024px) {
+  .entete--onglets {
+    flex-wrap: nowrap;
+  }
+
+  .onglets {
+    flex-basis: 320px;
+    flex-shrink: 0;
   }
 
   .fil-cartes {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
     align-items: start;
+  }
+
+  .voir-plus {
+    width: auto;
+    align-self: center;
+  }
+
+  .generateur {
+    display: grid;
+    --largeur-colonne-fixe: 300px;
+    gap: 32px;
+  }
+
+  .reglages {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions .bouton {
+    flex: none;
+  }
+
+  .tenue {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
+  }
+
+  .piece__vignette {
+    height: auto;
+    aspect-ratio: 3 / 4;
   }
 }
 </style>

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AtoutsAccueil from '@/components/AtoutsAccueil.vue'
+import IllustrationAccueil from '@/components/IllustrationAccueil.vue'
 import SelecteurLangue from '@/components/SelecteurLangue.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -32,237 +33,248 @@ async function seConnecter() {
 }
 
 const typeMotDePasse = computed(() => (afficherMotDePasse.value ? 'text' : 'password'))
-const libelleBascule = computed(() =>
-  t(afficherMotDePasse.value ? 'connexion.masquer' : 'connexion.afficher'),
-)
 </script>
 
 <template>
-  <div class="ecran ecran--accueil">
-    <div class="bandeau">
-      <div class="bandeau__haut">
-        <span class="bandeau__logo">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6a2 2 0 1 1 2 2c-1 0-2 .7-2 1.6v.9" /><path d="M12 10.5 2.6 17a1.4 1.4 0 0 0 .8 2.5h17.2a1.4 1.4 0 0 0 .8-2.5z" /></svg>
+  <div class="accueil">
+    <div class="accueil__haut">
+      <span class="accueil__marque">
+        <span class="accueil__logo" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6a2 2 0 1 1 2 2c-1 0-2 .7-2 1.6v.9" /><path d="M12 10.5 2.6 17a1.4 1.4 0 0 0 .8 2.5h17.2a1.4 1.4 0 0 0 .8-2.5z" /></svg>
         </span>
-        <SelecteurLangue />
-      </div>
-      <div class="bandeau__textes">
-        <span class="bandeau__titre">{{ t('connexion.accroche') }}</span>
-        <span class="bandeau__sous-titre">{{ t('connexion.sousTitre') }}</span>
-      </div>
-      <AtoutsAccueil />
+        {{ t('navigation.marque') }}
+      </span>
+      <SelecteurLangue />
     </div>
 
-    <form class="formulaire" @submit.prevent="seConnecter">
-      <h1 class="formulaire__titre">{{ t('connexion.titre') }}</h1>
+    <div class="accueil__carte">
+      <!-- Présentation : en tête d'écran sur téléphone, colonne de gauche sur ordinateur -->
+      <section class="presentation">
+        <IllustrationAccueil class="presentation__illustration" />
+        <h1 class="presentation__titre">{{ t('connexion.accroche') }}</h1>
+        <p class="texte-secondaire">{{ t('connexion.sousTitre') }}</p>
+        <AtoutsAccueil class="presentation__atouts" />
+      </section>
 
-      <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+      <div class="formulaire">
+        <h2 class="titre-page formulaire__titre">{{ t('connexion.titre') }}</h2>
+        <form class="pile" @submit.prevent="seConnecter">
+          <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
-      <label class="champ">
-        <span class="champ__libelle">{{ t('connexion.email') }}</span>
-        <input v-model="email" class="saisie" type="email" autocomplete="email" :placeholder="t('connexion.exempleEmail')" required />
-      </label>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('connexion.email') }}</span>
+            <input v-model="email" class="saisie" type="email" autocomplete="email" :placeholder="t('connexion.exempleEmail')" required />
+          </label>
 
-      <label class="champ">
-        <span class="champ__libelle">{{ t('connexion.motDePasse') }}</span>
-        <span class="saisie saisie--groupe saisie--mot-de-passe">
-          <input v-model="motDePasse" :type="typeMotDePasse" autocomplete="current-password" placeholder="••••••••" required />
-          <button type="button" class="bascule" :aria-label="libelleBascule" @click="afficherMotDePasse = !afficherMotDePasse">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('connexion.motDePasse') }}</span>
+            <input v-model="motDePasse" class="saisie" :type="typeMotDePasse" autocomplete="current-password" placeholder="••••••••" required />
+          </label>
+
+          <div class="ligne-titre">
+            <button type="button" class="lien lien--discret" :aria-pressed="afficherMotDePasse" @click="afficherMotDePasse = !afficherMotDePasse">
+              {{ t(afficherMotDePasse ? 'connexion.masquer' : 'connexion.afficher') }}
+            </button>
+            <a href="#" class="lien">{{ t('connexion.oubli') }}</a>
+          </div>
+
+          <button type="submit" class="bouton bouton--large" :disabled="envoiEnCours">
+            {{ t(envoiEnCours ? 'connexion.enCours' : 'connexion.seConnecter') }}
           </button>
-        </span>
-      </label>
 
-      <a href="#" class="oubli">{{ t('connexion.oubli') }}</a>
+          <div class="separateur texte-secondaire">
+            <span class="separateur__trait"></span>
+            {{ t('connexion.ou') }}
+            <span class="separateur__trait"></span>
+          </div>
 
-      <button type="submit" class="bouton-principal" :disabled="envoiEnCours">
-        {{ t(envoiEnCours ? 'connexion.enCours' : 'connexion.seConnecter') }}
-      </button>
+          <RouterLink :to="{ name: 'membres' }" class="bouton bouton--contour bouton--large">{{ t('connexion.decouvrir') }}</RouterLink>
+        </form>
 
-      <div class="separateur">
-        <span class="separateur__trait"></span>
-        {{ t('connexion.ou') }}
-        <span class="separateur__trait"></span>
+        <p class="texte-secondaire pied">
+          {{ t('connexion.pasDeCompte') }}
+          <RouterLink to="/inscription" class="lien">{{ t('connexion.inscription') }}</RouterLink>
+        </p>
       </div>
-
-      <a href="#" class="bouton-secondaire">
-        {{ t('connexion.decouvrir') }}
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-      </a>
-    </form>
-
-    <p class="pied">
-      {{ t('connexion.pasDeCompte') }}
-      <RouterLink to="/inscription" class="pied__lien">{{ t('connexion.inscription') }}</RouterLink>
-    </p>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.bandeau {
-  height: 250px;
-  flex-shrink: 0;
+/* Téléphone : page blanche, logo et langue en haut, présentation puis formulaire */
+.accueil {
+  max-width: 390px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 22px 16px 24px;
   box-sizing: border-box;
-  padding: 40px 24px 0;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
+  background: var(--couleur-surface);
 }
 
-.bandeau__haut {
+.accueil__haut {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
-.bandeau__logo {
-  width: 60px;
-  height: 60px;
-  border-radius: 18px;
-  background: var(--couleur-sur-primaire-voile);
+.accueil__marque {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.accueil__logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.bandeau__textes {
+.accueil__carte {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 22px;
 }
 
-.bandeau__titre {
-  font-size: 28px;
+.presentation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.presentation__titre {
+  margin: 0;
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
-.bandeau__sous-titre {
-  font-size: 14px;
-  font-weight: 500;
-  opacity: 0.85;
+.presentation__atouts,
+.formulaire__titre {
+  display: none;
 }
 
 .formulaire {
-  flex: 1;
-  margin-top: -24px;
-  padding: 28px 24px 0;
-  border-radius: 26px 26px 0 0;
-  background: var(--couleur-fond);
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.formulaire__titre {
-  margin: 0 0 4px;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.formulaire .pile {
+  gap: 14px;
 }
 
-.champ {
-  gap: 6px;
-}
-
-.saisie {
-  height: 52px;
-}
-
-.saisie--mot-de-passe {
-  padding: 0 6px 0 16px;
-}
-
-.bascule {
-  width: 44px;
-  height: 44px;
-  border: 0;
-  background: none;
+.lien--discret {
   color: var(--couleur-texte-secondaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.oubli {
-  align-self: flex-end;
-  padding: 4px 0;
-  font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .separateur {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-size: 12.5px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 10px;
 }
 
 .separateur__trait {
-  flex: 1;
+  width: 90px;
   height: 1px;
   background: var(--couleur-bordure);
 }
 
-.bouton-secondaire {
-  height: 52px;
-  box-sizing: border-box;
-  border-radius: 16px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
 .pied {
-  margin: 0;
-  padding: 16px 24px 28px;
   text-align: center;
-  font-size: 14px;
-  color: var(--couleur-texte-secondaire);
 }
 
-.pied__lien {
-  font-weight: 800;
+/* Tablette : carte centrée avec le seul formulaire */
+@media (min-width: 600px) {
+  .accueil {
+    max-width: 480px;
+    min-height: 100dvh;
+    padding: 40px 0;
+    justify-content: center;
+    background: var(--couleur-fond);
+  }
+
+  .accueil__carte {
+    padding: 32px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 18px;
+    background: var(--couleur-surface);
+    box-shadow: var(--ombre-menu);
+  }
+
+  .presentation {
+    display: none;
+  }
+
+  .formulaire__titre {
+    display: block;
+  }
 }
 
-/* Ordinateur : le bandeau devient un panneau à gauche qui présente l'application, le formulaire est à droite */
+/* Ordinateur : carte large en deux parties, présentation à gauche et formulaire à droite */
 @media (min-width: 1024px) {
-  .bandeau {
-    grid-row: 1 / 3;
-    height: auto;
-    padding: 48px 44px;
-    gap: 36px;
+  .accueil {
+    max-width: 960px;
+    gap: 14px;
   }
 
-  .bandeau__titre {
-    font-size: 36px;
+  .accueil__carte {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    min-height: 560px;
+    padding: 0;
+    overflow: hidden;
   }
 
-  .bandeau__sous-titre {
-    font-size: 16px;
+  .presentation {
+    display: flex;
+    gap: 18px;
+    padding: 40px;
+    border-right: 1.5px solid var(--couleur-bordure);
+    background: var(--couleur-primaire-pale);
+  }
+
+  /* Titre et accroche d'abord, puis l'illustration et les atouts */
+  .presentation__titre {
+    order: 1;
+    font-size: 30px;
+  }
+
+  .presentation .texte-secondaire {
+    order: 2;
+  }
+
+  .presentation__illustration {
+    order: 3;
+    flex: 1;
+    background: var(--couleur-fond);
+  }
+
+  .presentation__atouts {
+    order: 4;
+  }
+
+  .presentation__atouts {
+    display: flex;
   }
 
   .formulaire {
-    margin-top: 0;
-    padding: 56px 48px 0;
-    border-radius: 0;
     justify-content: center;
-  }
-
-  .pied {
-    padding: 20px 48px 40px;
+    padding: 40px;
   }
 }
 </style>

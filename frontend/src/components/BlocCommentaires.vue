@@ -106,7 +106,7 @@ onMounted(async () => {
         :placeholder="t('commentaires.ajouter')"
         :aria-label="t('commentaires.votre')"
       ></textarea>
-      <button type="submit" class="nouveau-commentaire__envoyer" :disabled="envoi || !nouveau.trim()">{{ t('commun.publier') }}</button>
+      <button type="submit" class="nouveau-commentaire__envoyer" :disabled="envoi || !nouveau.trim()">{{ t('messages.envoyer') }}</button>
     </form>
     <p v-else-if="!session.utilisateur" class="commentaires__aide">
       <i18n-t keypath="commentaires.connectezVous" scope="global">

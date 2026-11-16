@@ -298,11 +298,13 @@ final class Presentateur
             'description' => $article->getDescription(),
             'statut' => $article->getStatut()->value,
             'categorie' => $this->referentiels->nom($article->getCategorie()->getNom()),
+            'categorieChemin' => $this->referentiels->chemin($article->getCategorie()),
             'couleur' => null === $couleur ? null : ['nom' => $this->referentiels->nom($couleur->getNom()), 'codeHex' => $couleur->getCodeHex()],
             'photos' => array_map(static fn ($photo) => $photo->getChemin(), $photos),
             'dateScan' => $photoScan?->getCreatedAt()->format(\DATE_ATOM),
             'voitEmplacement' => $voitEmplacement,
             'emplacement' => null === $stockage || !$voitEmplacement ? null : [
+                'logement' => ['id' => $article->getLogement()->getId(), 'nom' => $article->getLogement()->getNom()],
                 'piece' => ['id' => $stockage->getPiece()->getId(), 'nom' => $stockage->getPiece()->getNom()],
                 'stockage' => ['id' => $stockage->getId(), 'nom' => $stockage->getNom()],
             ],

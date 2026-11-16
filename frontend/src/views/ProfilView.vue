@@ -5,9 +5,9 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import CarteTenue from '@/components/CarteTenue.vue'
+import VignetteArticle from '@/components/VignetteArticle.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
-import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -29,7 +29,6 @@ const erreurTenues = ref('')
 // /profil affiche le profil de l'utilisateur connecté, /membres/:pseudo celui d'un membre
 const pseudo = computed(() => route.params.pseudo ?? session.utilisateur?.pseudo)
 const estMoi = computed(() => profil.value?.relation.estMoi ?? false)
-const nomAffiche = computed(() => profil.value.nomComplet ?? profil.value.pseudo)
 
 const actionAbonnement = computed(() => {
   const relation = profil.value.relation
@@ -119,157 +118,157 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
 
 <template>
   <div class="ecran">
-    <main class="contenu">
+    <main class="page">
       <p v-if="chargement && !profil" class="etat">{{ t('profil.chargement') }}</p>
-      <div v-else-if="erreur" class="contenu-erreur">
+      <div v-else-if="erreur" class="pile">
         <p class="message-erreur" role="alert">{{ erreur }}</p>
-        <RouterLink :to="{ name: 'membres' }">{{ t('profil.rechercherMembre') }}</RouterLink>
+        <RouterLink :to="{ name: 'membres' }" class="lien">{{ t('profil.rechercherMembre') }}</RouterLink>
       </div>
 
       <template v-else-if="profil">
-        <RouterLink v-if="!estMoi" :to="{ name: 'membres' }" class="retour">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-          {{ t('profil.membres') }}
-        </RouterLink>
-
-        <header class="entete">
-          <AvatarMembre :membre="profil" :taille="76" anneau />
-          <div class="entete__textes">
-            <h1 class="entete__nom">{{ nomAffiche }}</h1>
-            <span class="entete__pseudo">@{{ profil.pseudo }}</span>
-            <span v-if="profil.estPrive" class="badge">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-              {{ t('commun.profilPrive') }}
-            </span>
-          </div>
-          <RouterLink v-if="estMoi" :to="{ name: 'profil-modifier' }" class="bouton-icone entete__bouton" :aria-label="t('profil.parametres')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+        <!-- Téléphone : « @pseudo » en titre, avec retour (profil d'un membre) ou recherche (mon profil) -->
+        <header class="entete seulement-mobile">
+          <RouterLink v-if="!estMoi" :to="{ name: 'membres' }" class="bouton-icone" :aria-label="t('commun.retour')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </RouterLink>
+          <h1 class="titre-page">@{{ profil.pseudo }}</h1>
+          <RouterLink v-if="estMoi" :to="{ name: 'membres' }" class="bouton-icone" :aria-label="t('profil.rechercherMembres')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
           </RouterLink>
         </header>
 
-        <p v-if="profil.bio" class="bio">{{ profil.bio }}</p>
-
-        <div class="compteurs">
-          <div class="compteur">
-            <span class="compteur__nombre">{{ profil.compteurs.articles ?? '—' }}</span>
-            <span class="compteur__libelle">{{ t('dressing.articles', profil.compteurs.articles ?? 0) }}</span>
-          </div>
-          <component
-            :is="profil.peutVoirContenu ? RouterLink : 'div'"
-            :to="{ name: 'membre-abonnes', params: { pseudo: profil.pseudo } }"
-            class="compteur compteur--milieu"
-          >
-            <span class="compteur__nombre">{{ profil.compteurs.abonnes }}</span>
-            <span class="compteur__libelle">{{ t('profil.abonnes', profil.compteurs.abonnes) }}</span>
-          </component>
-          <component
-            :is="profil.peutVoirContenu ? RouterLink : 'div'"
-            :to="{ name: 'membre-abonnements', params: { pseudo: profil.pseudo } }"
-            class="compteur"
-          >
-            <span class="compteur__nombre">{{ profil.compteurs.abonnements }}</span>
-            <span class="compteur__libelle">{{ t('profil.abonnements', profil.compteurs.abonnements) }}</span>
-          </component>
+        <!-- Ordinateur : fil d'Ariane sur le profil d'un membre -->
+        <div v-if="!estMoi" class="entete seulement-ordinateur">
+          <RouterLink :to="{ name: 'membres' }" class="bouton-icone" :aria-label="t('commun.retour')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </RouterLink>
+          <span class="fil-ariane">{{ t('profil.membres') }} › @{{ profil.pseudo }}</span>
         </div>
 
-        <template v-if="estMoi">
-          <RouterLink v-if="profil.moi.demandes" :to="{ name: 'profil-demandes' }" class="demandes">
-            <span class="demandes__icone">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>
-            </span>
-            <span class="demandes__texte">{{ t('profil.demandes', profil.moi.demandes) }}</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
-          </RouterLink>
+        <section class="profil">
+          <AvatarMembre class="profil__avatar" :membre="profil" :taille="84" />
 
-          <div class="boutons">
-            <RouterLink :to="{ name: 'profil-modifier' }" class="bouton bouton--secondaire">{{ t('profil.modifier') }}</RouterLink>
-            <RouterLink :to="{ name: 'profil-amis' }" class="bouton bouton--principal">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z" /></svg>
-              {{ t('profil.amis', { n: profil.moi.amis }) }}
-            </RouterLink>
-          </div>
-
-          <RouterLink :to="{ name: 'membres' }" class="recherche">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-            {{ t('profil.rechercherMembres') }}
-          </RouterLink>
-
-          <div class="raccourcis">
-            <RouterLink :to="{ name: 'profil-espace' }" class="raccourci">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
-              {{ t('profil.monEspace') }}
-            </RouterLink>
-            <RouterLink v-if="session.utilisateur?.estAdmin" :to="{ name: 'admin' }" class="raccourci">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></svg>
-              {{ t('profil.backOffice') }}
-            </RouterLink>
-          </div>
-        </template>
-
-        <template v-else>
-          <div class="boutons">
+          <div class="profil__titre seulement-ordinateur">
+            <h1 class="titre-page">@{{ profil.pseudo }}</h1>
+            <template v-if="estMoi">
+              <RouterLink :to="{ name: 'profil-modifier' }" class="bouton bouton--contour bouton--petit">{{ t('profil.modifier') }}</RouterLink>
+              <RouterLink :to="{ name: 'profil-espace' }" class="bouton bouton--contour bouton--petit">{{ t('profil.monEspace') }}</RouterLink>
+              <RouterLink :to="{ name: 'membres' }" class="bouton-icone" :aria-label="t('profil.rechercherMembres')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+              </RouterLink>
+            </template>
             <button
+              v-else
               type="button"
-              class="bouton"
-              :class="actionAbonnement.secondaire ? 'bouton--secondaire' : 'bouton--principal'"
+              class="bouton bouton--petit"
+              :class="{ 'bouton--contour': actionAbonnement.secondaire }"
               :disabled="actionEnCours"
               @click="basculerAbonnement"
             >
-              <svg v-if="profil.relation.abonnement === 'ACCEPTE'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
               {{ actionAbonnement.libelle }}
             </button>
           </div>
-          <p v-if="profil.relation.estAmi" class="ami">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2-6.2 3.2L7 14.2 2 9.3l6.9-1z" /></svg>
-            {{ t('profil.estAmi') }}
+
+          <div class="compteurs">
+            <div class="compteur">
+              <b>{{ profil.compteurs.articles ?? '—' }}</b>
+              <span class="texte-secondaire">{{ t('dressing.articles', profil.compteurs.articles ?? 0) }}</span>
+            </div>
+            <component :is="profil.peutVoirContenu ? RouterLink : 'div'" :to="{ name: 'membre-abonnes', params: { pseudo: profil.pseudo } }" class="compteur">
+              <b>{{ profil.compteurs.abonnes }}</b>
+              <span class="texte-secondaire">{{ t('profil.abonnes', profil.compteurs.abonnes) }}</span>
+            </component>
+            <component :is="profil.peutVoirContenu ? RouterLink : 'div'" :to="{ name: 'membre-abonnements', params: { pseudo: profil.pseudo } }" class="compteur">
+              <b>{{ profil.compteurs.abonnements }}</b>
+              <span class="texte-secondaire">{{ t('profil.abonnements', profil.compteurs.abonnements) }}</span>
+            </component>
+          </div>
+
+          <p class="profil__identite">
+            <b v-if="profil.nomComplet">{{ profil.nomComplet }}</b>
+            <span v-if="profil.nomComplet && profil.bio" class="seulement-ordinateur texte-secondaire"> · </span>
+            <span v-if="profil.bio" class="texte-secondaire profil__bio">{{ profil.bio }}</span>
           </p>
+        </section>
+
+        <template v-if="estMoi">
+          <div class="boutons seulement-mobile">
+            <RouterLink :to="{ name: 'profil-modifier' }" class="bouton bouton--contour bouton--petit bouton--flexible">{{ t('profil.modifier') }}</RouterLink>
+            <RouterLink :to="{ name: 'profil-espace' }" class="bouton bouton--contour bouton--petit bouton--flexible">{{ t('profil.monEspace') }}</RouterLink>
+          </div>
+
+          <!-- Liens : liste sur téléphone, puces sur ordinateur -->
+          <nav class="raccourcis" :aria-label="t('profil.parametres')">
+            <RouterLink :to="{ name: 'profil-demandes' }" class="raccourci">
+              <span class="raccourci__libelle">{{ t('demandes.titre') }}</span>
+              <span v-if="profil.moi.demandes" class="badge badge--plein">{{ profil.moi.demandes }}</span>
+              <svg class="ligne__chevron seulement-mobile" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </RouterLink>
+            <RouterLink :to="{ name: 'profil-amis' }" class="raccourci">
+              <span class="raccourci__libelle">{{ t('profil.amis', { n: profil.moi.amis }) }}</span>
+              <svg class="ligne__chevron seulement-mobile" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </RouterLink>
+            <RouterLink :to="{ name: 'prets' }" class="raccourci">
+              <span class="raccourci__libelle">{{ t('profil.ongletPrets') }} · {{ profil.moi.pretsEnCours }}</span>
+              <svg class="ligne__chevron seulement-mobile" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </RouterLink>
+            <RouterLink v-if="session.utilisateur?.estAdmin" :to="{ name: 'admin' }" class="raccourci">
+              <span class="raccourci__libelle">{{ t('profil.backOffice') }}</span>
+              <svg class="ligne__chevron seulement-mobile" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </RouterLink>
+          </nav>
+        </template>
+
+        <template v-else>
+          <button
+            type="button"
+            class="bouton bouton--large seulement-mobile"
+            :class="{ 'bouton--contour': actionAbonnement.secondaire }"
+            :disabled="actionEnCours"
+            @click="basculerAbonnement"
+          >
+            {{ actionAbonnement.libelle }}
+          </button>
+          <p v-if="profil.relation.estAmi" class="bandeau-info">{{ t('profil.estAmi') }}</p>
           <p v-if="erreurAction" class="message-erreur" role="alert">{{ erreurAction }}</p>
         </template>
 
-        <div role="tablist" :aria-label="t('profil.contenu')" class="onglets">
-          <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'articles' }" :aria-selected="onglet === 'articles'" @click="ouvrirOnglet('articles')">
-            {{ t('profil.ongletArticles') }}<template v-if="profil.compteurs.articles !== null"> · {{ profil.compteurs.articles }}</template>
-          </button>
-          <button type="button" role="tab" class="onglet" :class="{ 'onglet--actif': onglet === 'tenues' }" :aria-selected="onglet === 'tenues'" @click="ouvrirOnglet('tenues')">
-            {{ t('profil.ongletTenues') }}<template v-if="tenues"> · {{ tenues.length }}</template>
-          </button>
-          <!-- Les prêts sont privés : un lien vers leur écran, sur son propre profil uniquement -->
-          <RouterLink v-if="estMoi" :to="{ name: 'prets' }" class="onglet onglet--lien">{{ t('profil.ongletPrets') }} · {{ profil.moi.pretsEnCours }}</RouterLink>
-        </div>
-
         <div v-if="!profil.peutVoirContenu" class="verrou">
           <span class="verrou__icone">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
           </span>
-          <span class="verrou__titre">{{ t('profil.prive') }}</span>
-          <span class="verrou__texte">{{ t('profil.abonnezVous') }}</span>
+          <b>{{ t('profil.prive') }}</b>
+          <span class="texte-secondaire">{{ t('profil.abonnezVous') }}</span>
         </div>
-        <template v-else-if="onglet === 'tenues'">
-          <p v-if="erreurTenues" class="message-erreur" role="alert">{{ erreurTenues }}</p>
-          <p v-if="tenues === null" class="etat">{{ t('profil.chargementTenues') }}</p>
-          <div v-else-if="tenues.length === 0" class="vide">
-            <p class="etat">{{ t('profil.aucuneTenue') }}</p>
-            <RouterLink v-if="estMoi" :to="{ name: 'tenues' }" class="bouton bouton--principal">{{ t('profil.genererTenue') }}</RouterLink>
+
+        <template v-else>
+          <div role="tablist" :aria-label="t('profil.contenu')" class="segments onglets">
+            <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'articles' }" :aria-selected="onglet === 'articles'" @click="ouvrirOnglet('articles')">
+              {{ t('profil.ongletArticles') }}
+            </button>
+            <button type="button" role="tab" class="segment" :class="{ 'segment--actif': onglet === 'tenues' }" :aria-selected="onglet === 'tenues'" @click="ouvrirOnglet('tenues')">
+              {{ t('profil.ongletTenues') }}
+            </button>
           </div>
-          <div v-else class="tenues">
-            <CarteTenue v-for="tenue in tenues" :key="tenue.id" :tenue="tenue" @supprimee="retirerTenue" />
+
+          <template v-if="onglet === 'tenues'">
+            <p v-if="erreurTenues" class="message-erreur" role="alert">{{ erreurTenues }}</p>
+            <p v-if="tenues === null" class="etat">{{ t('profil.chargementTenues') }}</p>
+            <div v-else-if="tenues.length === 0" class="pile">
+              <p class="etat">{{ t('profil.aucuneTenue') }}</p>
+              <RouterLink v-if="estMoi" :to="{ name: 'tenues' }" class="bouton">{{ t('profil.genererTenue') }}</RouterLink>
+            </div>
+            <div v-else class="pile grille-2-ordinateur">
+              <CarteTenue v-for="tenue in tenues" :key="tenue.id" :tenue="tenue" @supprimee="retirerTenue" />
+            </div>
+          </template>
+          <p v-else-if="articles.length === 0" class="etat">{{ t('profil.aucunArticle') }}</p>
+          <div v-else class="grille-photos grille-profil">
+            <RouterLink v-for="article in articles" :key="article.id" :to="{ name: 'article', params: { id: article.id } }" class="vignette-lien" :aria-label="article.titre">
+              <VignetteArticle :photo="article.photo" :couleur="article.couleur" carree :icone="28" />
+            </RouterLink>
           </div>
         </template>
-        <p v-else-if="articles.length === 0" class="etat">{{ t('profil.aucunArticle') }}</p>
-        <div v-else class="grille">
-          <RouterLink
-            v-for="article in articles"
-            :key="article.id"
-            :to="{ name: 'article', params: { id: article.id } }"
-            class="vignette"
-            :class="{ 'vignette--claire': estCouleurClaire(article.couleur) }"
-            :style="{ background: fondVignette(article.couleur) }"
-            :aria-label="article.titre"
-          >
-            <img v-if="article.photo" :src="article.photo" alt="" class="vignette__photo" />
-            <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-          </RouterLink>
-        </div>
       </template>
     </main>
 
@@ -278,341 +277,198 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
 </template>
 
 <style scoped>
-.contenu {
-  flex: 1;
-  padding: 20px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.retour {
-  align-self: flex-start;
-  display: flex;
+/* Téléphone : avatar et compteurs sur une ligne, puis nom et bio */
+.profil {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'avatar compteurs'
+    'identite identite';
   align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 700;
+  gap: 12px 16px;
 }
 
-.entete {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.entete__textes {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.entete__nom {
-  margin: 0;
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-}
-
-.entete__pseudo {
-  font-size: 13.5px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.entete__bouton {
-  align-self: flex-start;
-}
-
-.badge {
-  display: inline-flex;
-  align-self: flex-start;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--couleur-info-fond);
-  color: var(--couleur-primaire-fonce);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.bio {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  white-space: pre-line;
+.profil__avatar {
+  grid-area: avatar;
 }
 
 .compteurs {
+  grid-area: compteurs;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 12px 0;
-  border-radius: 16px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
+  text-align: center;
 }
 
 .compteur {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1px;
   color: var(--couleur-texte);
 }
 
-.compteur--milieu {
-  border-left: 1px solid var(--couleur-separateur);
-  border-right: 1px solid var(--couleur-separateur);
+a.compteur:hover {
+  color: var(--couleur-primaire);
 }
 
-.compteur__nombre {
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.compteur__libelle {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.demandes {
+.profil__identite {
+  grid-area: identite;
+  margin: 0;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire-fonce);
+  flex-direction: column;
+  gap: 2px;
 }
 
-.demandes__icone {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.demandes__texte {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.boutons {
-  display: flex;
-  gap: 10px;
-}
-
-.bouton {
-  flex: 1;
-  height: 44px;
-  box-sizing: border-box;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.bouton:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-.bouton--secondaire {
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-}
-
-.bouton--principal {
-  border: 0;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.bouton--principal:hover {
-  color: var(--couleur-sur-primaire);
-  background: var(--couleur-primaire-fonce);
-}
-
-.recherche {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 14px;
-  background: var(--couleur-info-fond);
-  color: var(--couleur-texte-secondaire);
-  font-size: 14px;
-  font-weight: 600;
+.profil__bio {
+  white-space: pre-line;
 }
 
 .raccourcis {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  padding: 0 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
+  background: var(--couleur-surface);
 }
 
 .raccourci {
-  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--couleur-separateur);
   color: var(--couleur-texte);
-  font-size: 14px;
-  font-weight: 700;
 }
 
-.ami {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--couleur-primaire);
+.raccourci:last-child {
+  border-bottom: 0;
 }
 
-.onglets {
-  display: flex;
-  border-bottom: 1px solid var(--couleur-bordure);
+.raccourci:hover {
+  color: var(--couleur-texte);
 }
 
-.onglet {
+.raccourci__libelle {
   flex: 1;
-  height: 44px;
-  border: 0;
-  border-bottom: 2.5px solid transparent;
-  background: none;
-  color: var(--couleur-texte-secondaire);
-  font: inherit;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
-}
-
-.onglet--actif {
-  border-bottom-color: var(--couleur-primaire);
-  color: var(--couleur-primaire);
-  font-weight: 800;
-}
-
-.onglet--lien {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.grille {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-}
-
-.vignette {
-  position: relative;
-  height: 112px;
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--couleur-photo-icone);
-}
-
-.vignette--claire {
-  color: var(--couleur-photo-icone-sombre);
-}
-
-.vignette__photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .verrou {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 28px 16px;
+  gap: 8px;
+  padding: 30px 16px;
+  border: 1.5px dashed var(--couleur-bordure-pointillee);
+  border-radius: 14px;
+  background: var(--couleur-surface);
   text-align: center;
 }
 
 .verrou__icone {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--couleur-texte);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--couleur-primaire-pale);
+  color: var(--couleur-primaire);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.verrou__titre {
-  font-size: 16px;
-  font-weight: 800;
+.vignette-lien {
+  display: block;
 }
 
-.verrou__texte {
-  font-size: 13.5px;
-  color: var(--couleur-texte-secondaire);
+.vignette-lien :deep(.vignette) {
+  width: 100%;
 }
 
-.contenu-erreur {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.vignette-lien:hover :deep(.vignette) {
+  outline: 2px solid var(--couleur-primaire);
+  outline-offset: 1px;
 }
 
-.vide {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tenues {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* Tablette et ordinateur : plus de vignettes par ligne, tenues côte à côte */
-@media (min-width: 600px) {
-  .grille {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-
-  .vignette {
-    height: 150px;
-  }
-
-  .tenues {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+/* Ordinateur : en-tête de profil en ligne (photo, pseudo et actions, compteurs, nom et bio) */
+@media (min-width: 1024px) {
+  .profil {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'avatar titre'
+      'avatar compteurs'
+      'avatar identite';
     align-items: start;
+    gap: 8px 24px;
+  }
+
+  .profil__avatar {
+    width: 110px !important;
+    height: 110px !important;
+    font-size: 40px !important;
+  }
+
+  .profil__titre {
+    grid-area: titre;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .compteurs {
+    display: flex;
+    gap: 28px;
+    text-align: left;
+  }
+
+  .compteur {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .profil__identite {
+    display: block;
+  }
+
+  .raccourcis {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .raccourci,
+  .raccourci:last-child {
+    height: 32px;
+    padding: 0 13px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 999px;
+    background: var(--couleur-surface);
+  }
+
+  .raccourci:hover {
+    border-color: var(--couleur-primaire);
+  }
+
+  .raccourci__libelle {
+    flex: none;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .onglets {
+    width: 280px;
+  }
+
+  .verrou {
+    padding: 60px 16px;
+  }
+
+  .grille-profil {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 </style>

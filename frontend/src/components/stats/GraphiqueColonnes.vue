@@ -147,8 +147,8 @@ const bulle = computed(() => {
 }
 
 .graphique__titre {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: var(--couleur-texte);
 }
 
