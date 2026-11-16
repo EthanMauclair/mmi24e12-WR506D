@@ -541,3 +541,22 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - « Mon espace » pour chaque membre : chiffres de son inventaire, de ses prêts, de ses ventes et de son activité sociale, ajouts par mois sur un an
 - Graphiques en SVG sans bibliothèque, une seule couleur de données vérifiée pour le contraste, valeurs au survol et au clavier, tableau des données
 - Tout en français, anglais et portugais ; dernière connexion enregistrée pour mesurer les membres actifs
+
+---
+
+## 2026-11-16 — Version responsive
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/responsive`
+
+**Prompt :**
+
+> Parfait, maintenant fais moi une version rsponsive
+
+**Résultat retenu :**
+
+- Trois paliers : téléphone (inchangé), tablette à partir de 600 px (colonne de 720 px), ordinateur à partir de 1024 px
+- Sur ordinateur, la barre de navigation du bas devient un menu latéral (nom de l'application, bouton « Scanner un article », onglets) ; les écrans qui l'affichent s'étendent sur la largeur
+- Grilles adaptatives (articles d'une pièce, marché, profil, tenues proposées, fil des tenues, « Mon espace »)
+- Fiches article et annonce sur deux colonnes, photo fixe à gauche ; connexion et inscription en carte centrée ; scan en plein écran ; bulles de messages proportionnelles à la largeur
+- Vérifié à 390, 820 et 1280 px : aucun défilement horizontal

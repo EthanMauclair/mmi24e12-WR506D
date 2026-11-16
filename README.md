@@ -150,6 +150,11 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
   - l'acheteur écrit au vendeur depuis l'annonce : une conversation privée par acheteur et par annonce, mise à jour toutes les 5 secondes, avec un badge des messages non lus sur le marché ;
   - le vendeur change le prix, réserve l'annonce ou la remet en ligne, la marque vendue (à un membre qui lui a écrit, ou à quelqu'un hors de l'application) ou la retire. Vendu, l'article quitte le dressing ; retiré, il redevient disponible ;
   - aucun paiement : acheteur et vendeur s'arrangent entre eux.
+- **Responsive** : l'application, pensée d'abord pour le téléphone, s'adapte à la tablette et à l'ordinateur :
+  - téléphone (moins de 600 px) : une colonne et la barre de navigation en bas ;
+  - tablette (à partir de 600 px) : une colonne plus large (720 px), et des grilles (articles d'une pièce, marché, profil, tenues) qui prennent autant de colonnes que la place le permet ;
+  - ordinateur (à partir de 1024 px) : la barre du bas devient un menu latéral, avec le bouton « Scanner un article » en tête ; les écrans s'étendent sur la largeur (jusqu'à 1040 px), la fiche d'un article et d'une annonce passent sur deux colonnes (photo à gauche, informations à droite), la connexion et l'inscription s'affichent dans une carte centrée ;
+  - le back office suit les mêmes principes.
 - **Trois langues : français (langue principale), anglais et portugais du Portugal** :
   - au premier passage, l'application suit la langue du navigateur (français par défaut) ; un sélecteur FR / EN / PT sur la connexion, l'inscription et les paramètres du profil permet de la changer, et le choix est mémorisé ;
   - l'interface est traduite avec [vue-i18n](https://vue-i18n.intlify.dev/) (`frontend/src/i18n/{fr,en,pt}.json`), dates et prix compris (« 12 nov. », « 12 Nov », « 12/11 » ; « 18 € », « €18 ») ;
