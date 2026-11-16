@@ -158,13 +158,13 @@ async function creerCompte() {
 </template>
 
 <style scoped>
+/* Fond dégradé sur toute la fenêtre ; le contenu est centré par les marges intérieures */
 .accueil {
-  max-width: 390px;
+  --largeur-accueil: 358px;
   min-height: 100dvh;
-  margin: 0 auto;
-  padding: 18px 16px 24px;
+  padding: 18px max(16px, calc((100% - var(--largeur-accueil)) / 2)) 24px;
   box-sizing: border-box;
-  background: var(--couleur-surface);
+  background: var(--degrade-accueil-mobile);
 }
 
 .presentation {
@@ -243,9 +243,10 @@ async function creerCompte() {
 /* Tablette : carte centrée avec le seul formulaire */
 @media (min-width: 600px) {
   .accueil {
-    max-width: 480px;
-    padding: 40px 0;
-    background: var(--couleur-fond);
+    --largeur-accueil: 480px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background: var(--degrade-accueil);
   }
 
   .accueil__carte {
@@ -260,7 +261,7 @@ async function creerCompte() {
 /* Ordinateur : carte large en deux parties, présentation à gauche et formulaire à droite */
 @media (min-width: 1024px) {
   .accueil {
-    max-width: 960px;
+    --largeur-accueil: 960px;
     display: flex;
     align-items: center;
   }

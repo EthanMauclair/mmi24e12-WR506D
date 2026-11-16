@@ -92,6 +92,10 @@
   --ombre-menu: 0 12px 32px rgba(30, 20, 22, 0.16);
   --ombre-segment: 0 1px 3px rgba(30, 20, 22, 0.08);
 
+  /* Fond dégradé de la connexion et de l'inscription : vertical sur téléphone, en diagonale au-delà */
+  --degrade-accueil-mobile: linear-gradient(180deg, #e8c4cf 0%, #f5e7eb 38%, #ffffff 75%);
+  --degrade-accueil: linear-gradient(135deg, #f5e7eb 0%, #e8c4cf 55%, #d9b3bf 100%);
+
   /* Mise en page responsive : colonne sur tablette, menu latéral et zone de contenu sur ordinateur */
   --largeur-colonne: 720px;
   --largeur-menu: 240px;

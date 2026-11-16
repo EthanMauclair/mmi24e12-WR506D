@@ -101,17 +101,17 @@ const typeMotDePasse = computed(() => (afficherMotDePasse.value ? 'text' : 'pass
 </template>
 
 <style scoped>
-/* Téléphone : page blanche, logo et langue en haut, présentation puis formulaire */
+/* Téléphone : fond dégradé du rose au blanc, logo et langue en haut, présentation puis formulaire.
+   La page couvre toute la fenêtre ; le contenu est centré par les marges intérieures */
 .accueil {
-  max-width: 390px;
+  --largeur-accueil: 358px;
   min-height: 100dvh;
-  margin: 0 auto;
-  padding: 22px 16px 24px;
+  padding: 22px max(16px, calc((100% - var(--largeur-accueil)) / 2)) 24px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 22px;
-  background: var(--couleur-surface);
+  background: var(--degrade-accueil-mobile);
 }
 
 .accueil__haut {
@@ -200,11 +200,11 @@ const typeMotDePasse = computed(() => (afficherMotDePasse.value ? 'text' : 'pass
 /* Tablette : carte centrée avec le seul formulaire */
 @media (min-width: 600px) {
   .accueil {
-    max-width: 480px;
-    min-height: 100dvh;
-    padding: 40px 0;
+    --largeur-accueil: 480px;
+    padding-top: 40px;
+    padding-bottom: 40px;
     justify-content: center;
-    background: var(--couleur-fond);
+    background: var(--degrade-accueil);
   }
 
   .accueil__carte {
@@ -227,7 +227,7 @@ const typeMotDePasse = computed(() => (afficherMotDePasse.value ? 'text' : 'pass
 /* Ordinateur : carte large en deux parties, présentation à gauche et formulaire à droite */
 @media (min-width: 1024px) {
   .accueil {
-    max-width: 960px;
+    --largeur-accueil: 960px;
     gap: 14px;
   }
 
