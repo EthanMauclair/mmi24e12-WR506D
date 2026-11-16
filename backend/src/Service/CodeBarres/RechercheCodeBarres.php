@@ -94,7 +94,7 @@ final class RechercheCodeBarres
             $livre['publish_date'] ?? null,
             $livre['cover']['large'] ?? $livre['cover']['medium'] ?? null,
             array_map(static fn ($sujet) => $sujet['name'] ?? '', $livre['subjects'] ?? []),
-        );
+        ) + ['source' => 'Open Library'];
     }
 
     /**
@@ -117,7 +117,7 @@ final class RechercheCodeBarres
             $livre['publishedDate'] ?? null,
             $livre['imageLinks']['thumbnail'] ?? null,
             $livre['categories'] ?? [],
-        );
+        ) + ['source' => 'Google Books'];
     }
 
     /**
@@ -178,6 +178,8 @@ final class RechercheCodeBarres
 
         return [
             'type' => 'VINYLE',
+            // Base d'où viennent les informations, affichée sur la fiche (« Pré-rempli depuis MusicBrainz »)
+            'source' => 'MusicBrainz',
             'code' => $ean,
             'titre' => mb_substr($disque['title'], 0, 150),
             'categorie' => match (true) {

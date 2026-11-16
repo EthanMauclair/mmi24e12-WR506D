@@ -48,6 +48,22 @@ final class TenueController extends ApiController
      * Propose une tenue avec les vêtements du membre dans ce logement.
      * Paramètres facultatifs : etiquette (identifiant), lat et lon (météo), eviter (identifiants séparés par des virgules).
      */
+    /**
+     * Météo du moment à une position (`lat`, `lon`), pour la carte « tenue du jour » du dressing.
+     * `meteo` vaut null sans position valide ou si la météo n'a pas pu être lue.
+     */
+    #[Route('/meteo', name: 'api_meteo', methods: ['GET'])]
+    public function meteo(Request $request, ServiceMeteo $serviceMeteo): JsonResponse
+    {
+        $latitude = filter_var($request->query->get('lat'), \FILTER_VALIDATE_FLOAT);
+        $longitude = filter_var($request->query->get('lon'), \FILTER_VALIDATE_FLOAT);
+        $meteo = false !== $latitude && false !== $longitude && abs($latitude) <= 90 && abs($longitude) <= 180
+            ? $serviceMeteo->actuelle($latitude, $longitude)
+            : null;
+
+        return $this->json(['meteo' => null === $meteo ? null : $this->presenterMeteo($meteo)]);
+    }
+
     #[Route('/logements/{id}/tenue-proposee', name: 'api_tenue_proposee', requirements: ['id' => '\d+'], methods: ['GET'])]
     #[IsGranted(LogementVoter::VOIR, 'logement')]
     public function proposer(
