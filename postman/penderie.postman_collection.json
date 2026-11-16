@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Penderie API",
-    "description": "Collection Postman de l'API de la penderie.\n\nL'authentification se fait par cookie de session : lancez d'abord « Connexion », Postman renvoie ensuite le cookie automatiquement.\n\nLes requêtes d'inventaire utilisent les variables logementId, pieceId et articleId, remplies par les tests des requêtes précédentes. Avec les données de démonstration (doctrine:fixtures:load), le compte lea@exemple.fr / penderie2026 est propriétaire du logement « Appartement Lyon ».",
+    "description": "Collection Postman de l'API de la penderie.\n\nL'authentification se fait par cookie de session : lancez d'abord « Connexion », Postman renvoie ensuite le cookie automatiquement.\n\nLes requêtes d'inventaire utilisent les variables logementId, pieceId et articleId, remplies par les tests des requêtes précédentes. Avec les données de démonstration (doctrine:fixtures:load --group=demo), le compte lea@exemple.fr / penderie2026 est propriétaire du logement « Appartement Lyon ».",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -67,7 +67,7 @@
     },
     {
       "key": "emailAdmin",
-      "value": "admin@exemple.fr"
+      "value": "admin@penderie.fr"
     },
     {
       "key": "membreId",
@@ -2500,7 +2500,7 @@
     },
     {
       "name": "Back office",
-      "description": "Se connecte avec le compte super admin de démonstration (admin@exemple.fr), puis parcourt les indicateurs, les membres, les référentiels et la modération.",
+      "description": "Se connecte avec le compte super admin (admin@penderie.fr), puis parcourt les indicateurs, les membres, les référentiels et la modération.",
       "item": [
         {
           "name": "Connexion super admin",
