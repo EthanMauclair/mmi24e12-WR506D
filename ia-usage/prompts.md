@@ -612,3 +612,18 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - Ordinateur : menu latéral sur tous les écrans, menu propre au back office avec « Retour à l'application »
 - API : météo pour la carte « tenue du jour », photo de profil, relation dans la recherche de membres, chemin complet de rangement et de catégorie sur la fiche, source des fiches code-barres
 - Nouveaux textes en français, anglais et portugais ; vérifié dans le navigateur à 390 et 1280 px
+
+---
+
+## 2026-11-16 — Back office centré
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/back-office-centre`
+
+**Prompt :**
+
+> Merci, maintenant modifie la partie back-office, je veux qu'elle soit centré 'sur la page, actuellement ele est collé à la barre latérale à gauche
+
+**Résultat retenu :**
+
+- Sur ordinateur, le contenu du back office est centré dans l'espace à droite du menu latéral, comme les écrans de l'application

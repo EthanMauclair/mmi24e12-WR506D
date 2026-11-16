@@ -189,8 +189,10 @@ const role = computed(() => t(session.utilisateur.estSuperAdmin ? 'admin.roles.S
     display: none;
   }
 
+  /* Contenu centré dans l'espace à droite du menu, comme les écrans de l'application */
   .admin__contenu {
     max-width: var(--largeur-contenu);
+    margin: 0 auto;
   }
 }
 </style>
