@@ -172,4 +172,11 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 700;
 }
+
+/* Tablette et ordinateur : les quatre chiffres clés sur une ligne */
+@media (min-width: 600px) {
+  .tuiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
 </style>

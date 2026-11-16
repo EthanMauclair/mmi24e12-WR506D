@@ -271,7 +271,8 @@ onBeforeUnmount(() => clearInterval(minuterie))
 }
 
 .message__bulle {
-  max-width: 260px;
+  /* Trois quarts de la largeur : 260 px environ sur téléphone, plus sur grand écran */
+  max-width: min(75%, 520px);
   padding: 10px 14px;
   border-radius: 18px 18px 18px 6px;
   background: var(--couleur-surface);

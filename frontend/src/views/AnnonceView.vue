@@ -71,7 +71,7 @@ watch(() => route.params.id, charger, { immediate: true })
 </script>
 
 <template>
-  <div class="ecran">
+  <div class="ecran ecran--fiche">
     <p v-if="!annonce && !erreur" class="etat">{{ t('annonce.chargement') }}</p>
     <div v-else-if="!annonce" class="contenu">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
@@ -473,5 +473,31 @@ watch(() => route.params.id, charger, { immediate: true })
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Ordinateur : la photo à gauche, l'annonce et ses actions à droite */
+@media (min-width: 1024px) {
+  .ecran--fiche {
+    max-width: var(--largeur-contenu);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 40px;
+    align-items: start;
+  }
+
+  .photo {
+    position: sticky;
+    top: 24px;
+    height: min(560px, calc(100dvh - 48px));
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .contenu--fiche {
+    margin-top: 0;
+    padding: 0;
+    border-radius: 0;
+  }
 }
 </style>

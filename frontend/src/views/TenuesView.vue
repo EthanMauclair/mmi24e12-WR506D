@@ -212,7 +212,9 @@ onMounted(() => ouvrirOnglet(onglet.value))
           <RouterLink :to="{ name: 'membres' }" class="bouton-principal">{{ t('profil.rechercherMembres') }}</RouterLink>
         </div>
         <template v-else>
-          <CarteTenue v-for="tenueDuFil in fil" :key="tenueDuFil.id" :tenue="tenueDuFil" @supprimee="retirerDuFil" />
+          <div class="fil-cartes">
+            <CarteTenue v-for="tenueDuFil in fil" :key="tenueDuFil.id" :tenue="tenueDuFil" @supprimee="retirerDuFil" />
+          </div>
           <button v-if="suiteFil" type="button" class="voir-plus" :disabled="chargementFil" @click="chargerFil(true)">{{ t('tenues.voirPlus') }}</button>
         </template>
       </template>
@@ -708,5 +710,26 @@ onMounted(() => ouvrirOnglet(onglet.value))
   font-size: 14px;
   font-weight: 600;
   accent-color: var(--couleur-primaire);
+}
+
+/* Le fil : une carte sous l'autre sur téléphone */
+.fil-cartes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Tablette et ordinateur : toutes les pièces de la tenue sur une ligne, cartes du fil côte à côte */
+@media (min-width: 600px) {
+  .tenue {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .fil-cartes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-items: start;
+    gap: 14px;
+  }
 }
 </style>

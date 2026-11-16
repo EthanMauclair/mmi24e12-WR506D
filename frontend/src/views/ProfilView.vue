@@ -598,4 +598,21 @@ watch(pseudo, (valeur) => valeur && charger(), { immediate: true })
   flex-direction: column;
   gap: 14px;
 }
+
+/* Tablette et ordinateur : plus de vignettes par ligne, tenues côte à côte */
+@media (min-width: 600px) {
+  .grille {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .vignette {
+    height: 150px;
+  }
+
+  .tenues {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-items: start;
+  }
+}
 </style>
