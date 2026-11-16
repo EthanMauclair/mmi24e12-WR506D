@@ -42,13 +42,17 @@ Le premier démarrage prend quelques minutes : les dépendances PHP (`composer i
 
 Si l'API répond `{"status":"ok"}`, tout fonctionne. Les ports se changent dans `.env` s'ils sont déjà pris.
 
-Chargez ensuite les référentiels (catégories, couleurs) et les données de démonstration :
+Chargez ensuite les données de départ. Deux possibilités :
 
 ```bash
-docker compose exec php bin/console doctrine:fixtures:load -n
+# Site vierge : catégories, couleurs et deux comptes de test (super admin et membre), sans aucun contenu
+docker compose exec php bin/console doctrine:fixtures:load --group=base -n
+
+# Site de démonstration : la même chose, plus le logement « Appartement Lyon » et ses membres, articles, prêts, annonces…
+docker compose exec php bin/console doctrine:fixtures:load --group=demo -n
 ```
 
-Attention : cette commande vide la base avant de la remplir.
+Attention : ces commandes vident la base avant de la remplir. Sans `--group`, toutes les fixtures sont chargées, démonstration comprise. Pour repartir d'un site vierge, supprimez aussi les photos envoyées dans `backend/public/uploads/scans/`.
 
 Suivre la progression du premier démarrage :
 
@@ -63,9 +67,20 @@ docker compose down          # conserve la base de données
 docker compose down -v       # supprime aussi les données et les dépendances installées
 ```
 
+## Comptes de test
+
+Chargés dans les deux cas (site vierge et démonstration), avec le mot de passe `penderie2026` :
+
+| E-mail               | Pseudo   | Rôle                                                       |
+|----------------------|----------|------------------------------------------------------------|
+| `admin@penderie.fr`  | `admin`  | Super admin (propriétaire du site) : accès complet au back office |
+| `membre@penderie.fr` | `membre` | Membre classique, sans logement ni article                 |
+
+Sur un site vierge, le membre commence par créer son logement depuis le dressing.
+
 ## Comptes de démonstration
 
-Après le chargement des fixtures, tous les comptes ont le mot de passe `penderie2026` :
+Avec `--group=demo`, s'ajoutent ces comptes, tous avec le mot de passe `penderie2026` :
 
 | E-mail             | Rôle dans « Appartement Lyon »                         |
 |--------------------|--------------------------------------------------------|
@@ -75,7 +90,6 @@ Après le chargement des fixtures, tous les comptes ont le mot de passe `penderi
 | `jules@exemple.fr` | Membre mineur, rattaché à Léa                          |
 | `sam@exemple.fr`   | Aucun logement : peut créer le sien                    |
 | `camille@exemple.fr` | Aucun logement : membre du réseau social             |
-| `admin@exemple.fr` | Super admin (propriétaire du site) : accès au back office |
 
 Léa possède un article personnel (« Montre de ma grand-mère ») que les autres membres ne voient pas.
 
@@ -91,10 +105,10 @@ Côté réseau social, le profil de Léa (`lea.chine`) est privé :
 
 Vous pouvez aussi créer votre propre compte depuis l'écran d'inscription.
 
-Pour donner un rôle d'administration à un compte existant (par exemple sur une base créée avant ce compte de démonstration) :
+Pour donner un rôle d'administration à un compte existant :
 
 ```bash
-docker compose exec php bin/console app:admin:nommer admin@exemple.fr                 # super admin
+docker compose exec php bin/console app:admin:nommer lea@exemple.fr                   # super admin
 docker compose exec php bin/console app:admin:nommer tom@exemple.fr --role=admin      # administrateur
 docker compose exec php bin/console app:admin:nommer tom@exemple.fr --role=membre     # simple membre
 ```
@@ -312,7 +326,7 @@ docker compose up -d php
 
 ## Postman
 
-Importez `postman/penderie.postman_collection.json` dans Postman. Lancez d'abord « Authentification › Connexion » : Postman garde le cookie de session pour les requêtes suivantes, et les requêtes d'inventaire remplissent elles-mêmes les identifiants (logement, pièce, article) à réutiliser. Le dossier « Back office » se connecte avec le compte super admin de démonstration.
+Importez `postman/penderie.postman_collection.json` dans Postman. Lancez d'abord « Authentification › Connexion » : Postman garde le cookie de session pour les requêtes suivantes, et les requêtes d'inventaire remplissent elles-mêmes les identifiants (logement, pièce, article) à réutiliser. Le dossier « Back office » se connecte avec le compte super admin (`admin@penderie.fr`). La collection s'appuie sur les données de démonstration : chargez-les avec `--group=demo` avant de la lancer.
 
 ## Structure
 

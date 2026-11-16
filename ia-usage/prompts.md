@@ -568,3 +568,25 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 **Résultat retenu :**
 
 - Connexion et inscription : inchangées sur téléphone, carte centrée sur tablette, carte en deux parties sur ordinateur (bandeau de présentation avec trois atouts de l'application à gauche, formulaire à droite), en français, anglais et portugais
+
+---
+
+## 2026-11-16 — Site vierge et comptes de test
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/site-vierge`
+
+**Prompt :**
+
+> Parfait, maintenant je veux que sur reset le site (retireles informations brut pour avoir un site vierge). Crée moi un utilisateur admin, et un utilisateur classique pour que j'effectue mes tests etc
+
+**Réponses aux questions posées :**
+
+- Vider la base locale et changer aussi les fixtures, en gardant la démonstration disponible à la demande
+- Comptes `admin@penderie.fr` et `membre@penderie.fr`
+
+**Résultat retenu :**
+
+- Fixtures en deux groupes : `base` (catégories, couleurs, un super admin et un membre classique) et `demo` (la même chose plus les données de démonstration)
+- Base locale remise à zéro avec le groupe `base` et photos de test supprimées
+- README et collection Postman mis à jour
