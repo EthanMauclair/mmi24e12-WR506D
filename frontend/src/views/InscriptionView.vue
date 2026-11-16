@@ -60,7 +60,7 @@ async function creerCompte() {
 </script>
 
 <template>
-  <div class="ecran">
+  <div class="ecran ecran--accueil">
     <div class="bandeau">
       <div class="bandeau__haut">
         <h1 class="bandeau__titre">{{ t('inscription.titre') }}</h1>

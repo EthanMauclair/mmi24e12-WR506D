@@ -37,7 +37,7 @@ const libelleBascule = computed(() =>
 </script>
 
 <template>
-  <div class="ecran">
+  <div class="ecran ecran--accueil">
     <div class="bandeau">
       <div class="bandeau__haut">
         <span class="bandeau__logo">

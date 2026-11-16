@@ -36,10 +36,18 @@ const onglets = [
 </script>
 
 <template>
-  <nav class="barre" :aria-label="t('navigation.principale')">
+  <nav class="barre barre-navigation" :aria-label="t('navigation.principale')">
+    <!-- Nom de l'application, affiché seulement dans le menu latéral sur ordinateur -->
+    <RouterLink to="/dressing" class="marque">
+      <span class="marque__logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6a2 2 0 1 1 2 2c-1 0-2 .7-2 1.6v.9" /><path d="M12 10.5 2.6 17a1.4 1.4 0 0 0 .8 2.5h17.2a1.4 1.4 0 0 0 .8-2.5z" /></svg>
+      </span>
+      {{ t('navigation.marque') }}
+    </RouterLink>
     <template v-for="onglet in onglets" :key="onglet.id">
       <RouterLink v-if="onglet.central" to="/scan" class="scan" :aria-label="t('navigation.scanner')">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10" /></svg>
+        <span class="scan__libelle">{{ t('navigation.scanner') }}</span>
       </RouterLink>
       <RouterLink
         v-else
@@ -100,5 +108,93 @@ const onglets = [
   background: var(--couleur-primaire);
   color: var(--couleur-sur-primaire);
   box-shadow: var(--ombre-bouton-scan);
+}
+
+.marque,
+.scan__libelle {
+  display: none;
+}
+
+/* Ordinateur : la barre du bas devient un menu latéral fixe, le scan en tête */
+@media (min-width: 1024px) {
+  .barre {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    width: var(--largeur-menu);
+    height: auto;
+    padding: 24px 16px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 4px;
+    border-top: 0;
+    border-right: 1px solid var(--couleur-bordure);
+  }
+
+  .marque {
+    order: -2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px 20px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--couleur-texte);
+  }
+
+  .marque__logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--couleur-primaire);
+    color: var(--couleur-sur-primaire);
+  }
+
+  .scan {
+    order: -1;
+    width: auto;
+    height: 48px;
+    margin: 0 0 16px;
+    gap: 10px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .scan:hover {
+    background: var(--couleur-primaire-fonce);
+    color: var(--couleur-sur-primaire);
+  }
+
+  .scan__libelle {
+    display: inline;
+  }
+
+  .onglet {
+    flex-direction: row;
+    gap: 12px;
+    min-width: 0;
+    padding: 11px 12px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  .onglet:hover {
+    background: var(--couleur-separateur);
+    color: var(--couleur-texte);
+  }
+
+  .onglet--actif,
+  .onglet--actif:hover {
+    background: var(--couleur-primaire-pale);
+    color: var(--couleur-primaire);
+  }
 }
 </style>

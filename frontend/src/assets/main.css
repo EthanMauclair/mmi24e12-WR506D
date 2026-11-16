@@ -16,7 +16,7 @@ a:hover {
   color: var(--couleur-primaire-fonce);
 }
 
-/* Écran mobile : 390 px de large au maximum, centré sur les grands écrans */
+/* Écran : pensé pour le téléphone (390 px), il s'élargit sur tablette puis sur ordinateur */
 .ecran {
   width: 100%;
   max-width: 390px;
@@ -27,6 +27,40 @@ a:hover {
   flex-direction: column;
   background: var(--couleur-fond);
   color: var(--couleur-texte);
+}
+
+/* Téléphone large et tablette : une colonne plus large, la barre de navigation reste en bas */
+@media (min-width: 600px) {
+  .ecran {
+    max-width: var(--largeur-colonne);
+  }
+}
+
+/* Ordinateur : les écrans à navigation laissent la place au menu latéral et s'étendent sur la largeur ;
+   les autres (formulaires, fiches) restent une colonne centrée */
+@media (min-width: 1024px) {
+  .ecran:has(> .barre-navigation) {
+    max-width: none;
+    padding-left: var(--largeur-menu);
+  }
+
+  .ecran:has(> .barre-navigation) > :not(.barre-navigation) {
+    width: 100%;
+    max-width: var(--largeur-contenu);
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+
+  /* Connexion et inscription : une carte centrée sur la page */
+  .ecran--accueil {
+    max-width: 480px;
+    min-height: auto;
+    margin: 40px auto;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: var(--ombre-menu);
+  }
 }
 
 /* Bouton carré à icône (retour, notifications, options) */
