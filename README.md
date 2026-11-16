@@ -153,7 +153,7 @@ La position est arrondie à environ 1 km par l'API avant d'être envoyée à Ope
 - **Responsive** : l'application, pensée d'abord pour le téléphone, s'adapte à la tablette et à l'ordinateur :
   - téléphone (moins de 600 px) : une colonne et la barre de navigation en bas ;
   - tablette (à partir de 600 px) : une colonne plus large (720 px), et des grilles (articles d'une pièce, marché, profil, tenues) qui prennent autant de colonnes que la place le permet ;
-  - ordinateur (à partir de 1024 px) : la barre du bas devient un menu latéral, avec le bouton « Scanner un article » en tête ; les écrans s'étendent sur la largeur (jusqu'à 1040 px), la fiche d'un article et d'une annonce passent sur deux colonnes (photo à gauche, informations à droite), la connexion et l'inscription s'affichent dans une carte centrée ;
+  - ordinateur (à partir de 1024 px) : la barre du bas devient un menu latéral, avec le bouton « Scanner un article » en tête ; les écrans s'étendent sur la largeur (jusqu'à 1040 px), la fiche d'un article et d'une annonce passent sur deux colonnes (photo à gauche, informations à droite), la connexion et l'inscription s'affichent dans une carte en deux parties (présentation de l'application et de ses atouts à gauche, formulaire à droite), et dans une carte centrée sur tablette ;
   - le back office suit les mêmes principes.
 - **Trois langues : français (langue principale), anglais et portugais du Portugal** :
   - au premier passage, l'application suit la langue du navigateur (français par défaut) ; un sélecteur FR / EN / PT sur la connexion, l'inscription et les paramètres du profil permet de la changer, et le choix est mémorisé ;

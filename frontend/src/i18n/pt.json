@@ -1,4 +1,20 @@
 {
+  "accueil": {
+    "atouts": {
+      "scan": {
+        "titre": "Digitalize e fica arrumado",
+        "texte": "Basta uma foto: a IA reconhece a categoria, a cor e a marca. Livros e vinis por código de barras."
+      },
+      "rangement": {
+        "titre": "Encontre tudo",
+        "texte": "Cada artigo tem a sua divisão e o seu arrumo, partilhados com toda a casa."
+      },
+      "partage": {
+        "titre": "Empreste, venda, partilhe",
+        "texte": "Acompanhe os empréstimos, venda entre membros e crie conjuntos de acordo com o tempo."
+      }
+    }
+  },
   "admin": {
     "titre": "Back office",
     "navigation": "Secções do back office",

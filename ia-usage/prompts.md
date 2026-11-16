@@ -560,3 +560,11 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 - Grilles adaptatives (articles d'une pièce, marché, profil, tenues proposées, fil des tenues, « Mon espace »)
 - Fiches article et annonce sur deux colonnes, photo fixe à gauche ; connexion et inscription en carte centrée ; scan en plein écran ; bulles de messages proportionnelles à la largeur
 - Vérifié à 390, 820 et 1280 px : aucun défilement horizontal
+
+**Prompt de suivi :**
+
+> Je veux que la page connexion/inscription soit responsive aussi.
+
+**Résultat retenu :**
+
+- Connexion et inscription : inchangées sur téléphone, carte centrée sur tablette, carte en deux parties sur ordinateur (bandeau de présentation avec trois atouts de l'application à gauche, formulaire à droite), en français, anglais et portugais
