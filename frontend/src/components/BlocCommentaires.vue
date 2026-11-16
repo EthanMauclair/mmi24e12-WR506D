@@ -68,21 +68,25 @@ onMounted(async () => {
 
 <template>
   <section class="commentaires" aria-labelledby="titre-commentaires">
-    <h2 id="titre-commentaires" class="commentaires__titre">
-      {{ t('commentaires.titre') }}<template v-if="commentaires.length"> · {{ commentaires.length }}</template>
-    </h2>
-    <p v-if="chargement" class="commentaires__vide">{{ t('commun.chargement') }}</p>
+    <div class="ligne-titre">
+      <h2 id="titre-commentaires" class="titre-section">
+        {{ t('commentaires.titre') }}<template v-if="commentaires.length"> · {{ commentaires.length }}</template>
+      </h2>
+      <span class="texte-secondaire">{{ t('commentaires.amisUniquement') }}</span>
+    </div>
+
+    <p v-if="chargement" class="texte-secondaire">{{ t('commun.chargement') }}</p>
     <ul v-else-if="commentaires.length" class="commentaires__liste">
       <li v-for="commentaire in commentaires" :key="commentaire.id" class="commentaire">
         <RouterLink :to="{ name: 'membre', params: { pseudo: commentaire.auteur.pseudo } }" :aria-label="commentaire.auteur.pseudo">
           <AvatarMembre :membre="commentaire.auteur" :taille="32" />
         </RouterLink>
         <div class="commentaire__corps">
-          <p class="commentaire__texte">
+          <span class="texte-secondaire">
             <RouterLink :to="{ name: 'membre', params: { pseudo: commentaire.auteur.pseudo } }" class="commentaire__auteur">{{ commentaire.auteur.pseudo }}</RouterLink>
-            {{ commentaire.contenu }}
-          </p>
-          <span class="commentaire__date">{{ ilYA(commentaire.createdAt) }}</span>
+            · {{ ilYA(commentaire.createdAt) }}
+          </span>
+          <p class="commentaire__texte">{{ commentaire.contenu }}</p>
         </div>
         <button
           v-if="commentaire.peutSupprimer"
@@ -91,30 +95,23 @@ onMounted(async () => {
           :aria-label="t('commentaires.supprimer', { pseudo: commentaire.auteur.pseudo })"
           @click="supprimer(commentaire)"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" /></svg>
+          ✕
         </button>
       </li>
     </ul>
-    <p v-else class="commentaires__vide">{{ t('commentaires.aucun') }}</p>
+    <p v-else class="texte-secondaire">{{ t('commentaires.aucun') }}</p>
 
     <form v-if="peutCommenter" class="nouveau-commentaire" @submit.prevent="publier">
-      <textarea
-        v-model="nouveau"
-        class="saisie nouveau-commentaire__saisie"
-        rows="1"
-        maxlength="1000"
-        :placeholder="t('commentaires.ajouter')"
-        :aria-label="t('commentaires.votre')"
-      ></textarea>
-      <button type="submit" class="nouveau-commentaire__envoyer" :disabled="envoi || !nouveau.trim()">{{ t('messages.envoyer') }}</button>
+      <input v-model="nouveau" class="saisie nouveau-commentaire__saisie" type="text" maxlength="1000" :placeholder="t('commentaires.ajouter')" :aria-label="t('commentaires.votre')" />
+      <button type="submit" class="bouton bouton--petit" :disabled="envoi || !nouveau.trim()">{{ t('commun.publier') }}</button>
     </form>
-    <p v-else-if="!session.utilisateur" class="commentaires__aide">
+    <p v-else-if="!session.utilisateur" class="texte-secondaire">
       <i18n-t keypath="commentaires.connectezVous" scope="global">
-        <template #lien><RouterLink :to="{ name: 'connexion', query: { redirection: route.fullPath } }">{{ t('commentaires.seConnecter') }}</RouterLink></template>
+        <template #lien><RouterLink :to="{ name: 'connexion', query: { redirection: route.fullPath } }" class="lien">{{ t('commentaires.seConnecter') }}</RouterLink></template>
         <template #pseudo>{{ auteur }}</template>
       </i18n-t>
     </p>
-    <p v-else class="commentaires__aide">{{ t('commentaires.reserveAmis', { pseudo: auteur }) }}</p>
+    <p v-else class="texte-secondaire">{{ t('commentaires.reserveAmis', { pseudo: auteur }) }}</p>
     <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
   </section>
 </template>
@@ -123,14 +120,7 @@ onMounted(async () => {
 .commentaires {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 8px;
-}
-
-.commentaires__titre {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
+  gap: 8px;
 }
 
 .commentaires__liste {
@@ -139,13 +129,13 @@ onMounted(async () => {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .commentaire {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .commentaire__corps {
@@ -153,77 +143,45 @@ onMounted(async () => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+}
+
+.commentaire__auteur {
+  font-weight: 700;
+  color: var(--couleur-texte);
 }
 
 .commentaire__texte {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.45;
   overflow-wrap: anywhere;
   white-space: pre-line;
 }
 
-.commentaire__auteur {
-  font-weight: 800;
-  color: var(--couleur-texte);
-}
-
-.commentaire__date {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-}
-
 .commentaire__supprimer {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  padding: 2px 4px;
   border: 0;
-  border-radius: 10px;
   background: none;
   color: var(--couleur-texte-secondaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font: inherit;
+  font-size: 13px;
   cursor: pointer;
 }
 
-.commentaires__vide,
-.commentaires__aide {
-  margin: 0;
-  font-size: 13.5px;
-  color: var(--couleur-texte-secondaire);
+.commentaire__supprimer:hover {
+  color: var(--couleur-erreur);
 }
 
 .nouveau-commentaire {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
 }
 
 .nouveau-commentaire__saisie {
   flex: 1;
-  min-height: 44px;
-  padding: 11px 14px;
-  resize: vertical;
-  line-height: 1.4;
-}
-
-.nouveau-commentaire__envoyer {
+  min-width: 0;
   height: 44px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.nouveau-commentaire__envoyer:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 </style>

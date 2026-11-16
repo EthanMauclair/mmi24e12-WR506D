@@ -351,7 +351,8 @@
     "votre": "Your comment",
     "connectezVous": "{lien} to follow {pseudo}.",
     "seConnecter": "Log in",
-    "reserveAmis": "Only {pseudo}'s friends can comment."
+    "reserveAmis": "Only {pseudo}'s friends can comment.",
+    "amisUniquement": "Friends only"
   },
   "commun": {
     "retour": "Back",

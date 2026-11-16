@@ -96,118 +96,44 @@ watch(() => route.params.id, charger, { immediate: true })
         </RouterLink>
       </div>
 
-      <div class="deux-colonnes">
-        <div class="galerie">
-          <div
-            class="photo"
-            :class="{ 'photo--claire': estCouleurClaire(article.couleur?.codeHex) }"
-            :style="{ background: article.photos.length ? 'var(--couleur-pastel-sable)' : fondVignette(article.couleur?.codeHex) }"
-          >
-            <img v-if="article.photos.length" :src="article.photos[indexPhoto]" alt="" class="photo__image" />
-            <svg v-else width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
-            <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche seulement-mobile" :aria-label="t('commun.retour')">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-            </RouterLink>
-            <RouterLink
-              v-if="article.peutModifier"
-              :to="{ name: 'article-modifier', params: { id: article.id } }"
-              class="photo__bouton photo__bouton--droite seulement-mobile"
-              :aria-label="t('article.modifier')"
+      <div class="disposition-fiche">
+        <div class="colonne-fiche">
+          <div class="galerie">
+            <div
+              class="photo"
+              :class="{ 'photo--claire': estCouleurClaire(article.couleur?.codeHex) }"
+              :style="{ background: article.photos.length ? 'var(--couleur-pastel-sable)' : fondVignette(article.couleur?.codeHex) }"
             >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-            </RouterLink>
-            <span v-if="article.dateScan" class="badge badge--blanc photo__source">{{ t('article.photoScan', { date: formatDate(new Date(article.dateScan)) }) }}</span>
-          </div>
-          <div v-if="article.photos.length > 1" class="indicateurs">
-            <button
-              v-for="(photo, index) in article.photos"
-              :key="photo"
-              type="button"
-              class="indicateur"
-              :class="{ 'indicateur--actif': index === indexPhoto }"
-              :aria-label="t('article.photo', { n: index + 1 })"
-              :aria-pressed="index === indexPhoto"
-              @click="indexPhoto = index"
-            ></button>
-          </div>
-        </div>
-
-        <div class="informations">
-          <div class="titre">
-            <div class="entete__textes">
-              <h1 class="titre-page titre__nom">{{ article.titre }}</h1>
-              <span class="texte-secondaire">{{ article.infos }}</span>
+              <img v-if="article.photos.length" :src="article.photos[indexPhoto]" alt="" class="photo__image" />
+              <svg v-else width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
+              <RouterLink :to="retour" class="photo__bouton photo__bouton--gauche seulement-mobile" :aria-label="t('commun.retour')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+              </RouterLink>
+              <RouterLink
+                v-if="article.peutModifier"
+                :to="{ name: 'article-modifier', params: { id: article.id } }"
+                class="photo__bouton photo__bouton--droite seulement-mobile"
+                :aria-label="t('article.modifier')"
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+              </RouterLink>
+              <span v-if="article.dateScan" class="badge badge--blanc photo__source">{{ t('article.photoScan', { date: formatDate(new Date(article.dateScan)) }) }}</span>
             </div>
-            <span class="badge" :class="{ 'badge--plein': article.statut === 'DISPONIBLE' }">{{ t(`article.statuts.${article.statut}`) }}</span>
-          </div>
-
-          <RouterLink v-if="ajouteParUnAutre" :to="{ name: 'membre', params: { pseudo: article.proprietaire.pseudo } }" class="carte carte--rangee auteur">
-            <AvatarMembre :membre="article.proprietaire" :taille="32" />
-            <span class="entete__textes">
-              <span class="texte-secondaire">{{ t('article.ajoutePar') }}</span>
-              <b>{{ article.proprietaire.pseudo }}</b>
-            </span>
-          </RouterLink>
-
-          <!-- Un visiteur ou un abonné ne voit jamais où l'article est rangé -->
-          <div v-if="article.voitEmplacement" class="carte carte--rangee emplacement">
-            <span class="emplacement__icone">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-            </span>
-            <span class="entete__textes">
-              <span class="texte-secondaire">{{ t('article.rangeDans') }}</span>
-              <b class="emplacement__chemin">{{ chemin }}</b>
-            </span>
+            <div v-if="article.photos.length > 1" class="indicateurs">
+              <button
+                v-for="(photo, index) in article.photos"
+                :key="photo"
+                type="button"
+                class="indicateur"
+                :class="{ 'indicateur--actif': index === indexPhoto }"
+                :aria-label="t('article.photo', { n: index + 1 })"
+                :aria-pressed="index === indexPhoto"
+                @click="indexPhoto = index"
+              ></button>
+            </div>
           </div>
 
-          <!-- Autre statut : prêté ou en vente -->
-          <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="bandeau" :class="{ 'bandeau--retard': article.pretEnCours.joursRestants < 0 }">
-            <span class="entete__textes">
-              <b>{{ t('article.preteA', { nom: article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }) }}</b>
-              <span class="bandeau__detail">
-                {{ t('article.depuis', { date: jourCourt(article.pretEnCours.datePret) }) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · {{ t('article.retourPrevu', { date: jourCourt(article.pretEnCours.dateRetourPrevue) }) }}</template>
-              </span>
-            </span>
-            <span class="badge badge--blanc">{{ echeance(article.pretEnCours.joursRestants) }}</span>
-          </RouterLink>
-          <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="bandeau">
-            <span class="entete__textes">
-              <b>{{ t(article.annonce.statut === 'RESERVEE' ? 'article.reserve' : 'article.enVente') }} · {{ formatPrix(article.annonce.prix) }}</b>
-            </span>
-            <span class="bandeau__lien">{{ t('article.voirAnnonce') }}</span>
-          </RouterLink>
-          <p v-if="erreurPret" class="message-erreur" role="alert">{{ erreurPret }}</p>
-
-          <dl class="proprietes">
-            <div class="propriete">
-              <dt class="propriete__libelle">{{ t('article.categorie') }}</dt>
-              <dd class="propriete__valeur">{{ article.categorieChemin }}</dd>
-            </div>
-            <div v-if="article.couleur" class="propriete">
-              <dt class="propriete__libelle">{{ t('article.couleur') }}</dt>
-              <dd class="propriete__valeur couleur">
-                <span class="pastille-couleur" :style="{ background: article.couleur.codeHex }"></span>{{ article.couleur.nom }}
-              </dd>
-            </div>
-            <div v-if="article.voitEmplacement" class="propriete propriete--etiquettes">
-              <dt class="propriete__libelle">{{ t('article.etiquettes') }}</dt>
-              <dd class="etiquettes">
-                <span v-for="etiquette in article.etiquettes" :key="etiquette.id" class="puce puce--petite">{{ etiquette.nom }}</span>
-                <span v-if="!article.etiquettes.length && !article.peutModifier" class="texte-secondaire">{{ t('article.aucuneEtiquette') }}</span>
-                <RouterLink v-if="article.peutModifier" :to="{ name: 'article-modifier', params: { id: article.id } }" class="lien">{{ t('article.ajouterEtiquette') }}</RouterLink>
-              </dd>
-            </div>
-          </dl>
-
-          <label v-if="article.peutChangerConfidentialite" class="carte carte--grise carte--rangee personnel">
-            <span class="entete__textes">
-              <b class="personnel__titre">{{ t('article.personnel') }}</b>
-              <span class="texte-secondaire">{{ t('article.personnelAide') }}</span>
-            </span>
-            <input :checked="article.estPersonnel" type="checkbox" role="switch" class="interrupteur" @change="changerConfidentialite($event.target.checked)" />
-          </label>
-          <p v-if="erreurConfidentialite" class="message-erreur" role="alert">{{ erreurConfidentialite }}</p>
-
+          <!-- Sous les informations sur téléphone ; sous la photo sur ordinateur -->
           <BlocCommentaires
             v-if="!article.estPersonnel"
             :key="article.id"
@@ -216,6 +142,85 @@ watch(() => route.params.id, charger, { immediate: true })
             :peut-commenter="article.peutCommenter"
             :auteur="article.proprietaire.pseudo"
           />
+        </div>
+
+        <div class="colonne-fiche">
+          <div class="informations">
+            <div class="titre">
+              <div class="entete__textes">
+                <h1 class="titre-page titre__nom">{{ article.titre }}</h1>
+                <span class="texte-secondaire">{{ article.infos }}</span>
+              </div>
+              <span class="badge" :class="{ 'badge--plein': article.statut === 'DISPONIBLE' }">{{ t(`article.statuts.${article.statut}`) }}</span>
+            </div>
+
+            <RouterLink v-if="ajouteParUnAutre" :to="{ name: 'membre', params: { pseudo: article.proprietaire.pseudo } }" class="carte carte--rangee auteur">
+              <AvatarMembre :membre="article.proprietaire" :taille="32" />
+              <span class="entete__textes">
+                <span class="texte-secondaire">{{ t('article.ajoutePar') }}</span>
+                <b>{{ article.proprietaire.pseudo }}</b>
+              </span>
+            </RouterLink>
+
+            <!-- Un visiteur ou un abonné ne voit jamais où l'article est rangé -->
+            <div v-if="article.voitEmplacement" class="carte carte--rangee emplacement">
+              <span class="emplacement__icone">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+              </span>
+              <span class="entete__textes">
+                <span class="texte-secondaire">{{ t('article.rangeDans') }}</span>
+                <b class="emplacement__chemin">{{ chemin }}</b>
+              </span>
+            </div>
+
+            <!-- Autre statut : prêté ou en vente -->
+            <RouterLink v-if="article.pretEnCours" :to="{ name: 'prets' }" class="bandeau" :class="{ 'bandeau--retard': article.pretEnCours.joursRestants < 0 }">
+              <span class="entete__textes">
+                <b>{{ t('article.preteA', { nom: article.pretEnCours.emprunteur ? `@${article.pretEnCours.emprunteur.pseudo}` : article.pretEnCours.emprunteurNom }) }}</b>
+                <span class="bandeau__detail">
+                  {{ t('article.depuis', { date: jourCourt(article.pretEnCours.datePret) }) }}<template v-if="article.pretEnCours.dateRetourPrevue"> · {{ t('article.retourPrevu', { date: jourCourt(article.pretEnCours.dateRetourPrevue) }) }}</template>
+                </span>
+              </span>
+              <span class="badge badge--blanc">{{ echeance(article.pretEnCours.joursRestants) }}</span>
+            </RouterLink>
+            <RouterLink v-if="article.annonce" :to="{ name: 'annonce', params: { id: article.annonce.id } }" class="bandeau">
+              <span class="entete__textes">
+                <b>{{ t(article.annonce.statut === 'RESERVEE' ? 'article.reserve' : 'article.enVente') }} · {{ formatPrix(article.annonce.prix) }}</b>
+              </span>
+              <span class="bandeau__lien">{{ t('article.voirAnnonce') }}</span>
+            </RouterLink>
+            <p v-if="erreurPret" class="message-erreur" role="alert">{{ erreurPret }}</p>
+
+            <dl class="proprietes">
+              <div class="propriete">
+                <dt class="propriete__libelle">{{ t('article.categorie') }}</dt>
+                <dd class="propriete__valeur">{{ article.categorieChemin }}</dd>
+              </div>
+              <div v-if="article.couleur" class="propriete">
+                <dt class="propriete__libelle">{{ t('article.couleur') }}</dt>
+                <dd class="propriete__valeur couleur">
+                  <span class="pastille-couleur" :style="{ background: article.couleur.codeHex }"></span>{{ article.couleur.nom }}
+                </dd>
+              </div>
+              <div v-if="article.voitEmplacement" class="propriete propriete--etiquettes">
+                <dt class="propriete__libelle">{{ t('article.etiquettes') }}</dt>
+                <dd class="etiquettes">
+                  <span v-for="etiquette in article.etiquettes" :key="etiquette.id" class="puce puce--petite">{{ etiquette.nom }}</span>
+                  <span v-if="!article.etiquettes.length && !article.peutModifier" class="texte-secondaire">{{ t('article.aucuneEtiquette') }}</span>
+                  <RouterLink v-if="article.peutModifier" :to="{ name: 'article-modifier', params: { id: article.id } }" class="lien">{{ t('article.ajouterEtiquette') }}</RouterLink>
+                </dd>
+              </div>
+            </dl>
+
+            <label v-if="article.peutChangerConfidentialite" class="carte carte--grise carte--rangee personnel">
+              <span class="entete__textes">
+                <b class="personnel__titre">{{ t('article.personnel') }}</b>
+                <span class="texte-secondaire">{{ t('article.personnelAide') }}</span>
+              </span>
+              <input :checked="article.estPersonnel" type="checkbox" role="switch" class="interrupteur" @change="changerConfidentialite($event.target.checked)" />
+            </label>
+            <p v-if="erreurConfidentialite" class="message-erreur" role="alert">{{ erreurConfidentialite }}</p>
+          </div>
 
           <!-- En bas de l'écran sur téléphone ; juste après les informations sur ordinateur -->
           <div v-if="article.peutModifier" class="barre-actions barre-actions--dans-page actions-fiche">
@@ -248,7 +253,7 @@ watch(() => route.params.id, charger, { immediate: true })
 
 .photo {
   position: relative;
-  height: 270px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,7 +304,7 @@ watch(() => route.params.id, charger, { immediate: true })
 .indicateurs {
   position: absolute;
   right: 30px;
-  top: 252px;
+  top: 202px;
   display: flex;
   gap: 5px;
 }
@@ -449,9 +454,28 @@ watch(() => route.params.id, charger, { immediate: true })
     margin: 0;
   }
 
+  /* Photo en paysage et commentaires à gauche ; informations puis actions à droite */
+  .disposition-fiche {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+
+  .colonne-fiche {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .commentaires-fiche {
+    margin-top: 6px;
+  }
+
   .photo {
     height: auto;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 16 / 10;
     border-radius: 14px;
   }
 
@@ -476,18 +500,34 @@ watch(() => route.params.id, charger, { immediate: true })
   .titre__nom {
     font-size: 26px;
   }
+}
 
-  .actions-fiche {
+/* Téléphone et tablette : photo, informations, commentaires, puis la barre d'actions qui colle au bas de l'écran */
+@media (max-width: 1023px) {
+  .disposition-fiche {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .colonne-fiche {
+    display: contents;
+  }
+
+  .galerie {
     order: 1;
   }
 
-  .commentaires-fiche {
+  .informations {
     order: 2;
   }
-}
 
-/* Téléphone : la barre colle au bas de la page, qui finit sous elle */
-.actions-fiche {
-  margin-top: auto;
+  .commentaires-fiche {
+    order: 3;
+  }
+
+  .actions-fiche {
+    order: 4;
+  }
 }
 </style>

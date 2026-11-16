@@ -627,3 +627,20 @@ Réponse à la proposition de faire le suivi des prêts avant la place de march�
 **Résultat retenu :**
 
 - Sur ordinateur, le contenu du back office est centré dans l'espace à droite du menu latéral, comme les écrans de l'application
+
+---
+
+## 2026-11-16 — Mise à jour de quatre maquettes
+
+- **Outil** : Claude Code (Claude Opus 5.5)
+- **Branche** : `feature/maquettes-v2`
+
+**Prompt :**
+
+> Je viens de modifier 4 wireframes, modifie les sur le sites. C'est Main, Bureau acces, Mobile dressing, Bureau pièce article
+
+**Résultat retenu :**
+
+- Connexion et inscription : fond dégradé rose (vertical sur téléphone, en diagonale sur tablette et ordinateur)
+- Fiche article : photo moins haute sur téléphone, photo en paysage sur ordinateur avec les commentaires dessous
+- Commentaires : en-tête « Commentaires · n » et « Amis uniquement », auteur et date au-dessus du texte, suppression par « ✕ », bouton « Publier »
