@@ -3,9 +3,11 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
+import VignetteArticle from '@/components/VignetteArticle.vue'
 import { api } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { logementMemorise, memoriserLogementActif } from '@/utils/logementActif'
+import { positionDejaAutorisee } from '@/utils/position'
 
 const FONDS_PIECES = ['rose', 'sable', 'ardoise', 'lavande'].map((teinte) => `var(--couleur-pastel-${teinte})`)
 
@@ -18,6 +20,7 @@ const logement = ref(null)
 const chargement = ref(true)
 const erreur = ref('')
 const menuOuvert = ref(false)
+const meteo = ref(null)
 
 const creationLogement = ref(false)
 const nomLogement = ref('')
@@ -40,6 +43,11 @@ const libelleRole = computed(() => {
   return t(`dressing.roles.${logement.value.role}`) + coproprietaires
 })
 
+// « Lyon · Pluie · 12 °C » quand la position est déjà autorisée, sinon une invitation générale
+const ligneMeteo = computed(() =>
+  meteo.value ? [meteo.value.ville, meteo.value.libelle, `${Math.round(meteo.value.temperature)} °C`].filter(Boolean).join(' · ') : t('dressing.selonMeteo'),
+)
+
 async function chargerLogement(id) {
   logement.value = await api(`/logements/${id}`)
   memoriserLogementActif(id)
@@ -61,6 +69,18 @@ async function charger() {
     erreur.value = e.message
   } finally {
     chargement.value = false
+  }
+}
+
+// Sans redemander la localisation : la question n'est posée que par le générateur de tenue
+async function chargerMeteo() {
+  const position = await positionDejaAutorisee()
+  if (position) {
+    try {
+      meteo.value = (await api(`/meteo?lat=${position.lat}&lon=${position.lon}`)).meteo
+    } catch {
+      meteo.value = null
+    }
   }
 }
 
@@ -130,48 +150,47 @@ watch(recherche, (texte) => {
   }, 300)
 })
 
-onMounted(charger)
+onMounted(() => {
+  charger()
+  chargerMeteo()
+})
 </script>
 
 <template>
   <div class="ecran">
-    <main class="contenu">
+    <main class="page">
       <p v-if="chargement" class="etat">{{ t('dressing.chargement') }}</p>
 
       <p v-else-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
 
       <section v-else-if="creationLogement" class="nouveau-logement">
-        <h1 class="nouveau-logement__titre">{{ t(logements.length ? 'dressing.nouveauLogement' : 'dressing.bienvenue') }}</h1>
-        <p class="nouveau-logement__texte">
-          {{ t('dressing.creezLogement') }}
-        </p>
-        <form class="nouveau-logement__formulaire" @submit.prevent="creerLogement">
+        <h1 class="titre-page">{{ t(logements.length ? 'dressing.nouveauLogement' : 'dressing.bienvenue') }}</h1>
+        <p class="texte-secondaire">{{ t('dressing.creezLogement') }}</p>
+        <form class="pile" @submit.prevent="creerLogement">
           <label class="champ">
             <span class="champ__libelle">{{ t('dressing.nomLogement') }}</span>
-            <input v-model="nomLogement" class="saisie saisie--ligne" :class="{ 'saisie--invalide': erreurLogement }" type="text" :placeholder="t('dressing.exempleLogement')" required />
+            <input v-model="nomLogement" class="saisie" :class="{ 'saisie--invalide': erreurLogement }" type="text" :placeholder="t('dressing.exempleLogement')" required />
             <span v-if="erreurLogement" class="champ__erreur">{{ erreurLogement }}</span>
           </label>
-          <button type="submit" class="bouton-principal">{{ t('dressing.creerLogement') }}</button>
-          <button v-if="logements.length" type="button" class="lien-bouton" @click="creationLogement = false">{{ t('commun.annuler') }}</button>
+          <button type="submit" class="bouton bouton--large">{{ t('dressing.creerLogement') }}</button>
+          <button v-if="logements.length" type="button" class="lien lien--centre" @click="creationLogement = false">{{ t('commun.annuler') }}</button>
         </form>
       </section>
 
       <section v-else-if="!logement" class="nouveau-logement">
-        <h1 class="nouveau-logement__titre">{{ t('dressing.bienvenue') }}</h1>
-        <p class="nouveau-logement__texte">
-          {{ t('dressing.mineurSansLogement') }}
-        </p>
-        <button type="button" class="lien-bouton" @click="seDeconnecter">{{ t('dressing.seDeconnecter') }}</button>
+        <h1 class="titre-page">{{ t('dressing.bienvenue') }}</h1>
+        <p class="texte-secondaire">{{ t('dressing.mineurSansLogement') }}</p>
+        <button type="button" class="lien lien--centre" @click="seDeconnecter">{{ t('dressing.seDeconnecter') }}</button>
       </section>
 
       <template v-else>
-        <header class="entete">
-          <div class="entete__logement">
+        <header class="entete-dressing">
+          <div class="entete-dressing__logement">
             <button type="button" class="logement" :aria-expanded="menuOuvert" @click="menuOuvert = !menuOuvert">
               {{ logement.nom }}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
             </button>
-            <span class="role">{{ libelleRole }}</span>
+            <span class="badge role">{{ libelleRole }}</span>
 
             <div v-if="menuOuvert" class="menu">
               <button
@@ -188,84 +207,93 @@ onMounted(charger)
               <button type="button" class="menu__element menu__element--action" @click="seDeconnecter">{{ t('dressing.seDeconnecter') }}</button>
             </div>
           </div>
+
+          <label class="recherche" :class="{ 'recherche--active': enRecherche }">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+            <span class="visuellement-cache">{{ t('dressing.rechercher') }}</span>
+            <input v-model="recherche" type="search" :placeholder="t('dressing.recherche')" />
+          </label>
+
           <button type="button" class="bouton-icone notifications" :aria-label="t('dressing.notifications')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
           </button>
         </header>
 
-        <label class="recherche">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-          <span class="visuellement-cache">{{ t('dressing.rechercher') }}</span>
-          <input v-model="recherche" type="search" :placeholder="t('dressing.recherche')" />
-        </label>
-
-        <section v-if="enRecherche" class="pieces" aria-live="polite">
-          <h2 class="pieces__titre">{{ t('dressing.resultats') }}</h2>
+        <!-- Recherche « Où est rangé… ? » : remplace la liste des pièces pendant la saisie -->
+        <section v-if="enRecherche" class="pile" aria-live="polite">
+          <div class="ligne-titre">
+            <h2 class="titre-section">{{ t('dressing.resultats') }}</h2>
+            <span v-if="!rechercheEnCours && resultats.length" class="texte-secondaire seulement-ordinateur">{{ t('dressing.articlesTrouves', resultats.length) }}</span>
+          </div>
           <p v-if="rechercheEnCours" class="etat">{{ t('dressing.rechercheEnCours') }}</p>
           <p v-else-if="resultats.length === 0" class="etat">{{ t('dressing.aucunResultat', { texte: recherche.trim() }) }}</p>
-          <div v-else class="pieces__liste">
-            <RouterLink v-for="article in resultats" :key="article.id" :to="`/articles/${article.id}`" class="piece">
-              <span class="piece__textes">
-                <span class="piece__nom">{{ article.titre }}</span>
-                <span class="piece__stockages">{{ article.emplacement ?? t('commun.aRanger') }} · {{ article.infos }}</span>
+          <div v-else class="resultats">
+            <RouterLink v-for="article in resultats" :key="article.id" :to="`/articles/${article.id}`" class="resultat">
+              <VignetteArticle class="resultat__vignette" :photo="article.photo" :couleur="article.couleur" :icone="26" />
+              <span class="ligne__textes">
+                <span class="ligne__titre">{{ article.titre }}</span>
+                <span class="texte-secondaire">
+                  {{ article.emplacement ?? t('commun.aRanger') }}<span class="seulement-mobile"> · {{ article.infos }}</span>
+                </span>
+                <span class="texte-secondaire seulement-ordinateur">{{ article.infos }}</span>
               </span>
-              <svg class="piece__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+              <svg class="ligne__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
             </RouterLink>
           </div>
         </section>
 
         <template v-else>
-          <div class="chiffres">
-            <div class="chiffre">
-              <span class="chiffre__valeur">{{ logement.nbArticles }}</span>
-              <span class="chiffre__libelle">{{ t('dressing.articles', logement.nbArticles) }}</span>
+          <div class="apercu">
+            <div class="grille-3">
+              <div class="chiffre">
+                <span class="chiffre__valeur">{{ logement.nbArticles }}</span>
+                <span class="chiffre__libelle">{{ t('dressing.articles', logement.nbArticles) }}</span>
+              </div>
+              <div class="chiffre">
+                <span class="chiffre__valeur">{{ logement.nbPieces }}</span>
+                <span class="chiffre__libelle">{{ t('dressing.pieces', logement.nbPieces) }}</span>
+              </div>
+              <RouterLink :to="{ name: 'prets' }" class="chiffre">
+                <span class="chiffre__valeur chiffre__valeur--accent">{{ logement.nbPretes }}</span>
+                <span class="chiffre__libelle">{{ t('dressing.pretes', logement.nbPretes) }}</span>
+              </RouterLink>
             </div>
-            <div class="chiffre">
-              <span class="chiffre__valeur">{{ logement.nbPieces }}</span>
-              <span class="chiffre__libelle">{{ t('dressing.pieces', logement.nbPieces) }}</span>
-            </div>
-            <a href="#" class="chiffre">
-              <span class="chiffre__valeur chiffre__valeur--accent">{{ logement.nbPretes }}</span>
-              <span class="chiffre__libelle">{{ t('dressing.pretes', logement.nbPretes) }}</span>
-            </a>
+
+            <RouterLink :to="{ name: 'tenues' }" class="tenue-du-jour">
+              <span class="tenue-du-jour__icone">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><path d="M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2" /></svg>
+              </span>
+              <span class="tenue-du-jour__textes">
+                <span class="tenue-du-jour__meteo">{{ ligneMeteo }}</span>
+                <span class="tenue-du-jour__titre">{{ t('dressing.genererTenue') }}</span>
+              </span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </RouterLink>
           </div>
 
-          <a href="#" class="tenue-du-jour">
-            <span class="tenue-du-jour__icone">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><path d="M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2" /></svg>
-            </span>
-            <span class="tenue-du-jour__textes">
-              <span class="tenue-du-jour__meteo">{{ t('dressing.selonMeteo') }}</span>
-              <span class="tenue-du-jour__titre">{{ t('dressing.genererTenue') }}</span>
-            </span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
-          </a>
-
-          <section class="pieces">
-            <div class="pieces__entete">
-              <h2 class="pieces__titre">{{ t('dressing.titrePieces') }}</h2>
-              <button v-if="logement.peutGerer && !ajoutPiece" type="button" class="pieces__ajout" @click="ajoutPiece = true">{{ t('dressing.ajouterPiece') }}</button>
+          <section class="pile">
+            <div class="ligne-titre">
+              <h2 class="titre-section">{{ t('dressing.titrePieces') }}</h2>
+              <button v-if="logement.peutGerer && !ajoutPiece" type="button" class="lien" @click="ajoutPiece = true">{{ t('dressing.ajouterPiece') }}</button>
             </div>
 
             <form v-if="ajoutPiece" class="ajout" @submit.prevent="creerPiece">
               <div class="ajout__ligne">
-                <input v-model="nomPiece" class="saisie saisie--ligne" :class="{ 'saisie--invalide': erreurPiece }" type="text" :placeholder="t('dressing.nomPiece')" :aria-label="t('dressing.nomPiece')" required />
-                <button type="submit" class="ajout__valider">{{ t('commun.ajouter') }}</button>
+                <input v-model="nomPiece" class="saisie" :class="{ 'saisie--invalide': erreurPiece }" type="text" :placeholder="t('dressing.nomPiece')" :aria-label="t('dressing.nomPiece')" required />
+                <button type="submit" class="bouton">{{ t('commun.ajouter') }}</button>
               </div>
               <span v-if="erreurPiece" class="champ__erreur">{{ erreurPiece }}</span>
-              <button type="button" class="lien-bouton" @click="ajoutPiece = false">{{ t('commun.annuler') }}</button>
+              <button type="button" class="lien lien--centre" @click="ajoutPiece = false">{{ t('commun.annuler') }}</button>
             </form>
 
             <p v-if="logement.pieces.length === 0" class="etat">{{ t('dressing.aucunePiece') }}</p>
-            <div v-else class="pieces__liste">
+            <div v-else class="pieces">
               <RouterLink v-for="(piece, index) in logement.pieces" :key="piece.id" :to="`/pieces/${piece.id}`" class="piece">
-                <span class="piece__icone" :style="{ background: FONDS_PIECES[index % FONDS_PIECES.length] }">
+                <span class="piece__visuel" :style="{ background: FONDS_PIECES[index % FONDS_PIECES.length] }">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z" /><path d="m3 8 9 5 9-5M12 13v8" /></svg>
                 </span>
-                <span class="piece__textes">
-                  <span class="piece__nom">{{ piece.nom }}</span>
-                  <span class="piece__stockages">{{ piece.stockages.length ? piece.stockages.join(' · ') : t('dressing.aucunStockage') }}</span>
-                </span>
+                <span class="piece__nom">{{ piece.nom }}</span>
+                <span class="piece__stockages">{{ piece.stockages.length ? piece.stockages.join(' · ') : t('dressing.aucunStockage') }}</span>
                 <span class="piece__nombre">{{ piece.nbArticles }}</span>
                 <svg class="piece__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
               </RouterLink>
@@ -280,25 +308,28 @@ onMounted(charger)
 </template>
 
 <style scoped>
-.contenu {
-  flex: 1;
-  padding: 20px 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.entete {
-  display: flex;
+/* En-tête : logement et cloche, puis la recherche sur téléphone ; tout sur une ligne sur ordinateur */
+.entete-dressing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'logement cloche'
+    'recherche recherche';
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 14px 12px;
 }
 
-.entete__logement {
+.entete-dressing__logement {
+  grid-area: logement;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.notifications {
+  grid-area: cloche;
 }
 
 .logement {
@@ -308,39 +339,30 @@ onMounted(charger)
   padding: 0;
   border: 0;
   background: none;
-  font: inherit;
+  font-family: inherit;
   color: var(--couleur-texte);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  text-align: left;
   cursor: pointer;
 }
 
 .role {
-  display: inline-flex;
   align-self: flex-start;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire);
-  font-size: 12px;
-  font-weight: 700;
 }
-
-.notifications {
-  position: relative;
-}
-
 
 .recherche {
+  grid-area: recherche;
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: 14px;
+  height: 46px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: 12px;
   background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
+  border: 1.5px solid var(--couleur-bordure);
   color: var(--couleur-texte-secondaire);
 }
 
@@ -355,177 +377,21 @@ onMounted(charger)
   color: var(--couleur-texte);
 }
 
-.recherche:focus-within {
+.recherche:focus-within,
+.recherche--active {
   border-color: var(--couleur-primaire);
 }
 
-.chiffres {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
+@media (min-width: 1024px) {
+  .entete-dressing {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'logement recherche cloche';
+    gap: 16px;
+  }
 
-.chiffre {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
-  color: var(--couleur-texte);
-}
-
-.chiffre__valeur {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.chiffre__valeur--accent {
-  color: var(--couleur-primaire);
-}
-
-.chiffre__libelle {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 500;
-}
-
-.tenue-du-jour {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 20px;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.tenue-du-jour:hover {
-  color: var(--couleur-sur-primaire);
-}
-
-.tenue-du-jour__icone {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 14px;
-  background: var(--couleur-sur-primaire-voile);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tenue-du-jour__textes {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.tenue-du-jour__meteo {
-  font-size: 13px;
-  font-weight: 600;
-  opacity: 0.85;
-}
-
-.tenue-du-jour__titre {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.pieces {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.pieces__entete {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.pieces__titre {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-}
-
-.pieces__ajout {
-  border: 0;
-  background: none;
-  padding: 6px 0;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-primaire);
-  cursor: pointer;
-}
-
-.pieces__liste {
-  display: flex;
-  flex-direction: column;
-  border-radius: 18px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
-  overflow: hidden;
-}
-
-.piece {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--couleur-separateur);
-  color: var(--couleur-texte);
-}
-
-.piece__icone {
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  color: var(--couleur-primaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.piece__textes {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.piece__nom {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.piece__stockages {
-  font-size: 12.5px;
-  color: var(--couleur-texte-secondaire);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.piece__nombre {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
-}
-
-.piece__chevron {
-  color: var(--couleur-chevron);
-}
-
-.entete__logement {
-  position: relative;
+  .recherche {
+    margin-left: 12px;
+  }
 }
 
 .menu {
@@ -571,51 +437,259 @@ onMounted(charger)
   border-radius: 0;
 }
 
+/* Chiffres clés et tenue du jour : l'un sous l'autre, côte à côte sur ordinateur */
+.apercu {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .apercu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+}
+
+a.chiffre:hover {
+  border-color: var(--couleur-primaire);
+  color: var(--couleur-texte);
+}
+
+.chiffre__valeur--accent {
+  color: var(--couleur-primaire);
+}
+
+.tenue-du-jour {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+.tenue-du-jour:hover {
+  background: var(--couleur-primaire-fonce);
+  color: var(--couleur-sur-primaire);
+}
+
+.tenue-du-jour__icone {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--couleur-sur-primaire-voile);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tenue-du-jour__textes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tenue-du-jour__meteo {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.tenue-du-jour__titre {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Pièces : une liste sur téléphone, une grille de cartes sur ordinateur */
+.pieces {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
+  background: var(--couleur-surface);
+}
+
+.piece {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'visuel nom nombre chevron'
+    'visuel stockages nombre chevron';
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--couleur-separateur);
+  color: var(--couleur-texte);
+}
+
+.piece:last-child {
+  border-bottom: 0;
+}
+
+.piece:hover {
+  color: var(--couleur-texte);
+}
+
+.piece__visuel {
+  grid-area: visuel;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--couleur-primaire);
+}
+
+.piece__nom {
+  grid-area: nom;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.piece__stockages {
+  grid-area: stockages;
+  font-size: 13px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.piece__nombre {
+  grid-area: nombre;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-texte-secondaire);
+}
+
+.piece__chevron {
+  grid-area: chevron;
+  color: var(--couleur-chevron);
+}
+
+@media (min-width: 1024px) {
+  .pieces {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .piece {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'visuel visuel'
+      'nom nombre'
+      'stockages stockages';
+    row-gap: 6px;
+    padding: 12px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 14px;
+    background: var(--couleur-surface);
+  }
+
+  .piece:last-child {
+    border-bottom: 1.5px solid var(--couleur-bordure);
+  }
+
+  .piece:hover {
+    border-color: var(--couleur-primaire);
+  }
+
+  .piece__visuel {
+    width: 100%;
+    height: 110px;
+    margin-bottom: 4px;
+  }
+
+  .piece__visuel svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .piece__chevron {
+    display: none;
+  }
+}
+
+/* Résultats de recherche : liste sur téléphone, deux colonnes de cartes sur ordinateur */
+.resultats {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
+  background: var(--couleur-surface);
+}
+
+.resultat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--couleur-separateur);
+  color: var(--couleur-texte);
+}
+
+.resultat:last-child {
+  border-bottom: 0;
+}
+
+.resultat:hover {
+  color: var(--couleur-texte);
+}
+
+.resultat__vignette {
+  width: 52px;
+  height: 52px;
+}
+
+@media (min-width: 1024px) {
+  .resultats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .resultat,
+  .resultat:last-child {
+    padding: 12px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 14px;
+    background: var(--couleur-surface);
+  }
+
+  .resultat:hover {
+    border-color: var(--couleur-primaire);
+  }
+
+  .resultat__vignette {
+    width: 72px;
+    height: 72px;
+  }
+}
+
 .nouveau-logement {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-width: 560px;
   padding-top: 24px;
 }
 
-.nouveau-logement__titre {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.nouveau-logement__texte {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--couleur-texte-secondaire);
-}
-
-.nouveau-logement__formulaire {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.nouveau-logement__formulaire .champ {
-  gap: 6px;
-}
-
-.saisie--ligne {
-  height: 48px;
-}
-
-.lien-bouton {
+.lien--centre {
   align-self: center;
-  padding: 6px 0;
-  border: 0;
-  background: none;
   color: var(--couleur-texte-secondaire);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
+  text-decoration: none;
 }
 
 .ajout {
@@ -632,17 +706,5 @@ onMounted(charger)
 .ajout__ligne .saisie {
   flex: 1;
   min-width: 0;
-}
-
-.ajout__valider {
-  padding: 0 16px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
 }
 </style>

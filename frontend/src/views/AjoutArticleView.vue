@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import BarreNavigation from '@/components/BarreNavigation.vue'
 import ChoixEmplacement from '@/components/ChoixEmplacement.vue'
 import { api } from '@/services/api'
 import { useAjoutArticleStore } from '@/stores/ajoutArticle'
@@ -11,8 +12,8 @@ import { idLogementActif } from '@/utils/logementActif'
 // Champs du détail selon la famille de la catégorie choisie (libellés et exemples : ajout.champs et ajout.exemples)
 const CHAMPS_PAR_FAMILLE = {
   VETEMENT: [
-    { cle: 'marque', type: 'texte' },
     { cle: 'couleurId', type: 'couleur' },
+    { cle: 'marque', type: 'texte' },
     { cle: 'taille', type: 'texte' },
     { cle: 'matiere', type: 'texte' },
   ],
@@ -45,7 +46,7 @@ const origine = idArticle ? 'modification' : route.query.origine === 'vetement' 
 const scan = origine === 'vetement' ? ajout.vetement : null
 const codeInconnu = origine === 'manuel' ? ajout.codeInconnu : null
 
-// Article modifié : sa photo, ses droits et les valeurs absentes du formulaire (ISBN, état…)
+// Article modifié : sa photo, ses droits et les valeurs absentes du formulaire (ISBN…)
 const articleModifie = ref(null)
 const titreEcran = t(`ajout.titres.${origine}`)
 const retour = idArticle ? { name: 'article', params: { id: idArticle } } : { name: 'scan' }
@@ -53,6 +54,7 @@ const peutChangerConfidentialite = computed(() => !idArticle || articleModifie.v
 
 const logementId = ref(null)
 const stockages = ref([])
+const etiquettesDisponibles = ref([])
 const chargement = ref(true)
 const envoiEnCours = ref(false)
 const erreur = ref('')
@@ -76,9 +78,12 @@ const valeurs = reactive({
   format: null,
 })
 const stockageId = ref(null)
-// Les étiquettes ne sont plus proposées dans le formulaire : en modification, on garde celles de l'article
+const etat = ref(null)
 const etiquettesChoisies = ref([])
 const estPersonnel = ref(false)
+
+// Photo affichée à gauche : celle du scan, ou celle de l'article modifié
+const photo = computed(() => (scan ? scan.apercu ?? scan.photo : articleModifie.value?.photos[0] ?? null))
 
 // Valeurs proposées par l'IA : le champ garde son marqueur tant qu'on ne le modifie pas
 const valeursIa = reactive({})
@@ -90,6 +95,18 @@ function estRempliParIa(cle) {
 const nbChampsIa = computed(() => Object.keys(valeursIa).filter(estRempliParIa).length)
 // L'analyse se poursuit après l'ouverture de la fiche : envoi de la photo, puis réponse de l'IA
 const analyseEnCours = computed(() => scan && scan.envoi !== 'erreur' && scan.analyse !== 'termine' && scan.analyse !== 'erreur')
+const etatIa = computed(() => {
+  if (!scan) {
+    return ''
+  }
+  if (scan.envoi === 'erreur') {
+    return scan.erreur
+  }
+  if (analyseEnCours.value) {
+    return `${t('ajout.analyseEnCours')} ${t('ajout.remplirPendantAnalyse')}`
+  }
+  return nbChampsIa.value ? t('ajout.champsPreRemplis', nbChampsIa.value) : scan.ia?.message ?? t('ajout.rienReconnu')
+})
 
 /**
  * Applique les suggestions de l'IA, sans écraser ce que l'utilisateur a déjà saisi.
@@ -119,13 +136,19 @@ watch(
 )
 
 const famille = computed(() => referentiels.famille(valeurs.categorieId))
-// Après la photo d'un vêtement, marque et couleur s'affichent tout de suite, sans attendre la catégorie
+// Après la photo d'un vêtement, couleur et marque s'affichent tout de suite, sans attendre la catégorie
 const champsDetail = computed(
   () => CHAMPS_PAR_FAMILLE[famille.value ?? (origine === 'vetement' ? 'VETEMENT' : null)] ?? [],
 )
 const groupesCategories = computed(() =>
   referentiels.categoriesParRacine(origine === 'vetement' ? ['VETEMENT', 'ACCESSOIRE'] : null),
 )
+
+function basculerEtiquette(id) {
+  etiquettesChoisies.value = etiquettesChoisies.value.includes(id)
+    ? etiquettesChoisies.value.filter((autre) => autre !== id)
+    : [...etiquettesChoisies.value, id]
+}
 
 function nombre(valeur) {
   return valeur === '' || valeur === null ? null : Number(valeur)
@@ -146,6 +169,7 @@ function preremplir(article) {
   valeurs.description = formulaire.description ?? ''
   valeurs.categorieId = formulaire.categorieId
   stockageId.value = formulaire.stockageId
+  etat.value = formulaire.etat
   etiquettesChoisies.value = [...formulaire.etiquetteIds]
   estPersonnel.value = article.estPersonnel
 }
@@ -164,7 +188,7 @@ async function enregistrer() {
     titre: valeurs.titre,
     etiquetteIds: etiquettesChoisies.value,
     description: valeurs.description,
-    etat: origineFormulaire.etat ?? null,
+    etat: etat.value,
   }
   if (peutChangerConfidentialite.value) {
     corps.estPersonnel = estPersonnel.value
@@ -234,6 +258,7 @@ onMounted(async () => {
     }
     const [rangement] = await Promise.all([api(`/logements/${logementId.value}/rangement`), referentiels.charger()])
     stockages.value = rangement.stockages
+    etiquettesDisponibles.value = rangement.etiquettes
 
     // Code-barres inconnu : on devine la famille d'après le code (ISBN = livre, sinon disque)
     if (codeInconnu && valeurs.categorieId === null) {
@@ -251,254 +276,192 @@ onMounted(async () => {
 
 <template>
   <div class="ecran">
-    <header class="entete">
-      <RouterLink :to="retour" class="bouton-icone" :aria-label="t(idArticle ? 'ajout.retourFiche' : scan ? 'ajout.reprendrePhoto' : 'ajout.retourScan')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-      </RouterLink>
-      <h1 class="entete__titre">{{ titreEcran }}</h1>
-    </header>
+    <main class="page">
+      <header class="entete">
+        <RouterLink :to="retour" class="bouton-icone" :aria-label="t(idArticle ? 'ajout.retourFiche' : scan ? 'ajout.reprendrePhoto' : 'ajout.retourScan')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </RouterLink>
+        <h1 class="titre-page">{{ titreEcran }}</h1>
+        <span v-if="scan" class="bandeau-info etat-ia seulement-ordinateur" aria-live="polite">{{ etatIa }}</span>
+      </header>
 
-    <!-- Affiché tout de suite, sans attendre le chargement du formulaire : photo et avancement de l'analyse -->
-    <div v-if="scan" class="resume resume--scan">
-      <img :src="scan.apercu ?? scan.photo" :alt="t('ajout.photoScan')" class="resume__photo" />
-      <div class="resume__textes" aria-live="polite">
-        <template v-if="scan.envoi === 'erreur'">
-          <span class="badge-ia badge-ia--neutre">{{ scan.erreur }}</span>
-          <RouterLink :to="{ name: 'scan' }" class="resume__lien">{{ t('ajout.reprendrePhoto') }}</RouterLink>
-        </template>
-        <template v-else-if="analyseEnCours">
-          <span class="badge-ia badge-ia--attente">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-            {{ t('ajout.analyseEnCours') }}
-          </span>
-          <span class="resume__aide">{{ t('ajout.remplirPendantAnalyse') }}</span>
-        </template>
-        <template v-else>
-          <span v-if="nbChampsIa" class="badge-ia">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-            {{ t('ajout.champsPreRemplis', nbChampsIa) }}
-          </span>
-          <span v-else class="badge-ia badge-ia--neutre">{{ scan.ia?.message ?? t('ajout.rienReconnu') }}</span>
-          <span class="resume__aide">{{ t('ajout.photoConservee') }}</span>
-        </template>
+      <div :class="{ 'colonne-gauche': photo }">
+        <!-- Photo : petite carte sur téléphone, grande photo à gauche sur ordinateur -->
+        <div v-if="photo" class="photo-article">
+          <img :src="photo" :alt="t(scan ? 'ajout.photoScan' : 'ajout.photoArticle')" class="photo-article__image" />
+          <div class="photo-article__textes">
+            <b class="seulement-mobile photo-article__titre">{{ t(scan ? 'ajout.photoScan' : 'ajout.photoArticle') }}</b>
+            <RouterLink v-if="scan" :to="{ name: 'scan' }" class="lien">{{ t('ajout.reprendrePhoto') }}</RouterLink>
+            <p class="texte-secondaire seulement-ordinateur">{{ t(scan ? 'ajout.photoConservee' : 'ajout.aideModification') }}</p>
+          </div>
+        </div>
+
+        <!-- Le formulaire s'affiche tout de suite ; en modification, on attend les valeurs de l'article -->
+        <p v-if="chargement && idArticle" class="etat">{{ t('article.chargement') }}</p>
+
+        <form v-else class="formulaire" novalidate @submit.prevent="enregistrer">
+          <p v-if="scan" class="bandeau-info seulement-mobile" aria-live="polite">{{ etatIa }}</p>
+          <p v-if="codeInconnu" class="bandeau-info">{{ t('ajout.codeInconnu', { code: codeInconnu }) }}</p>
+          <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+
+          <label class="champ">
+            <span class="champ__libelle">{{ t('ajout.nom') }}</span>
+            <input
+              v-model.trim="valeurs.titre"
+              class="saisie"
+              :class="{ 'saisie--suggeree': estRempliParIa('titre'), 'saisie--invalide': erreurs.titre }"
+              type="text"
+              :placeholder="t('ajout.exempleNom')"
+              required
+            />
+            <span v-if="erreurs.titre" class="champ__erreur">{{ erreurs.titre }}</span>
+          </label>
+
+          <div class="champs">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('article.categorie') }}</span>
+              <select v-model="valeurs.categorieId" class="saisie" :class="{ 'saisie--suggeree': estRempliParIa('categorieId'), 'saisie--invalide': erreurs.categorieId }">
+                <option :value="null" disabled>{{ t('ajout.choisirCategorie') }}</option>
+                <optgroup v-for="groupe in groupesCategories" :key="groupe.racine" :label="groupe.racine">
+                  <option v-for="categorie in groupe.elements" :key="categorie.id" :value="categorie.id">{{ categorie.libelle }}</option>
+                </optgroup>
+              </select>
+              <span v-if="erreurs.categorieId" class="champ__erreur">{{ erreurs.categorieId }}</span>
+            </label>
+
+            <label v-for="champ in champsDetail" :key="champ.cle" class="champ">
+              <span class="champ__libelle">{{ t(`ajout.champs.${champ.cle}`) }}</span>
+              <select
+                v-if="champ.type === 'couleur'"
+                v-model="valeurs[champ.cle]"
+                class="saisie"
+                :class="{ 'saisie--suggeree': estRempliParIa(champ.cle), 'saisie--invalide': erreurs[champ.cle] }"
+              >
+                <option :value="null">—</option>
+                <option v-for="couleur in referentiels.couleurs" :key="couleur.id" :value="couleur.id">{{ couleur.nom }}</option>
+              </select>
+              <select v-else-if="champ.type === 'format'" v-model="valeurs[champ.cle]" class="saisie" :class="{ 'saisie--invalide': erreurs[champ.cle] }">
+                <option :value="null">—</option>
+                <option v-for="format in referentiels.formatsVinyle" :key="format.valeur" :value="format.valeur">{{ format.libelle }}</option>
+              </select>
+              <input
+                v-else
+                v-model.trim="valeurs[champ.cle]"
+                class="saisie"
+                :class="{ 'saisie--suggeree': estRempliParIa(champ.cle), 'saisie--invalide': erreurs[champ.cle] }"
+                :type="champ.type === 'nombre' ? 'number' : 'text'"
+                :inputmode="champ.type === 'nombre' ? 'numeric' : undefined"
+                :placeholder="t(`ajout.exemples.${champ.cle}`)"
+              />
+              <span v-if="erreurs[champ.cle]" class="champ__erreur">{{ erreurs[champ.cle] }}</span>
+            </label>
+
+            <label class="champ">
+              <span class="champ__libelle">{{ t('scanCode.etat') }}</span>
+              <select v-model="etat" class="saisie" :class="{ 'saisie--invalide': erreurs.etat }">
+                <option :value="null">—</option>
+                <option v-for="element in referentiels.etats" :key="element.valeur" :value="element.valeur">{{ element.libelle }}</option>
+              </select>
+            </label>
+          </div>
+
+          <ChoixEmplacement v-model="stockageId" :stockages="stockages" :erreur="erreurs.stockageId" />
+
+          <div v-if="etiquettesDisponibles.length" class="etiquettes">
+            <span class="champ__libelle">{{ t('article.etiquettes') }}</span>
+            <button
+              v-for="etiquette in etiquettesDisponibles"
+              :key="etiquette.id"
+              type="button"
+              class="puce puce--petite"
+              :class="{ 'puce--active': etiquettesChoisies.includes(etiquette.id) }"
+              :aria-pressed="etiquettesChoisies.includes(etiquette.id)"
+              @click="basculerEtiquette(etiquette.id)"
+            >
+              {{ etiquette.nom }}
+            </button>
+          </div>
+
+          <label class="champ">
+            <span class="champ__libelle">{{ t('ajout.note') }}</span>
+            <textarea v-model.trim="valeurs.description" class="saisie" :class="{ 'saisie--invalide': erreurs.description }" rows="3" :placeholder="t('ajout.exempleNote')"></textarea>
+            <span v-if="erreurs.description" class="champ__erreur">{{ erreurs.description }}</span>
+          </label>
+
+          <label v-if="peutChangerConfidentialite" class="carte carte--grise carte--rangee personnel">
+            <span class="entete__textes">
+              <b class="personnel__titre">{{ t('article.personnel') }}</b>
+              <span class="texte-secondaire">{{ t('article.personnelAide') }}</span>
+            </span>
+            <input v-model="estPersonnel" type="checkbox" role="switch" class="interrupteur" />
+          </label>
+
+          <div class="barre-actions barre-actions--dans-page barre-actions--droite">
+            <RouterLink :to="retour" class="bouton bouton--contour seulement-ordinateur">{{ t('commun.annuler') }}</RouterLink>
+            <!-- On attend seulement que la photo soit enregistrée, pas la réponse de l'IA -->
+            <button type="submit" class="bouton enregistrer" :disabled="envoiEnCours || chargement || (scan && scan.envoi !== 'termine')">
+              {{
+                t(
+                  envoiEnCours
+                    ? 'ajout.enregistrement'
+                    : scan?.envoi === 'en-cours'
+                      ? 'ajout.envoiPhoto'
+                      : idArticle
+                        ? 'ajout.enregistrerModifications'
+                        : 'ajout.enregistrerArticle',
+                )
+              }}
+            </button>
+          </div>
+        </form>
       </div>
-    </div>
+    </main>
 
-    <!-- Le formulaire s'affiche tout de suite ; en modification, on attend les valeurs de l'article -->
-    <p v-if="chargement && idArticle" class="etat etat--plein">{{ t('article.chargement') }}</p>
-
-    <form v-else id="formulaire-article" class="contenu" novalidate @submit.prevent="enregistrer">
-      <div v-if="articleModifie?.photos.length" class="resume">
-        <img :src="articleModifie.photos[0]" :alt="t('ajout.photoArticle')" class="resume__photo" />
-        <span class="resume__aide">{{ t('ajout.aideModification') }}</span>
-      </div>
-
-      <p v-if="codeInconnu" class="info">
-        {{ t('ajout.codeInconnu', { code: codeInconnu }) }}
-      </p>
-
-      <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-
-      <div class="champs">
-        <label class="carte carte--pleine" :class="{ 'carte--ia': estRempliParIa('titre'), 'carte--invalide': erreurs.titre }">
-          <span class="carte__libelle">
-            {{ t('ajout.nom') }}
-            <svg v-if="estRempliParIa('titre')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-          </span>
-          <input v-model.trim="valeurs.titre" class="carte__saisie" type="text" :placeholder="t('ajout.exempleNom')" required />
-          <span v-if="erreurs.titre" class="champ__erreur">{{ erreurs.titre }}</span>
-        </label>
-
-        <label class="carte carte--pleine" :class="{ 'carte--ia': estRempliParIa('categorieId'), 'carte--invalide': erreurs.categorieId }">
-          <span class="carte__libelle">
-            {{ t('article.categorie') }}
-            <svg v-if="estRempliParIa('categorieId')" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-          </span>
-          <select v-model="valeurs.categorieId" class="carte__saisie">
-            <option :value="null" disabled>{{ t('ajout.choisirCategorie') }}</option>
-            <optgroup v-for="groupe in groupesCategories" :key="groupe.racine" :label="groupe.racine">
-              <option v-for="categorie in groupe.elements" :key="categorie.id" :value="categorie.id">{{ categorie.libelle }}</option>
-            </optgroup>
-          </select>
-          <span v-if="erreurs.categorieId" class="champ__erreur">{{ erreurs.categorieId }}</span>
-        </label>
-
-        <label v-for="champ in champsDetail" :key="champ.cle" class="carte" :class="{ 'carte--ia': estRempliParIa(champ.cle), 'carte--invalide': erreurs[champ.cle] }">
-          <span class="carte__libelle">
-            {{ t(`ajout.champs.${champ.cle}`) }}
-            <svg v-if="estRempliParIa(champ.cle)" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" role="img" :aria-label="t('ajout.preRempli')" class="carte__ia"><path d="m12 2 2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z" /></svg>
-          </span>
-          <select v-if="champ.type === 'couleur'" v-model="valeurs[champ.cle]" class="carte__saisie">
-            <option :value="null">—</option>
-            <option v-for="couleur in referentiels.couleurs" :key="couleur.id" :value="couleur.id">{{ couleur.nom }}</option>
-          </select>
-          <select v-else-if="champ.type === 'format'" v-model="valeurs[champ.cle]" class="carte__saisie">
-            <option :value="null">—</option>
-            <option v-for="format in referentiels.formatsVinyle" :key="format.valeur" :value="format.valeur">{{ format.libelle }}</option>
-          </select>
-          <input
-            v-else
-            v-model.trim="valeurs[champ.cle]"
-            class="carte__saisie"
-            :type="champ.type === 'nombre' ? 'number' : 'text'"
-            :inputmode="champ.type === 'nombre' ? 'numeric' : undefined"
-            :placeholder="t(`ajout.exemples.${champ.cle}`)"
-          />
-          <span v-if="erreurs[champ.cle]" class="champ__erreur">{{ erreurs[champ.cle] }}</span>
-        </label>
-      </div>
-
-      <label class="carte carte--note" :class="{ 'carte--invalide': erreurs.description }">
-        <span class="carte__libelle">{{ t('ajout.note') }}</span>
-        <textarea v-model.trim="valeurs.description" class="carte__saisie carte__saisie--note" rows="3" :placeholder="t('ajout.exempleNote')"></textarea>
-        <span v-if="erreurs.description" class="champ__erreur">{{ erreurs.description }}</span>
-      </label>
-
-      <ChoixEmplacement v-model="stockageId" :stockages="stockages" :erreur="erreurs.stockageId" />
-
-      <label v-if="peutChangerConfidentialite" class="personnel">
-        <input v-model="estPersonnel" type="checkbox" class="personnel__case" />
-        {{ t('ajout.personnel') }}
-      </label>
-    </form>
-
-    <div class="pied">
-      <!-- On attend seulement que la photo soit enregistrée, pas la réponse de l'IA -->
-      <button
-        type="submit"
-        form="formulaire-article"
-        class="bouton-principal bouton-principal--icone"
-        :disabled="envoiEnCours || chargement || (scan && scan.envoi !== 'termine')"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-        {{
-          t(
-            envoiEnCours
-              ? 'ajout.enregistrement'
-              : scan?.envoi === 'en-cours'
-                ? 'ajout.envoiPhoto'
-                : idArticle
-                  ? 'ajout.enregistrerModifications'
-                  : 'ajout.enregistrerDressing',
-          )
-        }}
-      </button>
-    </div>
+    <BarreNavigation actif="dressing" ordinateur-seulement />
   </div>
 </template>
 
 <style scoped>
-.entete {
+.etat-ia {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.photo-article {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px 0;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
+  background: var(--couleur-surface);
 }
 
-.entete__titre {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.contenu {
-  flex: 1;
-  padding: 16px 20px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.resume {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.resume__photo {
-  width: 92px;
-  height: 108px;
+.photo-article__image {
+  width: 64px;
+  height: 64px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 10px;
   object-fit: cover;
   background: var(--couleur-vignette-grege);
 }
 
-.resume__textes {
+.photo-article__textes {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 3px;
 }
 
-.badge-ia {
-  display: inline-flex;
-  align-self: flex-start;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--couleur-primaire-pale);
-  color: var(--couleur-primaire);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.badge-ia--neutre {
-  background: var(--couleur-info-fond);
-  color: var(--couleur-texte-secondaire);
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-/* Analyse en cours : l'étoile pulse */
-.badge-ia--attente svg {
-  animation: pulsation 1.2s ease-in-out infinite;
-}
-
-@keyframes pulsation {
-  50% {
-    opacity: 0.3;
-    transform: scale(0.75);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .badge-ia--attente svg {
-    animation: none;
-  }
-}
-
-/* Pendant le chargement, occupe la place du formulaire pour garder le bouton en bas de l'écran */
-.etat--plein {
-  flex: 1;
-}
-
-/* Hors du formulaire : reprend ses marges */
-.resume--scan {
-  padding: 16px 20px 0;
-}
-
-.resume__lien {
+.photo-article__titre {
   font-size: 13px;
-  font-weight: 700;
 }
 
-.resume__aide {
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--couleur-texte-secondaire);
-}
-
-.info {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--couleur-info-fond);
-  color: var(--couleur-primaire-fonce);
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.45;
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .champs {
@@ -507,95 +470,57 @@ onMounted(async () => {
   gap: 10px;
 }
 
-.carte {
+.etiquettes {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: var(--couleur-surface);
-  border: 1.5px solid var(--couleur-bordure);
-}
-
-.carte--pleine {
-  grid-column: 1 / -1;
-}
-
-.carte--ia {
-  border-color: var(--couleur-bordure-ia);
-}
-
-.carte--invalide {
-  border-color: var(--couleur-erreur);
-}
-
-.carte:focus-within {
-  border-color: var(--couleur-primaire);
-}
-
-.carte__libelle {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--couleur-texte-secondaire);
-}
-
-.carte__ia {
-  color: var(--couleur-primaire);
-}
-
-.carte--note {
-  margin: 0;
-}
-
-.carte__saisie--note {
-  resize: vertical;
-  font-weight: 600;
-  line-height: 1.45;
-}
-
-.carte__saisie {
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  outline: none;
-  background: none;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--couleur-texte);
+  gap: 6px;
 }
 
 .personnel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 600;
   cursor: pointer;
 }
 
-.personnel__case {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  accent-color: var(--couleur-primaire);
+.personnel__titre {
+  font-size: 13px;
 }
 
-.pied {
-  position: sticky;
-  bottom: 0;
-  padding: 12px 20px 22px;
-  background: var(--couleur-surface);
-  border-top: 1px solid var(--couleur-bordure);
+.enregistrer {
+  flex: 1;
 }
 
-.bouton-principal--icone {
-  width: 100%;
-  gap: 8px;
+@media (min-width: 1024px) {
+  .colonne-gauche {
+    --largeur-colonne-fixe: 300px;
+  }
+
+  .photo-article {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+  }
+
+  .photo-article__image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    border-radius: 14px;
+  }
+
+  .formulaire {
+    gap: 12px;
+  }
+
+  .champs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .enregistrer {
+    flex: none;
+  }
 }
 </style>

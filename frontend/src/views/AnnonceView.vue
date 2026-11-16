@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AvatarMembre from '@/components/AvatarMembre.vue'
+import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
 import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 import { formatPrix } from '@/utils/prix'
@@ -23,6 +24,7 @@ const acheteur = ref('')
 
 const estActive = computed(() => ['EN_LIGNE', 'RESERVEE'].includes(annonce.value?.statut))
 const maConversation = computed(() => (annonce.value?.estVendeur ? null : annonce.value?.conversations[0]))
+const nonLus = computed(() => annonce.value?.conversations.reduce((total, conversation) => total + conversation.nonLus, 0) ?? 0)
 
 async function charger(id) {
   erreur.value = ''
@@ -71,121 +73,155 @@ watch(() => route.params.id, charger, { immediate: true })
 </script>
 
 <template>
-  <div class="ecran ecran--fiche">
+  <div class="ecran">
     <p v-if="!annonce && !erreur" class="etat">{{ t('annonce.chargement') }}</p>
-    <div v-else-if="!annonce" class="contenu">
+    <div v-else-if="!annonce" class="page">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
-      <RouterLink :to="{ name: 'marche' }">{{ t('annonce.retourMarche') }}</RouterLink>
+      <RouterLink :to="{ name: 'marche' }" class="lien">{{ t('annonce.retourMarche') }}</RouterLink>
     </div>
 
-    <template v-else>
-      <div
-        class="photo"
-        :class="{ 'photo--claire': estCouleurClaire(annonce.article.couleur) }"
-        :style="{ background: fondVignette(annonce.article.couleur) }"
-      >
-        <img v-if="annonce.article.photo" :src="annonce.article.photo" alt="" class="photo__image" />
-        <svg v-else width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-        <button type="button" class="photo__retour" :aria-label="t('commun.retour')" @click="router.back()">
+    <main v-else class="page fiche">
+      <!-- Ordinateur : retour et fil d'Ariane au-dessus des deux colonnes -->
+      <div class="entete seulement-ordinateur">
+        <RouterLink :to="{ name: 'marche' }" class="bouton-icone" :aria-label="t('annonce.retourMarche')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-        </button>
+        </RouterLink>
+        <span class="fil-ariane entete__textes">{{ t('navigation.marche') }} › {{ annonce.estVendeur ? t('annonce.votreAnnonceTitre') : annonce.article.titre }}</span>
+        <RouterLink v-if="annonce.estVendeur" :to="{ name: 'article', params: { id: annonce.article.id } }" class="lien">{{ t('annonce.voirFiche') }}</RouterLink>
       </div>
 
-      <main class="contenu contenu--fiche">
-        <div class="titre">
-          <div class="titre__textes">
-            <span class="titre__prix">{{ formatPrix(annonce.prix) }}</span>
-            <h1 class="titre__nom">{{ annonce.article.titre }}</h1>
-            <span class="titre__infos">{{ annonce.article.infos }}</span>
-          </div>
-          <span class="statut" :class="`statut--${annonce.statut.toLowerCase()}`">{{ t(`annonce.statuts.${annonce.statut}`) }}</span>
+      <div class="deux-colonnes">
+        <div
+          class="photo"
+          :class="{ 'photo--claire': estCouleurClaire(annonce.article.couleur), 'photo--vendeur': annonce.estVendeur }"
+          :style="{ background: annonce.article.photo ? 'var(--couleur-pastel-sable)' : fondVignette(annonce.article.couleur) }"
+        >
+          <img v-if="annonce.article.photo" :src="annonce.article.photo" alt="" class="photo__image" />
+          <svg v-else width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
+          <RouterLink :to="{ name: 'marche' }" class="photo__retour seulement-mobile" :aria-label="t('annonce.retourMarche')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </RouterLink>
+          <span class="badge badge--blanc photo__statut">{{ t(`annonce.statuts.${annonce.statut}`) }}</span>
         </div>
 
-        <RouterLink :to="{ name: 'membre', params: { pseudo: annonce.vendeur.pseudo } }" class="vendeur">
-          <AvatarMembre :membre="annonce.vendeur" :taille="36" />
-          <span class="vendeur__textes">
-            <span class="vendeur__libelle">{{ t('annonce.venduPar') }}</span>
-            <span class="vendeur__pseudo">{{ annonce.vendeur.pseudo }}</span>
-          </span>
-        </RouterLink>
-
-        <p v-if="annonce.description" class="description">{{ annonce.description }}</p>
-        <RouterLink :to="{ name: 'article', params: { id: annonce.article.id } }" class="lien">{{ t('annonce.voirFiche') }}</RouterLink>
-
-        <p class="info">{{ t('annonce.avertissement') }}</p>
-        <p v-if="erreurAction" class="message-erreur" role="alert">{{ erreurAction }}</p>
-
-        <!-- Acheteur : contacter le vendeur, ou reprendre la conversation -->
-        <template v-if="!annonce.estVendeur">
-          <RouterLink v-if="maConversation" :to="{ name: 'conversation', params: { id: maConversation.id } }" class="bouton-principal">
-            {{ t('annonce.voirConversation') }}<template v-if="maConversation.nonLus"> · {{ t('annonce.nonLus', maConversation.nonLus) }}</template>
-          </RouterLink>
-          <form v-else-if="estActive" class="contact" @submit.prevent="contacter">
-            <label class="champ">
-              <span class="champ__libelle">{{ t('annonce.votreMessage', { pseudo: annonce.vendeur.pseudo }) }}</span>
-              <textarea v-model="premierMessage" class="saisie contact__message" rows="3" maxlength="2000"></textarea>
-            </label>
-            <button type="submit" class="bouton-principal" :disabled="envoi || !premierMessage.trim()">{{ t('annonce.contacter') }}</button>
-          </form>
-          <p v-else class="etat">{{ t('annonce.horsLigne') }}</p>
-        </template>
-
-        <!-- Vendeur : prix, statut et conversations reçues -->
-        <template v-else>
-          <template v-if="estActive">
-            <form class="prix" @submit.prevent="modifier({ prix })">
-              <label class="saisie saisie--groupe prix__saisie">
-                <input v-model="prix" type="text" inputmode="decimal" :aria-label="t('annonce.prixEuros')" />
-                <span aria-hidden="true">€</span>
-              </label>
-              <button type="submit" class="action" :disabled="envoi">{{ t('annonce.changerPrix') }}</button>
-            </form>
-            <div class="actions">
-              <button v-if="annonce.statut === 'EN_LIGNE'" type="button" class="action" :disabled="envoi" @click="modifier({ statut: 'RESERVEE' })">{{ t('annonce.reserver') }}</button>
-              <button v-else type="button" class="action" :disabled="envoi" @click="modifier({ statut: 'EN_LIGNE' })">{{ t('annonce.remettreEnLigne') }}</button>
-              <button type="button" class="action action--principale" :disabled="envoi" @click="vente = !vente">{{ t('annonce.marquerVendue') }}</button>
+        <div class="informations">
+          <!-- Acheteur : titre et prix ; vendeur : « Votre annonce · 18 € » -->
+          <div class="titre">
+            <div class="entete__textes">
+              <h1 class="titre-page titre__nom">{{ annonce.article.titre }}</h1>
+              <span class="texte-secondaire">{{ annonce.estVendeur ? t('annonce.votreAnnonce', { prix: formatPrix(annonce.prix) }) : annonce.article.infos }}</span>
             </div>
-            <form v-if="vente" class="vente" @submit.prevent="modifier({ statut: 'VENDUE', acheteur }, t('annonce.confirmerVente'))">
-              <label class="champ">
-                <span class="champ__libelle">{{ t('annonce.venduA') }}</span>
-                <select v-model="acheteur" class="saisie vente__acheteur">
-                  <option value="">{{ t('annonce.horsApplication') }}</option>
-                  <option v-for="conversation in annonce.conversations" :key="conversation.id" :value="conversation.acheteur.pseudo">@{{ conversation.acheteur.pseudo }}</option>
-                </select>
-              </label>
-              <button type="submit" class="bouton-principal" :disabled="envoi">{{ t('annonce.confirmerLaVente') }}</button>
-            </form>
-            <button type="button" class="retirer" :disabled="envoi" @click="modifier({ statut: 'RETIREE' }, t('annonce.confirmerRetrait'))">{{ t('annonce.retirer') }}</button>
-          </template>
-          <p v-else-if="annonce.statut === 'VENDUE'" class="etat">{{ annonce.acheteur ? t('annonce.venduAMembre', { pseudo: `@${annonce.acheteur.pseudo}` }) : t('annonce.vendu') }}</p>
+            <span v-if="!annonce.estVendeur" class="titre-page titre__prix">{{ formatPrix(annonce.prix) }}</span>
+            <RouterLink v-else :to="{ name: 'article', params: { id: annonce.article.id } }" class="lien seulement-mobile">{{ t('annonce.voirFiche') }}</RouterLink>
+          </div>
 
-          <section class="conversations">
-            <h2 class="conversations__titre">{{ t('annonce.messagesRecus') }}</h2>
-            <p v-if="annonce.conversations.length === 0" class="etat">{{ t('annonce.personne') }}</p>
-            <RouterLink v-for="conversation in annonce.conversations" :key="conversation.id" :to="{ name: 'conversation', params: { id: conversation.id } }" class="conversation">
-              <AvatarMembre :membre="conversation.acheteur" :taille="40" />
-              <span class="conversation__textes">
-                <span class="conversation__pseudo">{{ conversation.acheteur.pseudo }}</span>
-                <span class="conversation__dernier">{{ conversation.dernierMessage?.contenu }}</span>
+          <p v-if="erreurAction" class="message-erreur" role="alert">{{ erreurAction }}</p>
+
+          <!-- Acheteur : contacter le vendeur, ou reprendre la conversation -->
+          <template v-if="!annonce.estVendeur">
+            <p v-if="annonce.description" class="texte-secondaire description">{{ annonce.description }}</p>
+            <RouterLink :to="{ name: 'membre', params: { pseudo: annonce.vendeur.pseudo } }" class="carte carte--rangee vendeur">
+              <AvatarMembre :membre="annonce.vendeur" :taille="44" />
+              <span class="entete__textes">
+                <span class="texte-secondaire">{{ t('annonce.venduPar') }}</span>
+                <b>@{{ annonce.vendeur.pseudo }}</b>
               </span>
-              <span v-if="conversation.nonLus" class="conversation__non-lus">{{ conversation.nonLus }}</span>
+              <svg class="ligne__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
             </RouterLink>
-          </section>
-        </template>
-      </main>
-    </template>
+            <p class="carte carte--grise texte-secondaire">{{ t('annonce.avertissement') }}</p>
+
+            <div v-if="maConversation" class="barre-actions barre-actions--dans-page">
+              <RouterLink :to="{ name: 'conversation', params: { id: maConversation.id } }" class="bouton bouton--large">
+                {{ t('annonce.voirConversation') }}<template v-if="maConversation.nonLus"> · {{ t('annonce.nonLus', maConversation.nonLus) }}</template>
+              </RouterLink>
+            </div>
+            <form v-else-if="estActive" class="contact" @submit.prevent="contacter">
+              <label class="champ">
+                <span class="champ__libelle">{{ t('annonce.votreMessage', { pseudo: `@${annonce.vendeur.pseudo}` }) }}</span>
+                <textarea v-model="premierMessage" class="saisie" rows="3" maxlength="2000"></textarea>
+              </label>
+              <div class="barre-actions barre-actions--dans-page">
+                <button type="submit" class="bouton bouton--large" :disabled="envoi || !premierMessage.trim()">{{ t('annonce.contacter') }}</button>
+              </div>
+            </form>
+            <p v-else class="etat">{{ t('annonce.horsLigne') }}</p>
+          </template>
+
+          <!-- Vendeur : prix, statut et conversations reçues -->
+          <template v-else>
+            <template v-if="estActive">
+              <form class="prix" @submit.prevent="modifier({ prix })">
+                <label class="champ prix__champ">
+                  <span class="champ__libelle">{{ t('annonce.changerPrixEuros') }}</span>
+                  <input v-model="prix" class="saisie" type="text" inputmode="decimal" />
+                </label>
+                <button type="submit" class="bouton bouton--contour" :disabled="envoi">{{ t('annonce.modifier') }}</button>
+              </form>
+              <div class="grille-3">
+                <button v-if="annonce.statut === 'EN_LIGNE'" type="button" class="bouton bouton--contour bouton--petit" :disabled="envoi" @click="modifier({ statut: 'RESERVEE' })">{{ t('annonce.reserver') }}</button>
+                <button v-else type="button" class="bouton bouton--contour bouton--petit" :disabled="envoi" @click="modifier({ statut: 'EN_LIGNE' })">{{ t('annonce.remettreEnLigne') }}</button>
+                <button type="button" class="bouton bouton--petit" :disabled="envoi" :aria-expanded="vente" @click="vente = !vente">{{ t('annonce.marquerVendue') }}</button>
+                <button type="button" class="bouton bouton--contour bouton--petit" :disabled="envoi" @click="modifier({ statut: 'RETIREE' }, t('annonce.confirmerRetrait'))">{{ t('annonce.retirer') }}</button>
+              </div>
+              <form v-if="vente" class="carte carte--grise vente" @submit.prevent="modifier({ statut: 'VENDUE', acheteur }, t('annonce.confirmerVente'))">
+                <label class="champ">
+                  <span class="champ__libelle">{{ t('annonce.venduA') }}</span>
+                  <select v-model="acheteur" class="saisie">
+                    <option value="">{{ t('annonce.horsApplication') }}</option>
+                    <option v-for="conversation in annonce.conversations" :key="conversation.id" :value="conversation.acheteur.pseudo">@{{ conversation.acheteur.pseudo }}</option>
+                  </select>
+                </label>
+                <button type="submit" class="bouton" :disabled="envoi">{{ t('annonce.confirmerLaVente') }}</button>
+              </form>
+            </template>
+            <p v-else-if="annonce.statut === 'VENDUE'" class="etat">{{ annonce.acheteur ? t('annonce.venduAMembre', { pseudo: `@${annonce.acheteur.pseudo}` }) : t('annonce.vendu') }}</p>
+
+            <section class="pile conversations">
+              <div class="ligne-titre">
+                <h2 class="titre-section">{{ t('annonce.conversations', { n: annonce.conversations.length }) }}</h2>
+                <span v-if="nonLus" class="badge badge--plein">{{ t('annonce.nonLus', nonLus) }}</span>
+              </div>
+              <p v-if="annonce.conversations.length === 0" class="etat">{{ t('annonce.personne') }}</p>
+              <div v-else class="lignes">
+                <RouterLink v-for="conversation in annonce.conversations" :key="conversation.id" :to="{ name: 'conversation', params: { id: conversation.id } }" class="ligne">
+                  <AvatarMembre :membre="conversation.acheteur" :taille="44" />
+                  <span class="ligne__textes">
+                    <b>@{{ conversation.acheteur.pseudo }}</b>
+                    <span class="texte-secondaire dernier">{{ conversation.dernierMessage?.contenu }}</span>
+                  </span>
+                  <span v-if="conversation.nonLus" class="point" :aria-label="t('annonce.nonLus', conversation.nonLus)"></span>
+                  <svg v-else class="ligne__chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                </RouterLink>
+              </div>
+            </section>
+          </template>
+        </div>
+      </div>
+    </main>
+
+    <BarreNavigation actif="marche" ordinateur-seulement />
   </div>
 </template>
 
 <style scoped>
+.fiche {
+  padding-top: 0;
+}
+
+/* Téléphone : photo bord à bord en haut de l'écran */
 .photo {
   position: relative;
-  height: 300px;
-  flex-shrink: 0;
+  margin: 0 -16px;
+  height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   color: var(--couleur-photo-icone-grande);
+}
+
+.photo--vendeur {
+  height: 170px;
 }
 
 .photo--claire {
@@ -202,302 +238,111 @@ watch(() => route.params.id, charger, { immediate: true })
 
 .photo__retour {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 14px;
+  top: 14px;
+  left: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   background: var(--couleur-photo-bouton);
   color: var(--couleur-texte);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
 }
 
-.contenu {
-  flex: 1;
-  padding: 20px 20px 24px;
+.photo__statut {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+}
+
+.informations {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.contenu--fiche {
-  margin-top: -20px;
-  padding-top: 22px;
-  border-radius: 24px 24px 0 0;
-  background: var(--couleur-fond);
-  position: relative;
+  gap: 11px;
+  min-width: 0;
 }
 
 .titre {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 12px;
 }
 
-.titre__textes {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .titre__prix {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--couleur-primaire);
-}
-
-.titre__nom {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.titre__infos {
-  font-size: 14px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.statut {
   flex-shrink: 0;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--couleur-succes-fond);
-  color: var(--couleur-succes);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.statut--reservee {
-  background: var(--couleur-alerte-fond);
-  color: var(--couleur-alerte);
-}
-
-.statut--vendue,
-.statut--retiree {
-  background: var(--couleur-info-fond);
-  color: var(--couleur-texte-secondaire);
-}
-
-.vendeur {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--couleur-texte);
-}
-
-.vendeur__textes {
-  display: flex;
-  flex-direction: column;
-}
-
-.vendeur__libelle {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  font-weight: 600;
-}
-
-.vendeur__pseudo {
-  font-size: 14px;
-  font-weight: 800;
 }
 
 .description {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
   white-space: pre-line;
 }
 
-.lien {
-  align-self: flex-start;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.info {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--couleur-info-fond);
-  color: var(--couleur-primaire-fonce);
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.4;
+.vendeur,
+.vendeur:hover {
+  color: var(--couleur-texte);
 }
 
 .contact {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.champ {
-  gap: 6px;
-}
-
-.contact__message {
-  padding: 12px 16px;
-  resize: vertical;
-  line-height: 1.5;
+  gap: 11px;
 }
 
 .prix {
   display: flex;
+  align-items: flex-end;
   gap: 10px;
 }
 
-.prix__saisie {
+.prix__champ {
   flex: 1;
-  height: 44px;
-  gap: 6px;
-  font-weight: 700;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-}
-
-.action {
-  flex: 1;
-  height: 44px;
-  padding: 0 12px;
-  border-radius: 14px;
-  border: 1.5px solid var(--couleur-primaire);
-  background: var(--couleur-surface);
-  color: var(--couleur-primaire);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.prix .action {
-  flex: 0 0 auto;
-}
-
-.action--principale {
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.action:disabled,
-.retirer:disabled {
-  opacity: 0.6;
-  cursor: wait;
 }
 
 .vente {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 16px;
-  background: var(--couleur-surface);
-  border: 1px solid var(--couleur-bordure);
+  gap: 10px;
 }
 
-.vente__acheteur {
-  height: 48px;
-}
-
-.retirer {
-  align-self: center;
-  padding: 8px;
-  border: 0;
-  background: none;
-  color: var(--couleur-erreur);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.conversations {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.conversations__titre {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.conversation {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--couleur-texte);
-}
-
-.conversation__textes {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.conversation__pseudo {
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.conversation__dernier {
-  font-size: 13px;
-  color: var(--couleur-texte-secondaire);
-  white-space: nowrap;
+.dernier {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.conversation__non-lus {
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  box-sizing: border-box;
-  border-radius: 999px;
+.point {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
   background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  font-size: 12px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Ordinateur : la photo à gauche, l'annonce et ses actions à droite */
+/* Ordinateur : photo carrée à gauche, annonce à droite */
 @media (min-width: 1024px) {
-  .ecran--fiche {
-    max-width: var(--largeur-contenu);
-    padding: 24px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 40px;
-    align-items: start;
+  .fiche {
+    padding-top: 28px;
   }
 
-  .photo {
-    position: sticky;
-    top: 24px;
-    height: min(560px, calc(100dvh - 48px));
-    border-radius: 24px;
-    overflow: hidden;
+  .photo,
+  .photo--vendeur {
+    margin: 0;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
   }
 
-  .contenu--fiche {
-    margin-top: 0;
-    padding: 0;
-    border-radius: 0;
+  .photo__statut {
+    left: 12px;
+  }
+
+  .informations {
+    gap: 12px;
+  }
+
+  .titre__nom,
+  .titre__prix {
+    font-size: 26px;
   }
 }
 </style>

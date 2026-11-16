@@ -2,9 +2,10 @@
 import { onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
+import AvatarMembre from '@/components/AvatarMembre.vue'
 import BarreNavigation from '@/components/BarreNavigation.vue'
+import VignetteArticle from '@/components/VignetteArticle.vue'
 import { api } from '@/services/api'
-import { estCouleurClaire, fondVignette } from '@/utils/couleurs'
 import { formatPrix } from '@/utils/prix'
 
 // Libellés : marche.filtres.<id> (« tout » pour l'identifiant vide)
@@ -52,10 +53,6 @@ async function charger() {
   }
 }
 
-function details(annonce) {
-  return [annonce.article.infos, `@${annonce.vendeur.pseudo}`].join(' · ')
-}
-
 watch(filtre, charger)
 watch(recherche, () => {
   clearTimeout(delai)
@@ -66,38 +63,35 @@ onMounted(charger)
 
 <template>
   <div class="ecran">
-    <main class="contenu">
-      <header class="entete">
-        <h1 class="entete__titre">{{ t('navigation.marche') }}</h1>
+    <main class="page">
+      <header class="entete-marche">
+        <h1 class="titre-page">{{ t('navigation.marche') }}</h1>
+        <label class="recherche">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+          <input v-model="recherche" type="search" :aria-label="t('marche.rechercher')" :placeholder="t('marche.rechercher')" />
+        </label>
         <RouterLink :to="{ name: 'messages' }" class="bouton-icone messages" :aria-label="nonLus ? t('marche.messagesNonLus', { n: nonLus }) : t('messages.titre')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-          <span v-if="nonLus" class="messages__badge" aria-hidden="true">{{ nonLus }}</span>
+          <span v-if="nonLus" class="badge badge--plein messages__badge" aria-hidden="true">{{ nonLus }}</span>
         </RouterLink>
       </header>
 
-      <label class="saisie saisie--groupe champ-recherche">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-        <input v-model="recherche" type="search" :aria-label="t('marche.rechercher')" :placeholder="t('marche.rechercher')" />
-      </label>
-
       <div class="filtres">
-        <button
-          v-for="choix in FILTRES"
-          :key="choix"
-          type="button"
-          class="filtre"
-          :class="{ 'filtre--actif': filtre === choix }"
-          :aria-pressed="filtre === choix"
-          @click="filtre = choix"
-        >
-          {{ t(`marche.filtres.${choix || 'tout'}`) }}
-        </button>
+        <div class="puces">
+          <button
+            v-for="choix in FILTRES"
+            :key="choix"
+            type="button"
+            class="puce"
+            :class="{ 'puce--active': filtre === choix }"
+            :aria-pressed="filtre === choix"
+            @click="filtre = choix"
+          >
+            {{ t(`marche.filtres.${choix || 'tout'}`) }}
+          </button>
+        </div>
+        <p class="texte-secondaire paiement">{{ t('marche.paiement') }}</p>
       </div>
-
-      <p class="info">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
-        {{ t('marche.paiement') }}
-      </p>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
       <p v-else-if="chargement && annonces.length === 0" class="etat">{{ t('marche.chargement') }}</p>
@@ -107,19 +101,14 @@ onMounted(charger)
       </p>
       <div v-else class="annonces" :class="{ 'annonces--chargement': chargement }">
         <RouterLink v-for="annonce in annonces" :key="annonce.id" :to="{ name: 'annonce', params: { id: annonce.id } }" class="annonce">
-          <span
-            class="annonce__vignette"
-            :class="{ 'annonce__vignette--claire': estCouleurClaire(annonce.article.couleur) }"
-            :style="{ background: fondVignette(annonce.article.couleur) }"
-          >
-            <img v-if="annonce.article.photo" :src="annonce.article.photo" alt="" class="annonce__photo" />
-            <svg v-else width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1" /></svg>
-            <span v-if="annonce.statut === 'RESERVEE'" class="annonce__reservee">{{ t('annonce.statuts.RESERVEE') }}</span>
-          </span>
-          <span class="annonce__textes">
-            <span class="annonce__prix">{{ formatPrix(annonce.prix) }}</span>
-            <span class="annonce__titre">{{ annonce.article.titre }}</span>
-            <span class="annonce__details">{{ details(annonce) }}</span>
+          <VignetteArticle :photo="annonce.article.photo" :couleur="annonce.article.couleur" carree>
+            <span v-if="annonce.statut === 'RESERVEE'" class="badge badge--blanc annonce__statut">{{ t('annonce.statuts.RESERVEE') }}</span>
+          </VignetteArticle>
+          <b class="annonce__prix">{{ formatPrix(annonce.prix) }}</b>
+          <span class="texte-secondaire annonce__titre">{{ annonce.article.titre }}</span>
+          <span class="annonce__vendeur">
+            <AvatarMembre :membre="annonce.vendeur" :taille="20" />
+            <span class="texte-secondaire">{{ annonce.vendeur.pseudo }}</span>
           </span>
         </RouterLink>
       </div>
@@ -130,97 +119,65 @@ onMounted(charger)
 </template>
 
 <style scoped>
-.contenu {
-  flex: 1;
-  padding: 20px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.entete {
-  display: flex;
+/* En-tête : titre et messages, puis la recherche ; tout sur une ligne sur ordinateur */
+.entete-marche {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'titre messages'
+    'recherche recherche';
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
 }
 
-.entete__titre {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.entete-marche .titre-page {
+  grid-area: titre;
 }
 
 .messages {
+  grid-area: messages;
   position: relative;
 }
 
 .messages__badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  box-sizing: border-box;
-  border-radius: 999px;
-  border: 2px solid var(--couleur-fond);
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-  font-size: 11px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: -6px;
+  right: -8px;
 }
 
-.champ-recherche {
-  gap: 10px;
-  height: 48px;
+.recherche {
+  grid-area: recherche;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 12px;
+  background: var(--couleur-surface);
   color: var(--couleur-texte-secondaire);
 }
 
-/* Les filtres défilent horizontalement plutôt que de passer sur deux lignes */
+.recherche:focus-within {
+  border-color: var(--couleur-primaire);
+}
+
+.recherche input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--couleur-texte);
+}
+
 .filtres {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.filtre {
-  flex-shrink: 0;
-  height: 38px;
-  padding: 0 13px;
-  border-radius: 999px;
-  border: 1.5px solid var(--couleur-bordure);
-  background: var(--couleur-surface);
-  color: var(--couleur-texte);
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.filtre--actif {
-  border-color: var(--couleur-primaire);
-  background: var(--couleur-primaire);
-  color: var(--couleur-sur-primaire);
-}
-
-.info {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--couleur-info-fond);
-  color: var(--couleur-primaire-fonce);
-  font-size: 12.5px;
-  font-weight: 600;
-  line-height: 1.4;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .annonces {
@@ -235,80 +192,74 @@ onMounted(charger)
 }
 
 .annonce {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   color: var(--couleur-texte);
 }
 
-.annonce__vignette {
-  position: relative;
-  height: 150px;
-  box-sizing: border-box;
-  border-radius: 16px;
-  border: 1px solid var(--couleur-bordure);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--couleur-photo-icone);
+.annonce:hover {
+  color: var(--couleur-texte);
 }
 
-.annonce__vignette--claire {
-  color: var(--couleur-photo-icone-sombre);
-}
-
-.annonce__photo {
-  position: absolute;
-  inset: 0;
+.annonce :deep(.vignette) {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
-.annonce__reservee {
+.annonce:hover :deep(.vignette) {
+  outline: 2px solid var(--couleur-primaire);
+  outline-offset: 1px;
+}
+
+.annonce__statut {
   position: absolute;
   top: 8px;
   left: 8px;
-  padding: 3px 8px;
-  border-radius: 8px;
-  background: var(--couleur-photo-etiquette);
-  color: var(--couleur-texte);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.annonce__textes {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 0 2px;
-  min-width: 0;
-}
-
-.annonce__prix {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--couleur-primaire);
 }
 
 .annonce__titre {
-  font-size: 13.5px;
-  font-weight: 700;
-}
-
-.annonce__details {
-  font-size: 12px;
-  color: var(--couleur-texte-secondaire);
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Tablette et ordinateur : autant de colonnes que la largeur le permet */
+.annonce__vendeur {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 @media (min-width: 600px) {
   .annonces {
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .entete-marche {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'titre recherche messages';
+  }
+
+  .recherche {
+    margin-left: 12px;
+  }
+
+  .filtres {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .paiement {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .annonces {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
   }
 }
 </style>

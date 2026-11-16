@@ -14,7 +14,7 @@ const succes = ref('')
 const filtre = ref('')
 // Ligne en cours de modification : { type, id, nom, codeHex }
 const edition = ref(null)
-const nouvelleCategorie = reactive({ parentId: '', nom: '' })
+const nouvelleCategorie = reactive({ parentId: '', zoneTenue: '', nom: '' })
 const nouvelleCouleur = reactive({ nom: '', codeHex: '#6E1A33' })
 
 const profondeur = (categorie) => categorie.chemin.split(' › ').length - 1
@@ -61,7 +61,7 @@ function changerOnglet(nom) {
 
 async function ajouterCategorie() {
   const ok = await executer(
-    () => api('/admin/categories', { methode: 'POST', corps: { parentId: Number(nouvelleCategorie.parentId), nom: nouvelleCategorie.nom } }),
+    () => api('/admin/categories', { methode: 'POST', corps: { parentId: Number(nouvelleCategorie.parentId), nom: nouvelleCategorie.nom, ...(nouvelleCategorie.zoneTenue ? { zoneTenue: nouvelleCategorie.zoneTenue } : {}) } }),
     t('admin.referentiels.categorieAjoutee', { nom: nouvelleCategorie.nom }),
   )
   if (ok) {
@@ -121,231 +121,238 @@ onMounted(charger)
 </script>
 
 <template>
-  <div class="admin-pile">
-    <div>
-      <h1 class="admin-titre">{{ t('admin.referentiels.titre') }}</h1>
-      <p class="admin-sous-titre">{{ t('admin.referentiels.sousTitre') }}</p>
-    </div>
-
-    <div class="barre-outils">
-      <div role="tablist" class="admin-segments" :aria-label="t('admin.referentiels.titre')">
+  <div class="pile referentiels">
+    <header class="entete entete--onglets">
+      <h1 class="titre-page seulement-ordinateur">{{ t('admin.referentiels.titre') }}</h1>
+      <div role="tablist" class="segments onglets" :aria-label="t('admin.referentiels.titre')">
         <button
           v-for="nom in ['categories', 'couleurs', 'marques']"
           :key="nom"
           type="button"
           role="tab"
-          class="admin-segment"
-          :class="{ 'admin-segment--actif': onglet === nom }"
+          class="segment"
+          :class="{ 'segment--actif': onglet === nom }"
           :aria-selected="onglet === nom"
           @click="changerOnglet(nom)"
         >
-          {{ t(`admin.referentiels.${nom}`) }}<template v-if="donnees"> · {{ donnees[nom].length }}</template>
+          {{ t(`admin.referentiels.${nom}`) }}
         </button>
       </div>
-      <input v-model="filtre" type="search" class="admin-saisie" :placeholder="t('admin.referentiels.filtrer')" :aria-label="t('admin.referentiels.filtrer')" />
-    </div>
+    </header>
 
-    <p class="admin-message admin-message--info">{{ t('admin.referentiels.langues') }}</p>
-    <p v-if="erreur" class="admin-message admin-message--erreur" role="alert">{{ erreur }}</p>
-    <p v-if="succes" class="admin-message admin-message--succes" role="status">{{ succes }}</p>
-    <p v-if="!donnees" class="admin-etat">{{ t('commun.chargement') }}</p>
+    <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
+    <p v-if="succes" class="bandeau-info" role="status">{{ succes }}</p>
+    <p v-if="!donnees" class="etat">{{ t('commun.chargement') }}</p>
 
-    <!-- Catégories -->
-    <section v-else-if="onglet === 'categories'" class="admin-carte">
-      <form class="admin-formulaire" @submit.prevent="ajouterCategorie">
-        <label class="admin-champ">
-          {{ t('admin.referentiels.parent') }}
-          <select v-model="nouvelleCategorie.parentId" class="admin-saisie" required>
-            <option value="" disabled>{{ t('admin.referentiels.choisirParent') }}</option>
-            <option v-for="categorie in donnees.categories" :key="categorie.id" :value="categorie.id">{{ categorie.chemin }}</option>
-          </select>
-        </label>
-        <label class="admin-champ">
-          {{ t('admin.referentiels.nom') }}
-          <input v-model="nouvelleCategorie.nom" class="admin-saisie" maxlength="80" required />
-        </label>
-        <button type="submit" class="admin-bouton admin-bouton--principal">{{ t('admin.referentiels.ajouterCategorie') }}</button>
-      </form>
+    <div v-else class="colonne-droite disposition">
+      <section class="pile">
+        <div class="ligne-titre">
+          <h2 class="titre-section">{{ t(`admin.referentiels.${onglet}`) }} · {{ donnees[onglet].length }}</h2>
+          <a v-if="onglet !== 'marques'" href="#nouveau" class="lien seulement-mobile">+ {{ t('commun.ajouter') }}</a>
+        </div>
+        <input v-model="filtre" type="search" class="saisie filtre" :placeholder="t('admin.referentiels.filtrer')" :aria-label="t('admin.referentiels.filtrer')" />
 
-      <div class="admin-defilement">
-        <table class="admin-tableau">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.referentiels.categorie') }}</th>
-              <th scope="col">{{ t('admin.referentiels.famille') }}</th>
-              <th scope="col">{{ t('admin.referentiels.zone') }}</th>
-              <th scope="col" class="nombre">{{ t('admin.referentiels.articles') }}</th>
-              <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="categorie in categories" :key="categorie.id">
-              <td :style="{ paddingLeft: `${10 + profondeur(categorie) * 18}px` }">
-                <form v-if="enEdition('categorie', categorie)" class="edition" @submit.prevent="enregistrerCategorie(categorie, { nom: edition.nom })">
-                  <input v-model="edition.nom" class="admin-saisie" maxlength="80" required :aria-label="t('admin.referentiels.nom')" />
-                  <button type="submit" class="admin-bouton admin-bouton--principal">{{ t('commun.enregistrer') }}</button>
-                  <button type="button" class="admin-bouton" @click="edition = null">{{ t('commun.annuler') }}</button>
-                </form>
-                <template v-else>
-                  <span :class="{ racine: !categorie.parentId }">{{ categorie.nom }}</span>
-                  <span v-if="categorie.nbEnfants" class="admin-secondaire"> · {{ t('admin.referentiels.sousCategories', categorie.nbEnfants) }}</span>
-                </template>
-              </td>
-              <td><span class="admin-pastille">{{ t(`stats.familles.${categorie.famille}`) }}</span></td>
-              <td>
-                <select
-                  class="admin-saisie zone"
-                  :value="categorie.zoneTenue ?? ''"
-                  :aria-label="t('admin.referentiels.zoneDe', { nom: categorie.nom })"
-                  @change="enregistrerCategorie(categorie, { zoneTenue: $event.target.value || null })"
-                >
-                  <option value="">—</option>
-                  <option v-for="zone in ZONES" :key="zone" :value="zone">{{ t(`tenues.zones.${zone}`) }}</option>
-                </select>
-              </td>
-              <td class="nombre">{{ categorie.nbArticles }}</td>
-              <td class="actions">
-                <button type="button" class="admin-bouton" @click="editer('categorie', categorie)">{{ t('admin.referentiels.renommer') }}</button>
-                <button
-                  type="button"
-                  class="admin-bouton admin-bouton--danger"
-                  :disabled="categorie.nbArticles > 0 || categorie.nbEnfants > 0"
-                  :title="categorie.nbArticles > 0 || categorie.nbEnfants > 0 ? t('admin.referentiels.categorieUtilisee') : ''"
-                  @click="supprimerCategorie(categorie)"
-                >
-                  {{ t('commun.supprimer') }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Couleurs -->
-    <section v-else-if="onglet === 'couleurs'" class="admin-carte">
-      <form class="admin-formulaire" @submit.prevent="ajouterCouleur">
-        <label class="admin-champ">
-          {{ t('admin.referentiels.nom') }}
-          <input v-model="nouvelleCouleur.nom" class="admin-saisie" maxlength="30" required />
-        </label>
-        <label class="admin-champ">
-          {{ t('admin.referentiels.teinte') }}
-          <span class="teinte">
-            <input v-model="nouvelleCouleur.codeHex" type="color" class="teinte__choix" :aria-label="t('admin.referentiels.teinte')" />
-            <input v-model="nouvelleCouleur.codeHex" class="admin-saisie teinte__code" maxlength="7" required :aria-label="t('admin.referentiels.codeHex')" />
-          </span>
-        </label>
-        <button type="submit" class="admin-bouton admin-bouton--principal">{{ t('admin.referentiels.ajouterCouleur') }}</button>
-      </form>
-
-      <div class="admin-defilement">
-        <table class="admin-tableau">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.referentiels.couleur') }}</th>
-              <th scope="col">{{ t('admin.referentiels.codeHex') }}</th>
-              <th scope="col" class="nombre">{{ t('admin.referentiels.articles') }}</th>
-              <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="couleur in couleurs" :key="couleur.id">
-              <template v-if="enEdition('couleur', couleur)">
+        <!-- Catégories : racines en gras, sous-catégories en retrait -->
+        <div v-if="onglet === 'categories'" class="defilement">
+          <table class="tableau-admin tableau-adaptable">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('admin.referentiels.categorie') }}</th>
+                <th scope="col">{{ t('admin.referentiels.zone') }}</th>
+                <th scope="col">{{ t('admin.referentiels.articles') }}</th>
+                <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="categorie in categories" :key="categorie.id">
+                <td class="cellule-nom" :style="{ paddingLeft: `${10 + profondeur(categorie) * 18}px` }">
+                  <form v-if="enEdition('categorie', categorie)" class="edition" @submit.prevent="enregistrerCategorie(categorie, { nom: edition.nom })">
+                    <input v-model="edition.nom" class="saisie saisie--compacte" maxlength="80" required :aria-label="t('admin.referentiels.nom')" />
+                    <button type="submit" class="bouton bouton--petit">{{ t('commun.enregistrer') }}</button>
+                    <button type="button" class="bouton bouton--contour bouton--petit" @click="edition = null">{{ t('commun.annuler') }}</button>
+                  </form>
+                  <component :is="categorie.parentId ? 'span' : 'b'" v-else>{{ categorie.nom }}</component>
+                </td>
                 <td>
-                  <span class="teinte">
-                    <input v-model="edition.codeHex" type="color" class="teinte__choix" :aria-label="t('admin.referentiels.teinte')" />
-                    <input v-model="edition.nom" class="admin-saisie" maxlength="30" required :aria-label="t('admin.referentiels.nom')" />
-                  </span>
-                </td>
-                <td><input v-model="edition.codeHex" class="admin-saisie teinte__code" maxlength="7" :aria-label="t('admin.referentiels.codeHex')" /></td>
-                <td class="nombre">{{ couleur.nbArticles }}</td>
-                <td class="actions">
-                  <button type="button" class="admin-bouton admin-bouton--principal" @click="enregistrerCouleur">{{ t('commun.enregistrer') }}</button>
-                  <button type="button" class="admin-bouton" @click="edition = null">{{ t('commun.annuler') }}</button>
-                </td>
-              </template>
-              <template v-else>
-                <td>
-                  <span class="teinte">
-                    <span class="pastille-couleur" :style="{ background: couleur.codeHex }" aria-hidden="true" />
-                    {{ couleur.nom }}
-                  </span>
-                </td>
-                <td class="admin-secondaire">{{ couleur.codeHex }}</td>
-                <td class="nombre">{{ couleur.nbArticles }}</td>
-                <td class="actions">
-                  <button type="button" class="admin-bouton" @click="editer('couleur', couleur)">{{ t('admin.referentiels.modifier') }}</button>
-                  <button
-                    type="button"
-                    class="admin-bouton admin-bouton--danger"
-                    :disabled="couleur.nbArticles > 0"
-                    :title="couleur.nbArticles > 0 ? t('admin.referentiels.couleurUtilisee') : ''"
-                    @click="supprimerCouleur(couleur)"
+                  <select
+                    class="saisie saisie--compacte"
+                    :value="categorie.zoneTenue ?? ''"
+                    :aria-label="t('admin.referentiels.zoneDe', { nom: categorie.nom })"
+                    @change="enregistrerCategorie(categorie, { zoneTenue: $event.target.value || null })"
                   >
-                    {{ t('commun.supprimer') }}
+                    <option value="">—</option>
+                    <option v-for="zone in ZONES" :key="zone" :value="zone">{{ t(`tenues.zones.${zone}`) }}</option>
+                  </select>
+                </td>
+                <td class="nombre texte-secondaire">{{ categorie.nbArticles }}</td>
+                <td class="actions">
+                  <button type="button" class="badge" :aria-label="t('admin.referentiels.renommerNom', { nom: categorie.nom })" @click="editer('categorie', categorie)">✎</button>
+                  <button
+                    v-if="categorie.nbArticles === 0 && categorie.nbEnfants === 0"
+                    type="button"
+                    class="badge"
+                    :aria-label="t('admin.referentiels.supprimerNom', { nom: categorie.nom })"
+                    @click="supprimerCategorie(categorie)"
+                  >
+                    ✕
                   </button>
                 </td>
-              </template>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-    <!-- Marques : créées par les membres (saisie ou IA), l'administrateur corrige ou supprime -->
-    <section v-else class="admin-carte">
-      <p class="admin-secondaire aide">{{ t('admin.referentiels.aideMarques') }}</p>
-      <p v-if="marques.length === 0" class="admin-etat">{{ t('admin.referentiels.aucuneMarque') }}</p>
-      <div v-else class="admin-defilement">
-        <table class="admin-tableau">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('admin.referentiels.marque') }}</th>
-              <th scope="col" class="nombre">{{ t('admin.referentiels.articles') }}</th>
-              <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="marque in marques" :key="marque.id">
-              <td>
-                <form v-if="enEdition('marque', marque)" class="edition" @submit.prevent="enregistrerMarque">
-                  <input v-model="edition.nom" class="admin-saisie" maxlength="80" required :aria-label="t('admin.referentiels.nom')" />
-                  <button type="submit" class="admin-bouton admin-bouton--principal">{{ t('commun.enregistrer') }}</button>
-                  <button type="button" class="admin-bouton" @click="edition = null">{{ t('commun.annuler') }}</button>
-                </form>
-                <template v-else>{{ marque.nom }}</template>
-              </td>
-              <td class="nombre">{{ marque.nbArticles }}</td>
-              <td class="actions">
-                <button type="button" class="admin-bouton" @click="editer('marque', marque)">{{ t('admin.referentiels.renommer') }}</button>
-                <button type="button" class="admin-bouton admin-bouton--danger" @click="supprimerMarque(marque)">{{ t('commun.supprimer') }}</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Couleurs -->
+        <div v-else-if="onglet === 'couleurs'" class="defilement">
+          <table class="tableau-admin tableau-adaptable">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('admin.referentiels.couleur') }}</th>
+                <th scope="col">{{ t('admin.referentiels.codeHex') }}</th>
+                <th scope="col">{{ t('admin.referentiels.articles') }}</th>
+                <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="couleur in couleurs" :key="couleur.id">
+                <template v-if="enEdition('couleur', couleur)">
+                  <td class="cellule-nom">
+                    <span class="teinte">
+                      <input v-model="edition.codeHex" type="color" class="teinte__choix" :aria-label="t('admin.referentiels.teinte')" />
+                      <input v-model="edition.nom" class="saisie saisie--compacte" maxlength="30" required :aria-label="t('admin.referentiels.nom')" />
+                    </span>
+                  </td>
+                  <td><input v-model="edition.codeHex" class="saisie saisie--compacte code" maxlength="7" :aria-label="t('admin.referentiels.codeHex')" /></td>
+                  <td class="nombre texte-secondaire">{{ couleur.nbArticles }}</td>
+                  <td class="actions">
+                    <button type="button" class="bouton bouton--petit" @click="enregistrerCouleur">{{ t('commun.enregistrer') }}</button>
+                    <button type="button" class="bouton bouton--contour bouton--petit" @click="edition = null">{{ t('commun.annuler') }}</button>
+                  </td>
+                </template>
+                <template v-else>
+                  <td class="cellule-nom">
+                    <span class="teinte">
+                      <span class="pastille-couleur" :style="{ background: couleur.codeHex }" aria-hidden="true"></span>
+                      {{ couleur.nom }}
+                    </span>
+                  </td>
+                  <td class="texte-secondaire">{{ couleur.codeHex }}</td>
+                  <td class="nombre texte-secondaire">{{ couleur.nbArticles }}</td>
+                  <td class="actions">
+                    <button type="button" class="badge" :aria-label="t('admin.referentiels.renommerNom', { nom: couleur.nom })" @click="editer('couleur', couleur)">✎</button>
+                    <button v-if="couleur.nbArticles === 0" type="button" class="badge" :aria-label="t('admin.referentiels.supprimerNom', { nom: couleur.nom })" @click="supprimerCouleur(couleur)">✕</button>
+                  </td>
+                </template>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Marques : créées par les membres (saisie ou IA), l'administrateur corrige ou supprime -->
+        <template v-else>
+          <p v-if="marques.length === 0" class="etat">{{ t('admin.referentiels.aucuneMarque') }}</p>
+          <div v-else class="defilement">
+            <table class="tableau-admin tableau-adaptable">
+              <thead>
+                <tr>
+                  <th scope="col">{{ t('admin.referentiels.marque') }}</th>
+                  <th scope="col">{{ t('admin.referentiels.articles') }}</th>
+                  <th scope="col"><span class="visuellement-cache">{{ t('admin.membres.actions') }}</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="marque in marques" :key="marque.id">
+                  <td class="cellule-nom">
+                    <form v-if="enEdition('marque', marque)" class="edition" @submit.prevent="enregistrerMarque">
+                      <input v-model="edition.nom" class="saisie saisie--compacte" maxlength="80" required :aria-label="t('admin.referentiels.nom')" />
+                      <button type="submit" class="bouton bouton--petit">{{ t('commun.enregistrer') }}</button>
+                      <button type="button" class="bouton bouton--contour bouton--petit" @click="edition = null">{{ t('commun.annuler') }}</button>
+                    </form>
+                    <template v-else>{{ marque.nom }}</template>
+                  </td>
+                  <td class="nombre texte-secondaire">{{ marque.nbArticles }}</td>
+                  <td class="actions">
+                    <button type="button" class="badge" :aria-label="t('admin.referentiels.renommerNom', { nom: marque.nom })" @click="editer('marque', marque)">✎</button>
+                    <button type="button" class="badge" :aria-label="t('admin.referentiels.supprimerNom', { nom: marque.nom })" @click="supprimerMarque(marque)">✕</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </section>
+
+      <!-- Colonne de droite (en bas sur téléphone) : ajout et rappel des règles -->
+      <div id="nouveau" class="pile">
+        <form v-if="onglet === 'categories'" class="carte carte--grise pile" @submit.prevent="ajouterCategorie">
+          <b>{{ t('admin.referentiels.nouvelleCategorie') }}</b>
+          <div class="champs-ajout">
+            <label class="champ">
+              <span class="champ__libelle">{{ t('admin.referentiels.parent') }}</span>
+              <select v-model="nouvelleCategorie.parentId" class="saisie" required>
+                <option value="" disabled>{{ t('admin.referentiels.choisirParent') }}</option>
+                <option v-for="categorie in donnees.categories" :key="categorie.id" :value="categorie.id">{{ categorie.chemin }}</option>
+              </select>
+            </label>
+            <label class="champ">
+              <span class="champ__libelle">{{ t('admin.referentiels.zone') }}</span>
+              <select v-model="nouvelleCategorie.zoneTenue" class="saisie">
+                <option value="">{{ t('admin.referentiels.zoneParent') }}</option>
+                <option v-for="zone in ZONES" :key="zone" :value="zone">{{ t(`tenues.zones.${zone}`) }}</option>
+              </select>
+            </label>
+          </div>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('admin.referentiels.nomFrancais') }}</span>
+            <input v-model="nouvelleCategorie.nom" class="saisie" maxlength="80" :placeholder="t('admin.referentiels.exempleCategorie')" required />
+          </label>
+          <button type="submit" class="bouton bouton--large">{{ t('commun.ajouter') }}</button>
+        </form>
+
+        <form v-else-if="onglet === 'couleurs'" class="carte carte--grise pile" @submit.prevent="ajouterCouleur">
+          <b>{{ t('admin.referentiels.nouvelleCouleur') }}</b>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('admin.referentiels.nomFrancais') }}</span>
+            <input v-model="nouvelleCouleur.nom" class="saisie" maxlength="30" required />
+          </label>
+          <label class="champ">
+            <span class="champ__libelle">{{ t('admin.referentiels.teinte') }}</span>
+            <span class="teinte">
+              <input v-model="nouvelleCouleur.codeHex" type="color" class="teinte__choix" :aria-label="t('admin.referentiels.teinte')" />
+              <input v-model="nouvelleCouleur.codeHex" class="saisie code" maxlength="7" required :aria-label="t('admin.referentiels.codeHex')" />
+            </span>
+          </label>
+          <button type="submit" class="bouton bouton--large">{{ t('commun.ajouter') }}</button>
+        </form>
+
+        <p class="bandeau-info">{{ t(onglet === 'marques' ? 'admin.referentiels.aideMarques' : 'admin.referentiels.regles') }}</p>
+        <p class="texte-secondaire">{{ t('admin.referentiels.langues') }}</p>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.barre-outils {
-  display: flex;
+.referentiels {
+  gap: 14px;
+}
+
+.entete--onglets {
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
 }
 
-.racine {
-  font-weight: 800;
+.onglets {
+  flex-basis: 100%;
 }
 
-.zone {
-  height: 32px;
-  padding: 0 8px;
-  font-size: 13px;
+.disposition {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filtre {
+  height: 40px;
 }
 
 .edition {
@@ -353,10 +360,6 @@ onMounted(charger)
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-}
-
-.edition .admin-bouton + .admin-bouton {
-  margin-left: 0;
 }
 
 .teinte {
@@ -368,6 +371,7 @@ onMounted(charger)
 .teinte__choix {
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   padding: 2px;
   border: 1.5px solid var(--couleur-bordure);
   border-radius: 10px;
@@ -375,19 +379,47 @@ onMounted(charger)
   cursor: pointer;
 }
 
-.teinte__code {
-  width: 100px;
+.code {
+  width: 110px;
   text-transform: uppercase;
 }
 
 .pastille-couleur {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(30, 20, 22, 0.15);
 }
 
-.aide {
-  margin: 0;
+.champs-ajout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 1024px) {
+  .entete--onglets {
+    flex-wrap: nowrap;
+  }
+
+  .entete--onglets .titre-page {
+    flex: 1;
+  }
+
+  .onglets {
+    flex-basis: 360px;
+    flex-shrink: 0;
+  }
+
+  .disposition {
+    display: grid;
+    --largeur-colonne-fixe: 320px;
+    gap: 28px;
+  }
+
+  .champs-ajout {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>

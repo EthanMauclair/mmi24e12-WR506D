@@ -1,13 +1,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import BarreNavigation from '@/components/BarreNavigation.vue'
 import LigneMembre from '@/components/LigneMembre.vue'
 import { api } from '@/services/api'
+import { useSessionStore } from '@/stores/session'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
+const session = useSessionStore()
 
 const recherche = ref('')
 const membres = ref([])
@@ -17,6 +20,34 @@ const assezLong = computed(() => recherche.value.trim().length >= 2)
 
 let delai = null
 let derniere = 0
+
+// Bouton de chaque ligne, comme sur un profil : Abonné, Demande envoyée, S'abonner ou Demander à suivre
+function action(membre) {
+  if (membre.abonnement === 'ACCEPTE') {
+    return { libelle: t('profil.abonne'), secondaire: true }
+  }
+  if (membre.abonnement === 'EN_ATTENTE') {
+    return { libelle: t('profil.demandeEnvoyee'), secondaire: true }
+  }
+  return { libelle: t(membre.estPrive ? 'profil.demanderSuivre' : 'profil.abonner'), secondaire: false }
+}
+
+async function basculerAbonnement(membre) {
+  if (!session.utilisateur) {
+    router.push({ name: 'connexion', query: { redirection: route.fullPath } })
+    return
+  }
+  if (membre.abonnement === 'ACCEPTE' && membre.estPrive && !window.confirm(t('profil.confirmerDesabonnement', { pseudo: membre.pseudo }))) {
+    return
+  }
+  erreur.value = ''
+  try {
+    const profil = await api(`/profils/${membre.pseudo}/abonnement`, { methode: membre.abonnement ? 'DELETE' : 'POST' })
+    membre.abonnement = profil.relation.abonnement
+  } catch (e) {
+    erreur.value = e.message
+  }
+}
 
 // La recherche part 250 ms après la dernière frappe ; une réponse dépassée par une plus récente est ignorée
 watch(recherche, () => {
@@ -47,24 +78,34 @@ watch(recherche, () => {
 
 <template>
   <div class="ecran">
-    <main class="contenu">
+    <main class="page">
       <header class="entete">
         <button type="button" class="bouton-icone" :aria-label="t('commun.retour')" @click="router.back()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <h1 class="entete__titre">{{ t('profil.membres') }}</h1>
+        <h1 class="titre-page">{{ t('profil.membres') }}</h1>
       </header>
 
-      <label class="saisie saisie--groupe champ-recherche">
+      <label class="recherche colonne-etroite">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
         <input v-model="recherche" type="search" :placeholder="t('membres.exemple')" :aria-label="t('profil.rechercherMembre')" autofocus />
       </label>
 
       <p v-if="erreur" class="message-erreur" role="alert">{{ erreur }}</p>
-      <p v-else-if="!assezLong" class="etat">{{ t('membres.deuxLettres') }}</p>
+      <p v-if="!assezLong" class="etat">{{ t('membres.deuxLettres') }}</p>
       <p v-else-if="!chargement && membres.length === 0" class="etat">{{ t('membres.aucun', { texte: recherche.trim() }) }}</p>
-      <ul v-else class="liste">
-        <LigneMembre v-for="membre in membres" :key="membre.id" :membre="membre" />
+      <ul v-else class="lignes liste-membres liste-membres--grille">
+        <LigneMembre v-for="membre in membres" :key="membre.id" :membre="membre" :detail="membre.estPrive ? t('membres.profilPrive') : ''">
+          <button
+            v-if="!membre.estMoi"
+            type="button"
+            class="bouton bouton--petit"
+            :class="{ 'bouton--contour': action(membre).secondaire }"
+            @click="basculerAbonnement(membre)"
+          >
+            {{ action(membre).libelle }}
+          </button>
+        </LigneMembre>
       </ul>
     </main>
 
@@ -73,39 +114,32 @@ watch(recherche, () => {
 </template>
 
 <style scoped>
-.contenu {
-  flex: 1;
-  padding: 20px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.entete {
+.recherche {
+  --largeur-etroite: 640px;
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.entete__titre {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.champ-recherche {
-  gap: 10px;
-  height: 50px;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 12px;
+  background: var(--couleur-surface);
   color: var(--couleur-texte-secondaire);
 }
 
-.liste {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.recherche:focus-within {
+  border-color: var(--couleur-primaire);
+}
+
+.recherche input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  color: var(--couleur-texte);
 }
 </style>

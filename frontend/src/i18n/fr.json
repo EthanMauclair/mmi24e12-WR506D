@@ -1,19 +1,12 @@
 {
   "accueil": {
     "atouts": {
-      "scan": {
-        "titre": "Scannez, c'est rangé",
-        "texte": "Une photo suffit : l'IA reconnaît la catégorie, la couleur et la marque. Livres et vinyles par code-barres."
-      },
-      "rangement": {
-        "titre": "Retrouvez tout",
-        "texte": "Chaque article a sa pièce et son rangement, partagés avec toute la maison."
-      },
-      "partage": {
-        "titre": "Prêtez, vendez, partagez",
-        "texte": "Suivez vos prêts, vendez entre membres et composez vos tenues selon la météo."
-      }
-    }
+      "scan": "Scannez, l'IA remplit la fiche",
+      "rangement": "Sachez où chaque article est rangé",
+      "partage": "Vendez, prêtez, partagez vos tenues"
+    },
+    "inscriptionAccroche": "Indexez votre dressing et partagez vos tenues.",
+    "gratuit": "Gratuit, sans paiement : acheteur et vendeur s'arrangent entre eux."
   },
   "admin": {
     "titre": "Back office",
@@ -75,12 +68,17 @@
       "likes": "J'aime",
       "commentaires": "Commentaires",
       "abonnements": "Abonnements",
-      "demandesEnAttente": "{n} demande en attente | {n} demandes en attente"
+      "demandesEnAttente": "{n} demande en attente | {n} demandes en attente",
+      "partScanTitre": "Part des articles ajoutés par scan",
+      "marcheActivite": "Marché et activité",
+      "pretsRetard": "Prêts en retard",
+      "ventesTitre": "Ventes",
+      "reseauSocial": "Réseau social"
     },
     "membres": {
       "titre": "Membres",
       "sousTitre": "Recherchez un membre pour le bloquer, changer son rôle ou supprimer son compte.",
-      "rechercher": "Pseudo, e-mail ou nom",
+      "rechercher": "Pseudo, prénom, nom ou e-mail",
       "aucun": "Aucun membre ne correspond.",
       "membre": "Membre",
       "role": "Rôle",
@@ -125,7 +123,14 @@
       "impactLogements": "Ses logements ({n}) seront supprimés, avec les {autres} articles que d'autres membres y ont rangés.",
       "impactSocial": "Ses tenues ({tenues}) et ses commentaires ({commentaires}) seront supprimés.",
       "irreversible": "Cette action est irréversible.",
-      "supprime": "Le compte de {pseudo} est supprimé."
+      "supprime": "Le compte de {pseudo} est supprimé.",
+      "inscritLe": "Inscrit le",
+      "statut": "Statut",
+      "actif": "Actif",
+      "pageSur": "Page {page} / {pages}",
+      "detail": "détail",
+      "voirProfil": "Voir le profil",
+      "choisir": "Choisissez un membre dans la liste pour le bloquer, changer son rôle ou supprimer son compte."
     },
     "referentiels": {
       "titre": "Référentiels",
@@ -161,7 +166,15 @@
       "enregistre": "Modification enregistrée.",
       "confirmerSuppression": "Supprimer « {nom} » ?",
       "confirmerSuppressionMarque": "Supprimer « {nom} » ? Les {n} articles qui la portent n'auront plus de marque.",
-      "supprime": "« {nom} » est supprimé."
+      "supprime": "« {nom} » est supprimé.",
+      "renommerNom": "Renommer {nom}",
+      "supprimerNom": "Supprimer {nom}",
+      "nouvelleCategorie": "Nouvelle catégorie",
+      "nouvelleCouleur": "Nouvelle couleur",
+      "zoneParent": "Celle de la catégorie parente",
+      "nomFrancais": "Nom (en français)",
+      "exempleCategorie": "Ex. Gilets",
+      "regles": "Une catégorie ou une couleur utilisée par des articles ne peut pas être supprimée. La zone de tenue alimente le générateur de tenue."
     },
     "moderation": {
       "titre": "Modération",
@@ -179,7 +192,14 @@
       "confirmerAnnonce": "Retirer l'annonce « {titre} » de la place de marché ? L'article redevient disponible chez son propriétaire.",
       "annonceRetiree": "Annonce retirée.",
       "confirmerTenue": "Supprimer la tenue « {titre} » ? Les articles qu'elle contient ne sont pas supprimés.",
-      "tenueSupprimee": "Tenue supprimée."
+      "tenueSupprimee": "Tenue supprimée.",
+      "sur": "sur",
+      "retirerMarche": "Retirer du marché",
+      "supprimerTenue": "Supprimer la tenue",
+      "auteur": "Auteur",
+      "contenu": "Contenu",
+      "surColonne": "Sur",
+      "date": "Date"
     }
   },
   "ajout": {
@@ -236,7 +256,8 @@
     "envoiPhoto": "Envoi de la photo…",
     "enregistrerModifications": "Enregistrer les modifications",
     "enregistrerDressing": "Enregistrer dans le dressing",
-    "preRempli": "Pré-rempli par l'IA"
+    "preRempli": "Pré-rempli par l'IA",
+    "enregistrerArticle": "Enregistrer l'article"
   },
   "annonce": {
     "chargement": "Chargement de l'annonce…",
@@ -270,7 +291,12 @@
     "vendu": "Vendu.",
     "venduAMembre": "Vendu à {pseudo}.",
     "messagesRecus": "Messages reçus",
-    "personne": "Personne ne vous a encore écrit."
+    "personne": "Personne ne vous a encore écrit.",
+    "votreAnnonceTitre": "Votre annonce",
+    "votreAnnonce": "Votre annonce · {prix}",
+    "changerPrixEuros": "Changer le prix (€)",
+    "modifier": "Modifier",
+    "conversations": "Conversations · {n}"
   },
   "article": {
     "chargement": "Chargement de l'article…",
@@ -314,7 +340,8 @@
     "preparation": "Préparation de l'image…",
     "telechargee": "Image téléchargée : publiez-la depuis Instagram.",
     "lienCopie": "Lien copié.",
-    "voirCommentaires": "Voir les {n} commentaires"
+    "voirCommentaires": "Voir les {n} commentaires",
+    "commentaires": "{n} commentaire | {n} commentaires"
   },
   "commentaires": {
     "titre": "Commentaires",
@@ -376,7 +403,8 @@
     "aucune": "Aucune demande en attente.",
     "accepter": "Accepter",
     "refuser": "Refuser",
-    "refuserDe": "Refuser la demande de {pseudo}"
+    "refuserDe": "Refuser la demande de {pseudo}",
+    "titreCourt": "Demandes"
   },
   "dressing": {
     "chargement": "Chargement de votre dressing…",
@@ -410,7 +438,8 @@
     "ajouterPiece": "+ Ajouter une pièce",
     "nomPiece": "Nom de la pièce",
     "aucunePiece": "Aucune pièce pour le moment.",
-    "aucunStockage": "Aucun stockage"
+    "aucunStockage": "Aucun stockage",
+    "articlesTrouves": "{n} article trouvé | {n} articles trouvés"
   },
   "emplacement": {
     "libelle": "Emplacement",
@@ -473,7 +502,8 @@
     "confidentialite": "politique de confidentialité",
     "creer": "Créer mon compte",
     "enCours": "Création du compte…",
-    "dejaInscrit": "Déjà inscrit ?"
+    "dejaInscrit": "Déjà inscrit ?",
+    "exemplePseudo": "Ex. lea.chine"
   },
   "langue": {
     "choisir": "Langue de l'application"
@@ -509,7 +539,10 @@
     "choisirAmi": "Choisir {pseudo} comme ami",
     "retirerAmi": "Retirer {pseudo} de vos amis",
     "retirerAbonne": "Retirer {pseudo} de vos abonnés",
-    "confirmerRetrait": "Retirer {pseudo} de vos abonnés ? Il ne verra plus votre contenu si votre profil est privé."
+    "confirmerRetrait": "Retirer {pseudo} de vos abonnés ? Il ne verra plus votre contenu si votre profil est privé.",
+    "choisirCommeAmi": "Choisir comme ami",
+    "retirer": "Retirer",
+    "profilPrive": "profil privé"
   },
   "messages": {
     "titre": "Messages",
@@ -531,7 +564,11 @@
     "bio": "Bio",
     "exempleBio": "Ex. Chineuse lyonnaise, fan de vinyles",
     "aidePrive": "Seuls les abonnés que vous acceptez voient vos articles",
-    "devientPublic": "En passant votre profil en public, la demande en attente sera acceptée. | En passant votre profil en public, les {n} demandes en attente seront acceptées."
+    "devientPublic": "En passant votre profil en public, la demande en attente sera acceptée. | En passant votre profil en public, les {n} demandes en attente seront acceptées.",
+    "pseudo": "Pseudo",
+    "langue": "Langue",
+    "changerPhoto": "Changer la photo",
+    "envoiPhoto": "Envoi de la photo…"
   },
   "navigation": {
     "principale": "Navigation principale",
@@ -563,11 +600,12 @@
     },
     "articles": "{n} article | {n} articles",
     "aucunStockage": "Aucun stockage dans cette pièce.",
-    "ajoutezStockage": "Ajoutez-en un avec le bouton ⋯ en haut à droite.",
+    "ajoutezStockage": "Ajoutez-en un avec « Ajouter un stockage ».",
     "stockages": "Stockages de la pièce",
     "filtrer": "Filtrer",
     "prete": "Prêté",
-    "aucunArticle": "Aucun article dans ce stockage pour le moment."
+    "aucunArticle": "Aucun article dans ce stockage pour le moment.",
+    "ajouterArticle": "Ajouter un article"
   },
   "preter": {
     "retourArticle": "Retour à l'article",
@@ -580,7 +618,8 @@
     "pseudoMembre": "Pseudo du membre",
     "choisirMembre": "Choisissez un membre dans la liste.",
     "exempleNote": "Ex. Week-end à Annecy",
-    "preterArticle": "Prêter l'article"
+    "preterArticle": "Prêter l'article",
+    "datePret": "Date de prêt"
   },
   "prets": {
     "statuts": "Statut des prêts",
@@ -596,7 +635,11 @@
     "renduLe": "Rendu le",
     "aucuneNote": "Aucune note",
     "supprimer": "Supprimer le prêt de {titre}",
-    "confirmerSuppression": "Supprimer ce prêt de « {titre} » ? À faire seulement s'il a été saisi par erreur."
+    "confirmerSuppression": "Supprimer ce prêt de « {titre} » ? À faire seulement s'il a été saisi par erreur.",
+    "retourProfil": "Retour au profil",
+    "preteLeDate": "Prêté le {date}",
+    "renduLeDate": "Rendu le {date}",
+    "retourPrevuDate": "Retour prévu le {date}"
   },
   "profil": {
     "chargement": "Chargement du profil…",
@@ -645,13 +688,18 @@
     "consigneCode": "Visez le code-barres d'un livre, d'un vinyle ou d'un comics. Les informations se remplissent toutes seules.",
     "typeScan": "Type de scan",
     "modes": {
-      "vetement": "Vêtement · IA",
-      "code-barres": "Code-barres"
+      "vetement": "Vêtement",
+      "code-barres": "Livre · Vinyle"
     },
     "importer": "Importer depuis la galerie",
     "prendrePhoto": "Prendre la photo",
     "lireCode": "Lire le code-barres",
-    "saisieManuelle": "Saisir manuellement"
+    "saisieManuelle": "Saisie manuelle",
+    "commentScanner": "Comment scanner",
+    "galerie": "Galerie",
+    "importerPhoto": "Importer une photo",
+    "importerPhotoCode": "Importer une photo du code",
+    "codeLu": "Code {code} lu, recherche…"
   },
   "scanCode": {
     "vinyleTrouve": "Vinyle trouvé",
@@ -665,7 +713,9 @@
     "etat": "État",
     "ouRanger": "Où le ranger ?",
     "suivant": "Scanner le suivant",
-    "ajoute": "« {titre} » est ajouté à votre dressing."
+    "ajoute": "« {titre} » est ajouté à votre dressing.",
+    "preRempliDepuis": "Pré-rempli depuis {source}",
+    "visuelsBase": "Visuel fourni par {source}."
   },
   "stats": {
     "voirDonnees": "Voir les données",
@@ -724,10 +774,14 @@
     "tenue": "Tenue",
     "inexistante": "Cette tenue n'existe plus.",
     "voirFil": "Voir le fil des tenues",
-    "chargementTenue": "Chargement de la tenue…"
+    "chargementTenue": "Chargement de la tenue…",
+    "toutes": "Toutes",
+    "partagerLien": "Partager le lien",
+    "instagram": "Instagram (image)",
+    "instagramTelecharger": "Instagram (télécharger l'image)"
   },
   "vendre": {
-    "prix": "Prix",
+    "prix": "Prix (€)",
     "exemplePrix": "Ex. 18",
     "description": "Description",
     "exempleDescription": "Ex. Porté deux fois, aucun défaut. Remise en main propre à Lyon.",

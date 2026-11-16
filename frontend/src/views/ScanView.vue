@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
+import BarreNavigation from '@/components/BarreNavigation.vue'
 import { api } from '@/services/api'
 import { lireCodeBarres } from '@/services/codeBarres'
 import { useAjoutArticleStore } from '@/stores/ajoutArticle'
@@ -96,7 +97,7 @@ watch(mode, () => {
 
 async function rechercherCode(code) {
   clearInterval(minuterieLecture)
-  traitement.value = `Code ${code} lu, recherche…`
+  traitement.value = t('scan.codeLu', { code })
   ajout.reinitialiser()
   try {
     ajout.fiche = await api(`/scans/code-barres/${code}`)
@@ -127,24 +128,12 @@ async function ouvrirFiche(image) {
   }
 }
 
-async function declencher() {
+async function prendrePhoto() {
   if (traitement.value) {
     return
   }
-  if (mode.value === 'vetement') {
-    if (cameraDisponible.value) {
-      await ouvrirFiche(video.value)
-    } else {
-      champFichier.value.click()
-    }
-    return
-  }
-  // Code-barres : lecture immédiate de l'image courante
-  const code = cameraDisponible.value ? await lireCodeBarres(video.value) : null
-  if (code) {
-    await rechercherCode(code)
-  } else if (cameraDisponible.value) {
-    erreur.value = t('scan.codeIllisible')
+  if (cameraDisponible.value) {
+    await ouvrirFiche(video.value)
   } else {
     champFichier.value.click()
   }
@@ -182,68 +171,48 @@ onBeforeUnmount(arreterCamera)
 
 <template>
   <div class="ecran ecran--scan">
-    <!-- Image de la caméra en plein écran, sous l'habillage (en-tête, cadre, commandes) -->
-    <video ref="video" class="flux" :class="{ 'flux--visible': cameraDisponible }" playsinline muted></video>
-
-    <header class="entete">
-      <RouterLink to="/dressing" class="bouton-voile" :aria-label="t('scan.fermer')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
-      </RouterLink>
-      <span class="entete__titre">{{ t('scan.titre') }}</span>
-      <button
-        v-if="flashDisponible"
-        type="button"
-        class="bouton-voile"
-        :class="{ 'bouton-voile--actif': flashActif }"
-        :aria-label="t(flashActif ? 'scan.eteindreFlash' : 'scan.activerFlash')"
-        :aria-pressed="flashActif"
-        @click="basculerFlash"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z" /></svg>
-      </button>
-      <span v-else class="entete__vide"></span>
-    </header>
-
-    <div class="visee">
-      <p v-if="confirmation" class="confirmation" role="status">{{ confirmation }}</p>
-
-      <div class="cadre" :class="{ 'cadre--transparent': cameraDisponible }">
-        <p v-if="!cameraDisponible" class="cadre__message">{{ messageCamera }}</p>
-
-        <template v-if="mode === 'vetement'">
-          <span class="coin coin--haut-gauche"></span>
-          <span class="coin coin--haut-droite"></span>
-          <span class="coin coin--bas-gauche"></span>
-          <span class="coin coin--bas-droite"></span>
-        </template>
-
-        <div v-else class="guide-code">
-          <template v-if="!cameraDisponible">
-            <span v-for="(largeur, index) in [4, 2, 6, 2, 3, 6, 2, 4, 2, 6, 3, 2]" :key="index" class="guide-code__barre" :style="{ width: `${largeur}px` }"></span>
-          </template>
-          <span class="guide-code__laser"></span>
-          <span v-if="traitement" class="badge-ia badge-ia--code">{{ traitement }}</span>
+    <main class="page scan">
+      <header class="entete">
+        <RouterLink to="/dressing" class="bouton-icone bouton-scan" :aria-label="t('scan.fermer')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </RouterLink>
+        <h1 class="titre-page scan__titre">{{ t('scan.titre') }}</h1>
+        <div class="segments seulement-ordinateur scan__segments" role="tablist" :aria-label="t('scan.typeScan')">
+          <button
+            v-for="element in modes"
+            :key="element"
+            type="button"
+            role="tab"
+            class="segment"
+            :class="{ 'segment--actif': element === mode }"
+            :aria-selected="element === mode"
+            @click="mode = element"
+          >
+            {{ t(`scan.modes.${element}`) }}
+          </button>
         </div>
-      </div>
+        <button
+          v-if="flashDisponible"
+          type="button"
+          class="bouton-icone bouton-scan seulement-mobile"
+          :class="{ 'bouton-scan--actif': flashActif }"
+          :aria-label="t(flashActif ? 'scan.eteindreFlash' : 'scan.activerFlash')"
+          :aria-pressed="flashActif"
+          @click="basculerFlash"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z" /></svg>
+        </button>
+        <span v-else class="entete__vide seulement-mobile"></span>
+      </header>
 
-      <p v-if="erreur" class="erreur" role="alert">{{ erreur }}</p>
-      <p v-else-if="mode === 'vetement'" class="consigne">
-        {{ t('scan.consigneVetement') }}
-      </p>
-      <p v-else class="consigne">
-        {{ t('scan.consigneCode') }}
-      </p>
-    </div>
-
-    <div class="commandes">
-      <div class="modes" role="tablist" :aria-label="t('scan.typeScan')">
+      <div class="puces scan__modes seulement-mobile" role="tablist" :aria-label="t('scan.typeScan')">
         <button
           v-for="element in modes"
           :key="element"
           type="button"
           role="tab"
-          class="modes__bouton"
-          :class="{ 'modes__bouton--actif': element === mode }"
+          class="puce"
+          :class="{ 'puce--active': element === mode }"
           :aria-selected="element === mode"
           @click="mode = element"
         >
@@ -251,53 +220,132 @@ onBeforeUnmount(arreterCamera)
         </button>
       </div>
 
-      <div class="actions">
-        <button type="button" class="bouton-voile bouton-voile--grand" :aria-label="t('scan.importer')" @click="champFichier.click()">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
-        </button>
+      <div class="disposition">
+        <!-- Aperçu de la caméra dans le cadre, avec le guide du mode choisi -->
+        <div class="camera">
+          <video ref="video" class="camera__flux" :class="{ 'camera__flux--visible': cameraDisponible }" playsinline muted></video>
+          <div class="cadre">
+            <p v-if="!cameraDisponible" class="cadre__message">{{ messageCamera }}</p>
+            <template v-if="mode === 'vetement'">
+              <span class="coin coin--haut-gauche"></span>
+              <span class="coin coin--haut-droite"></span>
+              <span class="coin coin--bas-gauche"></span>
+              <span class="coin coin--bas-droite"></span>
+            </template>
+            <div v-else class="guide-code">
+              <span class="guide-code__laser"></span>
+            </div>
+            <span v-if="traitement" class="traitement" role="status">{{ traitement }}</span>
+          </div>
+        </div>
+
+        <div class="aide">
+          <h2 class="titre-section seulement-ordinateur">{{ t('scan.commentScanner') }}</h2>
+          <p v-if="confirmation" class="confirmation" role="status">{{ confirmation }}</p>
+          <p class="consigne">{{ t(mode === 'vetement' ? 'scan.consigneVetement' : 'scan.consigneCode') }}</p>
+          <p v-if="erreur" class="erreur" role="alert">{{ erreur }}</p>
+
+          <!-- Ordinateur : boutons dans la colonne d'aide -->
+          <div class="pile seulement-ordinateur">
+            <button v-if="mode === 'vetement'" type="button" class="bouton bouton--large" :disabled="Boolean(traitement)" @click="prendrePhoto">{{ t('scan.prendrePhoto') }}</button>
+            <button type="button" class="bouton bouton--contour bouton--large" @click="champFichier.click()">
+              {{ t(mode === 'vetement' ? 'scan.importer' : 'scan.importerPhotoCode') }}
+            </button>
+            <RouterLink :to="{ name: 'article-nouveau', query: { origine: 'manuel' } }" class="lien">{{ t('scan.saisieManuelle') }}</RouterLink>
+          </div>
+        </div>
+      </div>
+
+      <!-- Téléphone : galerie, déclencheur et saisie manuelle en bas de l'écran -->
+      <div class="commandes seulement-mobile">
+        <button type="button" class="lien lien--clair" @click="champFichier.click()">{{ t(mode === 'vetement' ? 'scan.galerie' : 'scan.importerPhoto') }}</button>
         <button
+          v-if="mode === 'vetement'"
           type="button"
           class="declencheur"
-          :aria-label="t(mode === 'vetement' ? 'scan.prendrePhoto' : 'scan.lireCode')"
+          :aria-label="t('scan.prendrePhoto')"
           :disabled="Boolean(traitement)"
-          @click="declencher"
+          @click="prendrePhoto"
         >
           <span class="declencheur__centre"></span>
         </button>
-        <RouterLink :to="{ name: 'article-nouveau', query: { origine: 'manuel' } }" class="bouton-voile bouton-voile--grand" :aria-label="t('scan.saisieManuelle')">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-        </RouterLink>
+        <RouterLink :to="{ name: 'article-nouveau', query: { origine: 'manuel' } }" class="lien lien--clair commandes__droite">{{ t('scan.saisieManuelle') }}</RouterLink>
       </div>
-    </div>
 
-    <input ref="champFichier" type="file" accept="image/*" class="visuellement-cache" tabindex="-1" @change="importer" />
+      <input ref="champFichier" type="file" accept="image/*" class="visuellement-cache" tabindex="-1" @change="importer" />
+    </main>
+
+    <BarreNavigation actif="dressing" ordinateur-seulement />
   </div>
 </template>
 
 <style scoped>
+/* Téléphone et tablette : écran sombre façon appareil photo */
 .ecran--scan {
-  position: relative;
   background: var(--couleur-scan-fond);
   color: var(--couleur-sur-primaire);
 }
 
-/* Tablette et ordinateur : le fond sombre couvre toute la fenêtre, les commandes restent groupées au centre */
-@media (min-width: 600px) {
-  .ecran--scan {
-    max-width: none;
-  }
-
-  .ecran--scan > :not(.flux) {
-    width: 100%;
-    max-width: var(--largeur-colonne);
-    margin-inline: auto;
-    box-sizing: border-box;
-  }
+.scan {
+  gap: 16px;
 }
 
-/* La vidéo occupe tout l'écran ; l'habillage passe au-dessus */
-.flux {
-  position: fixed;
+.scan__titre {
+  font-size: 16px;
+  text-align: center;
+}
+
+.entete__vide {
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.bouton-scan {
+  border: 1.5px solid var(--couleur-donnee);
+  background: transparent;
+  color: var(--couleur-sur-primaire);
+}
+
+.bouton-scan--actif {
+  background: var(--couleur-sur-primaire);
+  color: var(--couleur-primaire);
+}
+
+.scan__modes {
+  justify-content: center;
+}
+
+.scan__modes .puce {
+  background: transparent;
+  border-color: var(--couleur-donnee);
+  color: var(--couleur-sur-primaire);
+}
+
+.scan__modes .puce--active {
+  background: var(--couleur-sur-primaire);
+  border-color: var(--couleur-sur-primaire);
+  color: var(--couleur-primaire);
+}
+
+.disposition {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.camera {
+  position: relative;
+  flex: 1;
+  min-height: 360px;
+  overflow: hidden;
+  border: 2px dashed var(--couleur-sur-primaire);
+  border-radius: 18px;
+  background: var(--couleur-scan-cadre);
+}
+
+.camera__flux {
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -305,95 +353,20 @@ onBeforeUnmount(arreterCamera)
   opacity: 0;
 }
 
-.flux--visible {
+.camera__flux--visible {
   opacity: 1;
 }
 
-.entete,
-.visee,
-.commandes {
-  position: relative;
-  z-index: 1;
-}
-
-/* Textes lisibles sur n'importe quelle image de la caméra */
-.entete__titre,
-.consigne {
-  text-shadow: var(--ombre-texte-scan);
-}
-
-.entete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-}
-
-.entete__titre {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.entete__vide {
-  width: 44px;
-}
-
-.bouton-voile {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 14px;
-  background: var(--couleur-scan-voile);
-  color: var(--couleur-sur-primaire);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.bouton-voile:hover {
-  color: var(--couleur-primaire-pale);
-}
-
-.bouton-voile--actif {
-  background: var(--couleur-sur-primaire);
-  color: var(--couleur-primaire);
-}
-
-.bouton-voile--grand {
-  width: 48px;
-  height: 48px;
-}
-
-.visee {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 0 20px;
-}
-
 .cadre {
-  position: relative;
-  width: 300px;
-  height: 360px;
-  border-radius: 28px;
-  background: var(--couleur-scan-cadre);
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Caméra active : seuls les coins du cadre restent, on voit l'image à travers */
-.cadre--transparent {
-  background: transparent;
 }
 
 .cadre__message {
-  max-width: 220px;
+  max-width: 240px;
   margin: 0;
   text-align: center;
   font-size: 13px;
@@ -409,45 +382,59 @@ onBeforeUnmount(arreterCamera)
 }
 
 .coin--haut-gauche {
-  top: 14px;
-  left: 14px;
+  top: 16px;
+  left: 16px;
   border-top-width: 4px;
   border-left-width: 4px;
   border-radius: 14px 0 0 0;
 }
 
 .coin--haut-droite {
-  top: 14px;
-  right: 14px;
+  top: 16px;
+  right: 16px;
   border-top-width: 4px;
   border-right-width: 4px;
   border-radius: 0 14px 0 0;
 }
 
 .coin--bas-gauche {
-  bottom: 14px;
-  left: 14px;
+  bottom: 16px;
+  left: 16px;
   border-bottom-width: 4px;
   border-left-width: 4px;
   border-radius: 0 0 0 14px;
 }
 
 .coin--bas-droite {
-  bottom: 14px;
-  right: 14px;
+  bottom: 16px;
+  right: 16px;
   border-bottom-width: 4px;
   border-right-width: 4px;
   border-radius: 0 0 14px 0;
 }
 
-.badge-ia {
+.guide-code {
+  position: relative;
+  width: min(250px, 80%);
+  height: 110px;
+  border: 2px solid var(--couleur-sur-primaire);
+  border-radius: 10px;
+}
+
+.guide-code__laser {
   position: absolute;
-  top: 34px;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 2px;
+  background: var(--couleur-scan-laser);
+}
+
+.traitement {
+  position: absolute;
+  bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
   padding: 7px 12px;
   border-radius: 999px;
   background: var(--couleur-sur-primaire);
@@ -457,50 +444,23 @@ onBeforeUnmount(arreterCamera)
   white-space: nowrap;
 }
 
-.badge-ia--code {
-  top: auto;
-  bottom: -46px;
-}
-
-.guide-code {
-  position: relative;
-  width: 240px;
-  height: 130px;
-  box-sizing: border-box;
-  border-radius: 16px;
-  border: 3px solid var(--couleur-sur-primaire);
+.aide {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.guide-code__barre {
-  height: 70px;
-  background: var(--couleur-scan-code);
-}
-
-.guide-code__laser {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  height: 2px;
-  background: var(--couleur-scan-laser);
+  flex-direction: column;
+  gap: 14px;
 }
 
 .consigne,
 .erreur,
 .confirmation {
   margin: 0;
-  max-width: 290px;
   text-align: center;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .consigne {
-  color: var(--couleur-scan-texte);
+  opacity: 0.9;
 }
 
 .erreur {
@@ -509,58 +469,39 @@ onBeforeUnmount(arreterCamera)
 }
 
 .confirmation {
+  align-self: center;
   padding: 8px 14px;
   border-radius: 999px;
   background: var(--couleur-succes-fond);
   color: var(--couleur-succes);
-  font-size: 13px;
   font-weight: 700;
 }
 
 .commandes {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 22px;
-  padding: 18px 20px 30px;
-}
-
-.modes {
-  display: flex;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--couleur-scan-onglets);
-}
-
-.modes__bouton {
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 0;
-  background: transparent;
-  color: var(--couleur-sur-primaire);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.modes__bouton--actif {
-  background: var(--couleur-sur-primaire);
-  color: var(--couleur-primaire);
-}
-
-.actions {
-  display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  max-width: 300px;
+  gap: 8px;
+  padding: 6px 8px 6px;
+}
+
+.lien--clair {
+  width: 96px;
+  color: var(--couleur-sur-primaire);
+  text-align: left;
+}
+
+.lien--clair:hover {
+  color: var(--couleur-primaire-pale);
+}
+
+.commandes__droite {
+  text-align: right;
 }
 
 .declencheur {
-  width: 78px;
-  height: 78px;
+  width: 72px;
+  height: 72px;
   padding: 0;
   border-radius: 50%;
   border: 4px solid var(--couleur-sur-primaire);
@@ -578,9 +519,86 @@ onBeforeUnmount(arreterCamera)
 }
 
 .declencheur__centre {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: var(--couleur-sur-primaire);
+}
+
+/* Tablette : la colonne sombre couvre toute la fenêtre */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .ecran--scan {
+    max-width: none;
+  }
+
+  .scan {
+    width: 100%;
+    max-width: var(--largeur-colonne);
+    margin: 0 auto;
+  }
+}
+
+/* Ordinateur : page claire avec le menu latéral, caméra (webcam) à gauche et aide à droite */
+@media (min-width: 1024px) {
+  .ecran--scan {
+    background: var(--couleur-fond);
+    color: var(--couleur-texte);
+  }
+
+  .scan__titre {
+    font-size: 22px;
+    text-align: left;
+  }
+
+  .scan__segments {
+    width: 300px;
+  }
+
+  .bouton-scan {
+    border: 1px solid var(--couleur-bordure);
+    background: var(--couleur-surface);
+    color: var(--couleur-texte);
+  }
+
+  .disposition {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .camera {
+    flex: none;
+    height: 560px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--couleur-scan-cadre);
+    color: var(--couleur-sur-primaire);
+  }
+
+  .cadre {
+    inset: 24px;
+    border: 2px dashed var(--couleur-sur-primaire);
+    border-radius: 18px;
+  }
+
+  .consigne,
+  .erreur,
+  .confirmation {
+    text-align: left;
+  }
+
+  .consigne {
+    color: var(--couleur-texte-secondaire);
+    opacity: 1;
+  }
+
+  .erreur {
+    color: var(--couleur-erreur);
+  }
+
+  .aide .lien {
+    align-self: flex-start;
+  }
 }
 </style>
