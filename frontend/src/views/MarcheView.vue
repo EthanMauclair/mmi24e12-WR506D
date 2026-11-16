@@ -304,4 +304,11 @@ onMounted(charger)
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Tablette et ordinateur : autant de colonnes que la largeur le permet */
+@media (min-width: 600px) {
+  .annonces {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+}
 </style>

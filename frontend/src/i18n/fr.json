@@ -1,4 +1,20 @@
 {
+  "accueil": {
+    "atouts": {
+      "scan": {
+        "titre": "Scannez, c'est rangé",
+        "texte": "Une photo suffit : l'IA reconnaît la catégorie, la couleur et la marque. Livres et vinyles par code-barres."
+      },
+      "rangement": {
+        "titre": "Retrouvez tout",
+        "texte": "Chaque article a sa pièce et son rangement, partagés avec toute la maison."
+      },
+      "partage": {
+        "titre": "Prêtez, vendez, partagez",
+        "texte": "Suivez vos prêts, vendez entre membres et composez vos tenues selon la météo."
+      }
+    }
+  },
   "admin": {
     "titre": "Back office",
     "navigation": "Sections du back office",
@@ -523,7 +539,8 @@
     "tenues": "Tenues",
     "scanner": "Scanner un article",
     "marche": "Marché",
-    "profil": "Profil"
+    "profil": "Profil",
+    "marque": "Penderie"
   },
   "piece": {
     "chargement": "Chargement de la pièce…",

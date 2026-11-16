@@ -425,4 +425,11 @@ watch(() => route.params.id, charger, { immediate: true })
   background: var(--couleur-primaire);
   color: var(--couleur-sur-primaire);
 }
+
+/* Tablette et ordinateur : autant de colonnes que la largeur le permet */
+@media (min-width: 600px) {
+  .articles {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+}
 </style>

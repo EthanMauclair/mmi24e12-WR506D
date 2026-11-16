@@ -73,7 +73,7 @@ watch(() => route.params.id, charger, { immediate: true })
 </script>
 
 <template>
-  <div class="ecran">
+  <div class="ecran ecran--fiche">
     <p v-if="chargement && !article" class="etat">{{ t('article.chargement') }}</p>
     <div v-else-if="erreur" class="contenu-erreur">
       <p class="message-erreur" role="alert">{{ erreur }}</p>
@@ -718,4 +718,47 @@ button.action--secondaire {
   font-weight: 800;
 }
 
+
+/* Ordinateur : la photo à gauche reste visible pendant qu'on fait défiler la fiche à droite */
+@media (min-width: 1024px) {
+  .ecran--fiche {
+    max-width: var(--largeur-contenu);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 1fr auto;
+    column-gap: 40px;
+    align-items: start;
+  }
+
+  .photo {
+    grid-row: 1 / 3;
+    position: sticky;
+    top: 24px;
+    height: min(640px, calc(100dvh - 48px));
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .photo__source {
+    bottom: 16px;
+  }
+
+  .photo__indicateurs {
+    bottom: 20px;
+  }
+
+  .contenu {
+    margin-top: 0;
+    padding: 0 0 16px;
+    border-radius: 0;
+  }
+
+  .actions {
+    grid-column: 2;
+    padding: 16px 0 0;
+    border-top: 0;
+    background: var(--couleur-fond);
+  }
+}
 </style>

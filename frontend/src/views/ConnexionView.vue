@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import AtoutsAccueil from '@/components/AtoutsAccueil.vue'
 import SelecteurLangue from '@/components/SelecteurLangue.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -37,7 +38,7 @@ const libelleBascule = computed(() =>
 </script>
 
 <template>
-  <div class="ecran">
+  <div class="ecran ecran--accueil">
     <div class="bandeau">
       <div class="bandeau__haut">
         <span class="bandeau__logo">
@@ -49,6 +50,7 @@ const libelleBascule = computed(() =>
         <span class="bandeau__titre">{{ t('connexion.accroche') }}</span>
         <span class="bandeau__sous-titre">{{ t('connexion.sousTitre') }}</span>
       </div>
+      <AtoutsAccueil />
     </div>
 
     <form class="formulaire" @submit.prevent="seConnecter">
@@ -233,5 +235,34 @@ const libelleBascule = computed(() =>
 
 .pied__lien {
   font-weight: 800;
+}
+
+/* Ordinateur : le bandeau devient un panneau à gauche qui présente l'application, le formulaire est à droite */
+@media (min-width: 1024px) {
+  .bandeau {
+    grid-row: 1 / 3;
+    height: auto;
+    padding: 48px 44px;
+    gap: 36px;
+  }
+
+  .bandeau__titre {
+    font-size: 36px;
+  }
+
+  .bandeau__sous-titre {
+    font-size: 16px;
+  }
+
+  .formulaire {
+    margin-top: 0;
+    padding: 56px 48px 0;
+    border-radius: 0;
+    justify-content: center;
+  }
+
+  .pied {
+    padding: 20px 48px 40px;
+  }
 }
 </style>

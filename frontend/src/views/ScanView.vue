@@ -281,6 +281,20 @@ onBeforeUnmount(arreterCamera)
   color: var(--couleur-sur-primaire);
 }
 
+/* Tablette et ordinateur : le fond sombre couvre toute la fenêtre, les commandes restent groupées au centre */
+@media (min-width: 600px) {
+  .ecran--scan {
+    max-width: none;
+  }
+
+  .ecran--scan > :not(.flux) {
+    width: 100%;
+    max-width: var(--largeur-colonne);
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+}
+
 /* La vidéo occupe tout l'écran ; l'habillage passe au-dessus */
 .flux {
   position: fixed;

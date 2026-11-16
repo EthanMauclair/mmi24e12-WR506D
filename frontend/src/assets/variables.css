@@ -92,5 +92,10 @@
   --ombre-menu: 0 12px 32px rgba(30, 20, 22, 0.16);
   --ombre-segment: 0 1px 3px rgba(30, 20, 22, 0.08);
 
+  /* Mise en page responsive : colonne sur tablette, menu latéral et zone de contenu sur ordinateur */
+  --largeur-colonne: 720px;
+  --largeur-menu: 240px;
+  --largeur-contenu: 1040px;
+
   --police: 'Plus Jakarta Sans', system-ui, sans-serif;
 }

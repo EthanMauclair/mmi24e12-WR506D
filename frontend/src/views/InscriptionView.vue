@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
+import AtoutsAccueil from '@/components/AtoutsAccueil.vue'
 import SelecteurLangue from '@/components/SelecteurLangue.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -60,13 +61,14 @@ async function creerCompte() {
 </script>
 
 <template>
-  <div class="ecran">
+  <div class="ecran ecran--accueil">
     <div class="bandeau">
       <div class="bandeau__haut">
         <h1 class="bandeau__titre">{{ t('inscription.titre') }}</h1>
         <SelecteurLangue />
       </div>
       <span class="bandeau__texte">{{ t('inscription.sousTitre') }}</span>
+      <AtoutsAccueil class="bandeau__atouts" />
     </div>
 
     <form id="formulaire-inscription" class="formulaire" novalidate @submit.prevent="creerCompte">
@@ -326,5 +328,37 @@ async function creerCompte() {
 
 .pied__lien {
   font-weight: 800;
+}
+
+/* Ordinateur : le bandeau devient un panneau à gauche qui présente l'application, le formulaire est à droite */
+@media (min-width: 1024px) {
+  .bandeau {
+    grid-row: 1 / 3;
+    padding: 48px 44px;
+    gap: 10px;
+  }
+
+  .bandeau__titre {
+    font-size: 36px;
+  }
+
+  .bandeau__texte {
+    font-size: 16px;
+  }
+
+  .bandeau__atouts {
+    margin-top: 26px;
+  }
+
+  .formulaire {
+    margin-top: 0;
+    padding: 40px 44px 8px;
+    border-radius: 0;
+  }
+
+  .pied {
+    padding: 16px 44px 28px;
+    background: var(--couleur-fond);
+  }
 }
 </style>

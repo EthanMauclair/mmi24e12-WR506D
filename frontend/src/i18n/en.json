@@ -1,4 +1,20 @@
 {
+  "accueil": {
+    "atouts": {
+      "scan": {
+        "titre": "Scan it, it's stored",
+        "texte": "One photo is enough: AI recognises the category, colour and brand. Books and vinyl by barcode."
+      },
+      "rangement": {
+        "titre": "Find everything",
+        "texte": "Every item has its room and its storage spot, shared with the whole household."
+      },
+      "partage": {
+        "titre": "Lend, sell, share",
+        "texte": "Track your loans, sell between members and put outfits together based on the weather."
+      }
+    }
+  },
   "admin": {
     "titre": "Back office",
     "navigation": "Back office sections",
@@ -523,7 +539,8 @@
     "tenues": "Outfits",
     "scanner": "Scan an item",
     "marche": "Market",
-    "profil": "Profile"
+    "profil": "Profile",
+    "marque": "Penderie"
   },
   "piece": {
     "chargement": "Loading the room…",
