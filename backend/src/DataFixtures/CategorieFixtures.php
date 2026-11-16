@@ -6,6 +6,7 @@ use App\Entity\Categorie;
 use App\Enum\FamilleCategorie;
 use App\Enum\ZoneTenue;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 
 /**
@@ -14,10 +15,18 @@ use Doctrine\Persistence\ObjectManager;
  * Une sous-catégorie s'écrit 'Nom' ou ['Nom', ZoneTenue] : sa zone est héritée par ses catégories.
  * Une catégorie s'écrit 'Nom' ou ['Nom', ZoneTenue] quand la zone ne s'applique qu'à elle.
  */
-class CategorieFixtures extends Fixture
+class CategorieFixtures extends Fixture implements FixtureGroupInterface
 {
     /** Sous-catégories rangées en famille ACCESSOIRE, avec leurs enfants. */
     private const SOUS_CATEGORIES_ACCESSOIRE = ['Sacs', 'Accessoires', 'Bijoux et montres'];
+
+    /**
+     * Référentiel indispensable : chargé pour un site vierge (base) comme pour la démonstration.
+     */
+    public static function getGroups(): array
+    {
+        return ['base', 'demo'];
+    }
 
     public function load(ObjectManager $manager): void
     {

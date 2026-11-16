@@ -32,6 +32,7 @@ use App\Enum\StatutAnnonce;
 use App\Enum\StatutArticle;
 use App\Enum\TypeStockage;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -39,8 +40,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 /**
  * Données de démonstration reprises des maquettes : le logement « Appartement Lyon » et ses articles.
  * Tous les comptes ont le mot de passe MOT_DE_PASSE (données fictives, uniquement pour le développement).
+ *
+ * Chargées seulement à la demande (groupe « demo ») : un site vierge se charge avec le groupe « base ».
  */
-class DemoFixtures extends Fixture implements DependentFixtureInterface
+class DemoFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
 {
     public const MOT_DE_PASSE = 'penderie2026';
 
@@ -58,7 +61,12 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
 
     public function getDependencies(): array
     {
-        return [CategorieFixtures::class, CouleurFixtures::class];
+        return [CategorieFixtures::class, CouleurFixtures::class, ComptesFixtures::class];
+    }
+
+    public static function getGroups(): array
+    {
+        return ['demo'];
     }
 
     public function load(ObjectManager $manager): void
@@ -71,9 +79,6 @@ class DemoFixtures extends Fixture implements DependentFixtureInterface
         $jules = $this->utilisateur('jules.chine', 'jules@exemple.fr', '2014-06-10')->setTuteur($lea);
         $sam = $this->utilisateur('sam.invite', 'sam@exemple.fr', '1990-11-30');
         $camille = $this->utilisateur('camille.vintage', 'camille@exemple.fr', '1995-03-07');
-
-        // Propriétaire du site : accès au back office complet (indicateurs, membres, référentiels, modération)
-        $this->utilisateur('penderie.admin', 'admin@exemple.fr', '1988-05-12')->setRoles(['ROLE_SUPER_ADMIN']);
 
         // Profils du réseau social : celui de Léa est privé, comme sur la maquette
         $lea->setPrenom('Léa')->setNom('Martin')->setEstPrive(true)

@@ -4,9 +4,10 @@ namespace App\DataFixtures;
 
 use App\Entity\Couleur;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class CouleurFixtures extends Fixture
+class CouleurFixtures extends Fixture implements FixtureGroupInterface
 {
     private const COULEURS = [
         'Noir' => '#000000',
@@ -29,6 +30,14 @@ class CouleurFixtures extends Fixture
         'Argenté' => '#C0C0C0',
         'Multicolore' => '#808080',
     ];
+
+    /**
+     * Référentiel indispensable : chargé pour un site vierge (base) comme pour la démonstration.
+     */
+    public static function getGroups(): array
+    {
+        return ['base', 'demo'];
+    }
 
     public function load(ObjectManager $manager): void
     {
