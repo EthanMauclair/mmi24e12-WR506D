@@ -2,8 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 /**
- * Atouts de l'application, dans le bandeau de la connexion et de l'inscription.
- * Affichés seulement sur ordinateur, où le bandeau devient un panneau latéral.
+ * Trois atouts de l'application, dans la présentation de la connexion sur ordinateur.
  */
 const { t } = useI18n()
 
@@ -18,63 +17,43 @@ const ATOUTS = [
   <ul class="atouts">
     <li v-for="atout in ATOUTS" :key="atout.cle" class="atout">
       <span class="atout__icone">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="atout.trace" /></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="atout.trace" /></svg>
       </span>
-      <span class="atout__textes">
-        <span class="atout__titre">{{ t(`accueil.atouts.${atout.cle}.titre`) }}</span>
-        <span class="atout__texte">{{ t(`accueil.atouts.${atout.cle}.texte`) }}</span>
-      </span>
+      <b class="atout__titre">{{ t(`accueil.atouts.${atout.cle}`) }}</b>
     </li>
   </ul>
 </template>
 
 <style scoped>
 .atouts {
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .atouts {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .atout {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  gap: 12px;
 }
 
 .atout__icone {
-  width: 42px;
-  height: 42px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
-  border-radius: 13px;
-  background: var(--couleur-sur-primaire-voile);
+  box-sizing: border-box;
+  border: 2px solid var(--couleur-primaire);
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.atout__textes {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  color: var(--couleur-primaire);
 }
 
 .atout__titre {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.atout__texte {
-  font-size: 13.5px;
-  line-height: 1.45;
-  opacity: 0.85;
+  font-size: 14px;
 }
 </style>

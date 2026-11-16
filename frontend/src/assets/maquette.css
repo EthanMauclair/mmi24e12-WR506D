@@ -1,0 +1,617 @@
+/*
+ * Briques d'interface communes, reprises des maquettes (wireframes-penderie) :
+ * en-tête d'écran, cartes, listes, puces, badges, boutons, tuiles chiffrées, barre d'actions
+ * et mises en page sur deux colonnes pour l'ordinateur.
+ */
+
+/* Contenu d'un écran */
+.page {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 16px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .page {
+    padding: 28px 40px 40px;
+    gap: 18px;
+  }
+}
+
+/* En-tête : bouton retour, titre, actions */
+.entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.entete__textes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titre-page {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.entete > .titre-page {
+  flex: 1;
+  min-width: 0;
+}
+
+.titre-section {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.texte-secondaire {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--couleur-texte-secondaire);
+}
+
+.fil-ariane {
+  font-size: 13px;
+  color: var(--couleur-texte-secondaire);
+  overflow-wrap: anywhere;
+}
+
+.lien {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--couleur-primaire);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ligne-titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Cartes et listes */
+.carte {
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
+  background: var(--couleur-surface);
+  min-width: 0;
+}
+
+.carte--grise {
+  background: var(--couleur-fond);
+}
+
+.carte--accent {
+  border-color: var(--couleur-primaire);
+}
+
+.carte--rangee {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lignes {
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 14px;
+  background: var(--couleur-surface);
+}
+
+.ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--couleur-separateur);
+  color: var(--couleur-texte);
+}
+
+.ligne:last-child {
+  border-bottom: 0;
+}
+
+a.ligne:hover,
+a.carte:hover {
+  color: var(--couleur-texte);
+}
+
+.ligne__textes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ligne__titre {
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ligne__chevron {
+  flex-shrink: 0;
+  color: var(--couleur-chevron);
+}
+
+/* Liste de membres : lignes dans une carte, ou grille de cartes sur ordinateur (variante --grille) */
+.liste-membres {
+  margin: 0;
+  list-style: none;
+}
+
+@media (min-width: 1024px) {
+  .liste-membres--grille {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .liste-membres--grille > .ligne,
+  .liste-membres--grille > .ligne:last-child {
+    padding: 12px;
+    border: 1.5px solid var(--couleur-bordure);
+    border-radius: 14px;
+    background: var(--couleur-surface);
+  }
+}
+
+/* Puces (filtres, étiquettes) */
+.puces {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.puces--retour {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.puce {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.puce--petite {
+  height: 28px;
+  padding: 0 11px;
+}
+
+.puce--active {
+  background: var(--couleur-primaire);
+  border-color: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+a.puce:hover {
+  color: var(--couleur-texte);
+}
+
+/* Badges (statut, rôle, compteur) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex-shrink: 0;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-primaire-pale);
+  color: var(--couleur-libelle);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge--plein {
+  background: var(--couleur-primaire);
+  border-color: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+.badge--blanc {
+  background: var(--couleur-surface);
+}
+
+button.badge {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Boutons */
+.bouton {
+  height: 46px;
+  padding: 0 18px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px solid var(--couleur-primaire);
+  border-radius: 12px;
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bouton:hover {
+  background: var(--couleur-primaire-fonce);
+  border-color: var(--couleur-primaire-fonce);
+  color: var(--couleur-sur-primaire);
+}
+
+.bouton--contour {
+  background: var(--couleur-surface);
+  color: var(--couleur-primaire);
+}
+
+.bouton--contour:hover {
+  background: var(--couleur-primaire-pale);
+  border-color: var(--couleur-primaire);
+  color: var(--couleur-primaire);
+}
+
+.bouton--petit {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.bouton--large {
+  width: 100%;
+}
+
+.bouton--flexible {
+  flex: 1;
+  min-width: 0;
+}
+
+.bouton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.boutons {
+  display: flex;
+  gap: 10px;
+}
+
+.boutons--droite {
+  justify-content: flex-end;
+}
+
+/* Sélecteur à segments (onglets) */
+.segments {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 12px;
+  background: var(--couleur-surface);
+}
+
+.segment {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--couleur-texte-secondaire);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.segment--actif {
+  background: var(--couleur-primaire);
+  color: var(--couleur-sur-primaire);
+}
+
+a.segment:hover {
+  color: var(--couleur-texte);
+}
+
+a.segment--actif:hover {
+  color: var(--couleur-sur-primaire);
+}
+
+/* Interrupteur (article personnel, profil privé) */
+.interrupteur {
+  position: relative;
+  flex-shrink: 0;
+  width: 50px;
+  height: 30px;
+  margin: 0;
+  appearance: none;
+  border-radius: 999px;
+  background: var(--couleur-interrupteur-inactif);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.interrupteur::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--couleur-surface);
+  box-shadow: var(--ombre-curseur);
+  transition: transform 0.15s;
+}
+
+.interrupteur:checked {
+  background: var(--couleur-primaire);
+}
+
+.interrupteur:checked::after {
+  transform: translateX(20px);
+}
+
+.interrupteur:focus-visible {
+  outline: 2px solid var(--couleur-primaire);
+  outline-offset: 2px;
+}
+
+/* Tuile chiffrée */
+.chiffre {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--couleur-bordure);
+  border-radius: 12px;
+  background: var(--couleur-surface);
+  color: var(--couleur-texte);
+}
+
+.chiffre__valeur {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.chiffre__libelle {
+  font-size: 12px;
+  color: var(--couleur-texte-secondaire);
+}
+
+/* Libellé + valeur (fiche article) */
+.propriete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.propriete__libelle {
+  flex-shrink: 0;
+  width: 84px;
+  font-size: 13px;
+  color: var(--couleur-texte-secondaire);
+}
+
+.propriete__valeur {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Grilles */
+.grille-2,
+.grille-3,
+.grille-4 {
+  display: grid;
+  gap: 10px;
+}
+
+.grille-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grille-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grille-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Grille de vignettes : 3 colonnes sur téléphone, autant que la place le permet au-delà (6 sur ordinateur) */
+.grille-photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+@media (min-width: 600px) {
+  .grille-photos {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+}
+
+/* Barre d'actions : en bas de l'écran sur téléphone, à la suite du contenu sur ordinateur */
+.barre-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px 16px;
+  border-top: 1.5px solid var(--couleur-bordure);
+  background: var(--couleur-surface);
+}
+
+.barre-actions--dans-page {
+  margin: 0 -16px -24px;
+}
+
+@media (min-width: 1024px) {
+  .barre-actions,
+  .barre-actions--dans-page {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border-top: 0;
+    background: none;
+  }
+
+  .barre-actions--droite {
+    justify-content: flex-end;
+  }
+}
+
+/* Annotation d'état (bandeau d'information) */
+.bandeau-info {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--couleur-info-fond);
+  color: var(--couleur-libelle);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* Champs (forme des maquettes) */
+.champ {
+  gap: 6px;
+}
+
+.saisie {
+  height: 46px;
+  border-radius: 12px;
+}
+
+textarea.saisie {
+  height: auto;
+  min-height: 84px;
+  padding: 10px 14px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+select.saisie {
+  padding-right: 10px;
+}
+
+/* Champ pré-rempli par l'IA ou une base en ligne : bordure en pointillés */
+.saisie--suggeree {
+  border-style: dashed;
+  border-color: var(--couleur-primaire);
+}
+
+/* Éléments propres au téléphone (et à la tablette) ou à l'ordinateur ; ils gardent leur propre affichage */
+@media (max-width: 1023px) {
+  .seulement-ordinateur {
+    display: none !important;
+  }
+}
+
+/* Mises en page sur ordinateur */
+@media (min-width: 1024px) {
+  .seulement-mobile {
+    display: none !important;
+  }
+
+  /* Deux colonnes égales (fiche article, annonce) */
+  .deux-colonnes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* Colonne fixe à gauche ou à droite (formulaire, panneau de détail) */
+  .colonne-gauche,
+  .colonne-droite {
+    display: grid;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .colonne-gauche {
+    grid-template-columns: var(--largeur-colonne-fixe, 300px) minmax(0, 1fr);
+  }
+
+  .colonne-droite {
+    grid-template-columns: minmax(0, 1fr) var(--largeur-colonne-fixe, 320px);
+  }
+
+  .colonne-etroite {
+    max-width: var(--largeur-etroite, 760px);
+  }
+
+  .grille-2-ordinateur {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
